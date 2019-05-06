@@ -259,7 +259,7 @@ int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
     char variableType[128];
     REAL value;
     int readVars = 0;
-    while (fscanf(input,"%s%*[^0-9]%lg\n",variableType,&value) != EOF)
+    while (fscanf(input,"%s%*[^0-9-]%lg\n",variableType,&value) != EOF)
     {
         switch(variableType[0])
         {

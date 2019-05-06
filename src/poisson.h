@@ -32,7 +32,7 @@ REAL    delUVbyDelZ(REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL de
 REAL    delFSqrdByDelZ(REAL **F, int i, int j, int z, REAL alpha, REAL delz);
 /* Compute derivatives needed in compFG */
 
-lattice*    simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, int option);
+lattice*    simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, int option, boundaryCond *bCond);
 /* Put all functions together and simulate the fluid */
 
 #endif /* POISSON_H_ */

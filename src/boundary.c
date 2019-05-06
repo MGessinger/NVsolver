@@ -40,21 +40,42 @@ void applyHomogeneousDirichletBC(REAL **p, int imax, int jmax)
     return;
 }
 
-void setBCond(double **U, double **V, int imax, int jmax)
+void setBCond(double **U, double **V, int imax, int jmax, boundaryCond *bCond)
 {
+    if (bCond == NULL) /* OUTFLOW on all four edges is the default. */
+    {
+        applyHomogeneousNeumannBC(U,imax-1,jmax);
+        applyHomogeneousNeumannBC(V,imax,jmax-1);
+        return;
+//        for (int i = 1; i <= imax; i++)
+//        {
+//            U[i][0] = -U[i][1];
+//            U[i][jmax+1] = -U[i][jmax];
+//            V[i][0] = 0;
+//            V[i][jmax] = 0;
+//        }
+//        for (int j = 1; j <= jmax; j++)
+//        {
+//            U[0][j] = 0;
+//            U[imax][j] = 0;
+//            V[0][j] = -V[1][j];
+//            V[imax+1][j] = -V[imax][j];
+//        }
+//        return;
+    }
     for (int i = 1; i <= imax; i++)
     {
-        U[i][0] = -U[i][1];
-        U[i][jmax+1] = 2-U[i][jmax];
-        V[i][0] = 0;
-        V[i][jmax] = 0;
+        U[i][0] = (bCond->wb == NOSLIP) ? -U[i][1] : U[i][1];
+        U[i][jmax+1] = (bCond->wt == NOSLIP) ? 2-U[i][jmax] : U[i][jmax];
+        V[i][0] = (bCond->wb == OUTFLOW) ? V[i][1] : 0;
+        V[i][jmax] = (bCond->wt == OUTFLOW) ? V[i][jmax-1] : 0;
     }
     for (int j = 1; j <= jmax; j++)
     {
-        U[0][j] = 0;
-        U[imax][j] = 0;
-        V[0][j] = -V[1][j];
-        V[imax+1][j] = -V[imax][j];
+        U[0][j] = (bCond->wl == OUTFLOW) ? U[1][j] : 0;
+        U[imax][j] = (bCond->wr == OUTFLOW) ? U[imax-1][j] : 0;
+        V[0][j] = (bCond->wl == NOSLIP) ? -V[1][j] : V[1][j];
+        V[imax+1][j] = (bCond->wr == NOSLIP) ? -V[imax][j] : V[imax][j];
     }
     return;
 }

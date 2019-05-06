@@ -247,7 +247,7 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, int imax, int jmax,
     return;
 }
 
-lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, int opt)
+lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, int opt, boundaryCond *bCond)
 {
     int n = 1;
     lattice *grid = malloc(sizeof(lattice));
@@ -285,7 +285,7 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     {
         /* Update all parameters and fields for the iteration */
         compDelt(&delt,grid->imax,grid->jmax,delx,dely,*U,*V,simulation.Re,tau);
-        setBCond(*U,*V,grid->imax,grid->jmax);
+        setBCond(*U,*V,grid->imax,grid->jmax,bCond);
         compFG(*U,*V,F,G,grid->imax,grid->jmax,delt,delx,dely,&simulation);
         compRHS(F,G,RHS,grid->imax,grid->jmax,delx,dely,delt);
         /* Solve the Poisson Equation */
