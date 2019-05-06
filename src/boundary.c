@@ -47,26 +47,11 @@ void setBCond(double **U, double **V, int imax, int jmax, boundaryCond *bCond)
         applyHomogeneousNeumannBC(U,imax-1,jmax);
         applyHomogeneousNeumannBC(V,imax,jmax-1);
         return;
-//        for (int i = 1; i <= imax; i++)
-//        {
-//            U[i][0] = -U[i][1];
-//            U[i][jmax+1] = -U[i][jmax];
-//            V[i][0] = 0;
-//            V[i][jmax] = 0;
-//        }
-//        for (int j = 1; j <= jmax; j++)
-//        {
-//            U[0][j] = 0;
-//            U[imax][j] = 0;
-//            V[0][j] = -V[1][j];
-//            V[imax+1][j] = -V[imax][j];
-//        }
-//        return;
     }
     for (int i = 1; i <= imax; i++)
     {
         U[i][0] = (bCond->wb == NOSLIP) ? -U[i][1] : U[i][1];
-        U[i][jmax+1] = (bCond->wt == NOSLIP) ? 2-U[i][jmax] : U[i][jmax];
+        U[i][jmax+1] = (bCond->wt == NOSLIP) ? -U[i][jmax] : U[i][jmax];
         V[i][0] = (bCond->wb == OUTFLOW) ? V[i][1] : 0;
         V[i][jmax] = (bCond->wt == OUTFLOW) ? V[i][jmax-1] : 0;
     }
@@ -78,4 +63,17 @@ void setBCond(double **U, double **V, int imax, int jmax, boundaryCond *bCond)
         V[imax+1][j] = (bCond->wr == NOSLIP) ? -V[imax][j] : V[imax][j];
     }
     return;
+}
+
+void setSpecBCond(REAL **U, REAL **V, int imax, int jmax, char *problem)
+{
+    if (problem == NULL)
+        return;
+    if (strcmp(problem,"Driven Cavity"))
+    {
+        for (int i = 1; i <= imax; i++)
+            U[i][jmax+1] = 2-U[i][jmax];
+    }
+    return;
+    V = V;
 }

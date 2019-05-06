@@ -265,6 +265,7 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     else
         del_vec = simulation.t_end*2;
     printf("Computing Reynoldsnumber %lg.\n",simulation.Re);
+
     /* Simulated Grids: */
     *P = createMatrix(grid->imax+2,grid->jmax+2);
     *U = createMatrix(grid->imax+2,grid->jmax+2);
@@ -274,6 +275,7 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     REAL **G = createMatrix(grid->imax+1,grid->jmax+1);
     /* RHS is used for the *Poisson-Solver so no ghost cells are neccessary */
     REAL **RHS = createMatrix(grid->imax,grid->jmax);
+
     /* Error checking */
     if (U == NULL || V == NULL || P == NULL)
         return grid;
@@ -286,12 +288,15 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
         /* Update all parameters and fields for the iteration */
         compDelt(&delt,grid->imax,grid->jmax,delx,dely,*U,*V,simulation.Re,tau);
         setBCond(*U,*V,grid->imax,grid->jmax,bCond);
+        setSpecBCond(*U,*V,grid->imax,grid->jmax,"Driven Cavity");
         compFG(*U,*V,F,G,grid->imax,grid->jmax,delt,delx,dely,&simulation);
         compRHS(F,G,RHS,grid->imax,grid->jmax,delx,dely,delt);
+
         /* Solve the Poisson Equation */
         solveSORforPoisson(*P,RHS,simulation.omega,simulation.eps,simulation.itmax,1,grid);
         /* Update U and V through F,G and P */
         adaptUV(*U,*V,*P,F,G,delt,delx,dely,grid->imax,grid->jmax);
+
         if (time > del_vec*n)
         {
             outputVec(*U,*V,*P,grid,n);
