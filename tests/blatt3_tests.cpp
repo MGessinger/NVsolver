@@ -18,7 +18,8 @@ TEST(Simulation,Initialisation)
     REAL delx, dely, delt;
     REAL tau, UI, VI, PI;
     /* Must cast to char* explicitly because C++ is a pile of shit */
-    int vars = readParameters((char*)"dcavity.par",&grid,&fluid,&delx,&dely,&delt,&tau,&UI,&VI,&PI);
+    char problem[128];
+    int vars = readParameters((char*)"dcavity.par",&grid,&fluid,&delx,&dely,&delt,&tau,&UI,&VI,&PI,problem);
     ASSERT_EQ(vars,17);
     EXPECT_EQ(delx,0.2);
     EXPECT_EQ(dely,0.2);
@@ -39,7 +40,8 @@ TEST(Simulation,Initialisation)
 TEST(Simulation,TrivialFluid)
 {
     REAL **U, **V, **P;
-    lattice *grid = simulateFluid(&U,&V,&P,"empty.par", SILENT,NULL);
+    lattice *grid = simulateFluid(&U,&V,&P,"empty.par",PRINT,NULL);
+    outputVec(U,V,P,grid,0);
     REAL **zero = createMatrix(grid->imax+2,grid->jmax+2);
     EXPECT_TRUE(isEqual2Dfield(U,zero,grid->imax+2,grid->jmax+2,1e-3));
 

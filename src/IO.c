@@ -259,7 +259,7 @@ int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
     char variableType[128];
     REAL value;
     int readVars = 0;
-    if (fscanf(input,"%[^\n]\n",problem) == 0)
+    if (fscanf(input,"%[^\n\r]\n",problem) == 0)
         printf("The problem could not be detected. Assuming trivial fluid.\n");
     else
         printf("Initialising problem %s\n",problem);

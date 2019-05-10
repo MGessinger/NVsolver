@@ -254,6 +254,8 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     /* Read prameters from a file */
     if (readParameters(fileName,grid,&simulation,&delx,&dely,&delt,&tau,&UI,&VI,&PI,problem) < 17)
         return grid;
+    if (bCond == NULL)
+        bCond = createBoundCond(grid->imax,grid->jmax,NOSLIP,NOSLIP,NOSLIP,NOSLIP);
     REAL del_vec;
     if (opt >= OUTPUT)
         del_vec = simulation.t_end/(opt/OUTPUT);
@@ -283,7 +285,7 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
         /* Update all parameters and fields for the iteration */
         compDelt(&delt,grid->imax,grid->jmax,delx,dely,*U,*V,simulation.Re,tau);
         setBCond(*U,*V,grid->imax,grid->jmax,bCond);
-        setSpecBCond(*U,*V,grid->imax,grid->jmax,"Driven Cavity");
+        setSpecBCond(*U,*V,grid->imax,grid->jmax,problem);
         compFG(*U,*V,F,G,grid->imax,grid->jmax,delt,delx,dely,&simulation);
         compRHS(F,G,RHS,grid->imax,grid->jmax,delx,dely,delt);
 
