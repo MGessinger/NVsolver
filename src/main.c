@@ -25,7 +25,7 @@ int main (int argc, char **argv)
 {
     REAL **U, **V, **P;
     int out = (argc >= 3) ? atoi(argv[2]) : 10;
-    boundaryCond bCond = (boundaryCond){.wt = NOSLIP, .wb = FREESLIP, .wr = FREESLIP, .wl = FREESLIP};
+    boundaryCond bCond = createBoundCond(0,0,NOSLIP,NOSLIP,NOSLIP,NOSLIP);
     lattice *grid = simulateFluid(&U,&V,&P,(argc >= 2 ? argv[1] : "dcavity.par"),PRINT | out*OUTPUT, &bCond);
     outputVec(U,V,P,grid,0);
     /* Destroy simulated grids */

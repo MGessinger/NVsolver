@@ -1,11 +1,11 @@
 #include "boundary.h"
 
-boundaryCond* createBoundCond(lattice *grid, int wl, int wr, int wt, int wb)
+boundaryCond* createBoundCond(int imax, int jmax, int wl, int wr, int wt, int wb)
 {
     boundaryCond *bCond = malloc(sizeof(boundaryCond));
     if (bCond == NULL)
         return NULL;
-    bCond->FLAG = create2DIntegerField(grid->imax+2,grid->jmax+2);
+    bCond->FLAG = create2DIntegerField(imax,jmax);
     bCond->wl = wl;
     bCond->wr = wr;
     bCond->wt = wt;

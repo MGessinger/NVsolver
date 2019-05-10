@@ -26,7 +26,7 @@ typedef struct boundaryCondition {
 #define FREESLIP (1)
 #define OUTFLOW (2)
 
-boundaryCond* createBoundCond(lattice *grid, int wl, int wr, int wt, int wb);
+boundaryCond* createBoundCond(int imax, int jmax, int wl, int wr, int wt, int wb);
 void destroyBoundCond(boundaryCond *bCond, lattice *grid);
 /* Create and destroy a boundaryCond structure */
 
