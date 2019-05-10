@@ -69,7 +69,7 @@ void setSpecBCond(REAL **U, REAL **V, int imax, int jmax, char *problem)
 {
     if (problem == NULL)
         return;
-    if (strcmp(problem,"Driven Cavity"))
+    if (strcmp(problem,"Driven Cavity") == 0)
     {
         for (int i = 1; i <= imax; i++)
             U[i][jmax+1] = 2-U[i][jmax];

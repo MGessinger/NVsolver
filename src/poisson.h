@@ -12,7 +12,7 @@
 REAL**  create2DpoissonMatrix (REAL ilength, REAL jlength, int imax, int jmax);
 /* Compute the 2D-Laplacian in discrete form */
 
-void    solveSOR (REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REAL epsilon, int itermax);
+int     solveSOR(REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REAL epsilon, int itermax);
 int     solveSORforPoisson (REAL **p, REAL **rhs, REAL omega, REAL epsilon, int itermax, int useNeumann, lattice *grid);
 /* Solve Ax = b for x. solveSORforPoisson uses an optimised algorithm for this application. useNeumann
  * toggles whether homogeneous Neumann (1) or Dirichlet (0) boundary conditions are to be used for p. */

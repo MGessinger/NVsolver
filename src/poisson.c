@@ -33,17 +33,15 @@ REAL** create2DpoissonMatrix(REAL ilength, REAL jlength, int imax, int jmax)
     return B;
 }
 
-void solveSOR(REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REAL epsilon, int itermax)
+int solveSOR(REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REAL epsilon, int itermax)
 {
     if (rows != cols)
     {
-        printf("The matrix has to be quadratic!");
-        return;
+        return 0;
     }
     if (A == NULL || x == NULL || b == NULL)
     {
-        printf("An input field is NULL. Please Check your input.\n");
-        return;
+        return 0;
     }
     REAL DeltaX, error;
     int it = 0;
@@ -57,16 +55,13 @@ void solveSOR(REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REAL e
             error += DeltaX*DeltaX;
             if (error >= 1e100)
             {
-                printf("The error is exploding. Attempting to restart with x = 0 and omega = 1.\n");
                 fill1Dfield(0,x,cols);
-                solveSOR(A,x,b,rows,cols,1,epsilon,itermax);
-                return;
+                return solveSOR(A,x,b,rows,cols,1,epsilon,itermax);
             }
         }
         it++;
     } while (sqrt(error) > epsilon && it < itermax);
-    printf("The algorithm was iterated %i times.\n",it);
-    return;
+    return it;
 }
 
 int solveSORforPoisson(REAL **p, REAL **rhs, REAL omega, REAL epsilon,
@@ -74,7 +69,6 @@ int solveSORforPoisson(REAL **p, REAL **rhs, REAL omega, REAL epsilon,
 {
     if (p == NULL || rhs == NULL)
     {
-        printf("An input field is invalid. Please check your input.\n");
         return 0;
     }
     int it = 0;
@@ -256,8 +250,9 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     fluidSim simulation;
     REAL delx, dely, delt;
     REAL tau, UI, VI, PI;
+    char problem[128];
     /* Read prameters from a file */
-    if (readParameters(fileName,grid,&simulation,&delx,&dely,&delt,&tau,&UI,&VI,&PI) < 17)
+    if (readParameters(fileName,grid,&simulation,&delx,&dely,&delt,&tau,&UI,&VI,&PI,problem) < 17)
         return grid;
     REAL del_vec;
     if (opt >= OUTPUT)
