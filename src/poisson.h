@@ -17,15 +17,14 @@ int     solveSORforPoisson (REAL **p, REAL **rhs, REAL omega, REAL epsilon, int 
 /* Solve Ax = b for x. solveSORforPoisson uses an optimised algorithm for this application. useNeumann
  * toggles whether homogeneous Neumann (1) or Dirichlet (0) boundary conditions are to be used for p. */
 
-void    compDelt (REAL *delt, REAL imax, REAL jmax, REAL delx, REAL dely, REAL **U, REAL **V, REAL Re, REAL tau);
+void    compDelt (REAL *delt, lattice *grid, REAL **U, REAL **V, REAL Re, REAL tau);
 /* Copute the next iteration of delt */
 
-void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, int imax, int jmax,
-                REAL delt, REAL delx, REAL dely, fluidSim *simulation);
-void    compRHS (REAL **F, REAL **G, REAL **RHS, int imax, int jmax, REAL delx, REAL dely, REAL delt);
+void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt, lattice *grid, fluidSim *simulation);
+void    compRHS (REAL **F, REAL **G, REAL **RHS, lattice *grid, REAL delt);
 /* Compute the RHS of the poisson equation */
 
-void    adaptUV (REAL **U, REAL **V, REAL **P, REAL **F, REAL **G, REAL delt, REAL delx, REAL dely, int imax, int jmax);
+void    adaptUV (REAL **U, REAL **V, REAL **P, REAL **F, REAL **G, REAL delt, short **FLAG, lattice *grid);
 /* Update the values of U and V */
 
 REAL    delUVbyDelZ(REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL delz);

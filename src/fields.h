@@ -31,11 +31,11 @@ void	applyFunctionTo1Dfield (REAL (*func)(REAL), REAL *field, int size);
 void	applyFunctionTo2Dfield (REAL (*func)(REAL), REAL **field, int sizeX, int sizeY);
 /* Applies a given funtion to every entry of field */
 
-REAL**  sampleFDgridOnCellCorners (REAL (*func)(REAL,REAL), REAL ilength, REAL jlength,int imax, int jmax);
-REAL**  sampleFDgridOnCellCenters (REAL (*func)(REAL,REAL), REAL ilength, REAL jlength,int imax, int jmax);
+REAL**  sampleFDgridOnCellCorners (REAL (*func)(REAL,REAL), lattice *grid);
+REAL**  sampleFDgridOnCellCenters (REAL (*func)(REAL,REAL), lattice *grid);
 /* Returns a matrix containing the discrete values of func on a lattice */
 
-void    initUVP(REAL **U, REAL **V, REAL **P, int imax, int jmax, REAL UI, REAL VI, REAL PI);
+void    initUVP(REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, REAL UI, REAL VI, REAL PI);
 /* Initialise the fields U, V and P to UI, VI and PI respectively */
 
 #endif /* FIELDS_H_ */

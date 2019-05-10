@@ -13,11 +13,11 @@ boundaryCond* createBoundCond(int imax, int jmax, int wl, int wr, int wt, int wb
     return bCond;
 }
 
-void destroyBoundCond(boundaryCond *bCond, lattice *grid)
+void destroyBoundCond(boundaryCond *bCond, int imax)
 {
     if (bCond == NULL)
         return;
-    destroy2DIntegerField(bCond->FLAG,grid->imax);
+    destroy2DIntegerField(bCond->FLAG,imax);
     free(bCond);
     return;
 }
@@ -84,6 +84,13 @@ void setBCond(REAL **U, REAL **V, int imax, int jmax, boundaryCond *bCond)
         V[0][j] = (bCond->wl == NOSLIP) ? -V[1][j] : V[1][j];
         V[imax+1][j] = (bCond->wr == NOSLIP) ? -V[imax][j] : V[imax][j];
     }
+    for (int i = 1; i <= imax; i++)
+        for (int j = 1; j <= jmax; j++)
+        {
+            if (bCond->FLAG[i][j] == C_F)
+                continue;
+            /* Set boundary conditions */
+        }
     return;
 }
 

@@ -61,18 +61,16 @@ int imax = 20, jmax = 20;
 
 TEST(Poisson,NaiveSolver)
 {
-    REAL ilength = 1, jlength = 2;
-    REAL dx = ilength/(imax+1);
-    REAL dy = jlength/(jmax+1);
-    REAL **A = create2DpoissonMatrix(ilength,jlength,imax,jmax);
+    lattice grid = (lattice){ .imax = imax, .jmax = jmax, .delx = 1./21, .dely = 1./21};
+    REAL **A = create2DpoissonMatrix(1,1,imax,jmax);
     REAL *x = createVector(imax*jmax);
     REAL *b = createVector(imax*jmax);
     fill1Dfield(1,x,imax*jmax);
     for (int i = 0; i < imax; i++)
         for (int j = 0; j < jmax; j++)
-            b[i*jmax+j] = -f((i+1)*dx,(j+1)*dy);
+            b[i*jmax+j] = -f((i+1)*grid.delx,(j+1)*grid.dely);
     solveSOR(A,x,b,imax*jmax,imax*jmax,1.7,1e-10,5000);
-    REAL **fGrid = sampleFDgridOnCellCorners(f_act,ilength,jlength,imax,jmax);
+    REAL **fGrid = sampleFDgridOnCellCorners(f_act,&grid);
     REAL diff = 0;
 
     for (int i = 0; i < imax; i++)
@@ -83,7 +81,7 @@ TEST(Poisson,NaiveSolver)
         }
     diff = sqrt(diff);
     printf("The error for the naive one was %lg.\n",diff);
-    EXPECT_LE(diff,(ilength*ilength/imax+jlength*jlength/jmax));
+    EXPECT_LE(diff,grid.delx+grid.dely);
     destroyMatrix(A,imax*jmax);
     destroyMatrix(fGrid,imax);
     destroyVector(x);
@@ -93,10 +91,10 @@ TEST(Poisson,NaiveSolver)
 
 TEST(Poisson,EfficientSolver)
 {
-    lattice grid = (lattice){.xlength = 1, .ylength = 1, .imax = imax, .jmax = jmax};
+    lattice grid = (lattice){ .imax = imax, .jmax = jmax, .delx = 0.05, .dely = 0.05};
     REAL **p = createMatrix(imax+2,jmax+2);
-    REAL **rhs = sampleFDgridOnCellCenters(f,grid.xlength,grid.ylength,imax,jmax);
-    REAL **F = sampleFDgridOnCellCenters(f_act,grid.xlength,grid.ylength,imax,jmax);
+    REAL **rhs = sampleFDgridOnCellCenters(f,&grid);
+    REAL **F = sampleFDgridOnCellCenters(f_act,&grid);
     fill2Dfield(1,p,imax+2,jmax+2);
     int it = solveSORforPoisson(p,rhs,1.7,1e-10,5000,0,&grid);
     REAL diff = 0;
@@ -108,9 +106,7 @@ TEST(Poisson,EfficientSolver)
         }
     diff = sqrt(diff);
     printf("The efficient algorithm was executed %i times barring an error of %lg.\n",it,diff);
-    REAL DX = grid.xlength*grid.xlength/imax;
-    REAL DY = grid.ylength*grid.ylength/jmax;
-    EXPECT_LE(diff,DX+DY);
+    EXPECT_LE(diff,grid.delx+grid.dely);
     destroyMatrix(p,imax+2);
     destroyMatrix(rhs,imax);
     destroyMatrix(F,imax);

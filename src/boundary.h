@@ -27,7 +27,7 @@ typedef struct boundaryCondition {
 #define OUTFLOW (2)
 
 boundaryCond *createBoundCond(int imax, int jmax, int wl, int wr, int wt, int wb);
-void destroyBoundCond(boundaryCond *bCond, lattice *grid);
+void    destroyBoundCond(boundaryCond *bCond, int imax);
 /* Create and destroy a boundaryCond structure */
 
 void    applyHomogeneousNeumannBC (REAL **p, int imax, int jmax);

@@ -4,15 +4,15 @@
 #define REAL double
 
 typedef struct lattice {
-    REAL xlength;
-    REAL ylength;
     int imax;
     int jmax;
+    REAL delx;
+    REAL dely;
 } lattice;
 
 typedef struct fluidSimulation {
     REAL Re;
-    REAL t_end;
+    REAL tau;
     REAL GX;
     REAL GY;
     REAL eps;

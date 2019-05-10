@@ -250,7 +250,7 @@ void writeVTKfileFor2DvectorField(const char* fileName, const char* description,
 }
 
 int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
-                   REAL *delx, REAL *dely, REAL *delt, REAL *tau,
+                   REAL *delt, REAL *t_end,
                    REAL *UI, REAL *VI, REAL *PI, char *problem)
 {
     FILE *input = open_file(inputFile,"r");
@@ -258,20 +258,21 @@ int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
         return 0;
     char variableType[128];
     REAL value;
+    REAL xlength = 0, ylength = 0;
     int readVars = 0;
     if (fscanf(input,"%[^\n\r]\n",problem) == 0)
         printf("The problem could not be detected. Assuming trivial fluid.\n");
     else
-        printf("Initialising problem %s\n",problem);
+        printf("Initialising problem \"%s\"\n",problem);
     while (fscanf(input,"%s%*[^0-9-]%lg\n",variableType,&value) != EOF)
     {
         switch(variableType[0])
         {
         case 'x':
-            grid->xlength = value;
+            xlength = value;
             break;
         case 'y':
-            grid->ylength = value;
+            ylength = value;
             break;
         case 'i':
             if (variableType[1] == 'm') grid->imax = (int)value;
@@ -293,8 +294,8 @@ int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
             *delt = value;
             break;
         case 't':
-            if (variableType[1] == '_') fluid->t_end = value;
-            else *tau = value;
+            if (variableType[1] == '_') *t_end = value;
+            else fluid->tau = value;
             break;
         case 'R':
             fluid->Re = value;
@@ -318,8 +319,8 @@ int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
         }
         readVars++;
     }
-    *delx = grid->xlength/grid->imax;
-    *dely = grid->ylength/grid->jmax;
+    grid->delx = xlength/grid->imax;
+    grid->dely = ylength/grid->jmax;
     fclose(input);
     return readVars;
 }
@@ -332,8 +333,6 @@ void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
     int jmax = grid->jmax;
     REAL **S = createMatrix(imax,jmax);
     REAL **T = createMatrix(imax,jmax);
-    REAL dx = grid->xlength/imax;
-    REAL dy = grid->ylength/jmax;
     char fileName[64];
     if (P != NULL)
     {
@@ -342,7 +341,7 @@ void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
         for (int i = 0;  i < imax; i++)
             for (int j = 0; j < jmax; j++)
                 T[i][j] = P[i+1][j+1];
-        writeVTKfileFor2DscalarField(fileName,"pressurefield",T,imax,jmax,dx,dy);
+        writeVTKfileFor2DscalarField(fileName,"pressurefield",T,imax,jmax,grid->delx,grid->dely);
     }
     if (U == NULL || V == NULL)
     {
@@ -358,7 +357,7 @@ void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
             T[i-1][j-1] = (U[i][j] + U[i-1][j])/2;
             S[i-1][j-1] = (V[i][j] + V[i][j-1])/2;
         }
-    writeVTKfileFor2DvectorField(fileName,"momentumfield",T,S,imax,jmax,dx,dy);
+    writeVTKfileFor2DvectorField(fileName,"momentumfield",T,S,imax,jmax,grid->delx,grid->dely);
     destroyMatrix(T,imax);
     destroyMatrix(S,imax);
     return;
