@@ -1,5 +1,27 @@
 #include "boundary.h"
 
+boundaryCond* createBoundCond(lattice *grid, int wl, int wr, int wt, int wb)
+{
+    boundaryCond *bCond = malloc(sizeof(boundaryCond));
+    if (bCond == NULL)
+        return NULL;
+    bCond->FLAG = create2DIntegerField(grid->imax+2,grid->jmax+2);
+    bCond->wl = wl;
+    bCond->wr = wr;
+    bCond->wt = wt;
+    bCond->wb = wb;
+    return bCond;
+}
+
+void destroyBoundCond(boundaryCond *bCond, lattice *grid)
+{
+    if (bCond == NULL)
+        return;
+    destroy2DIntegerField(bCond->FLAG,grid->imax);
+    free(bCond);
+    return;
+}
+
 void applyHomogeneousNeumannBC(REAL **p, int imax, int jmax)
 {
     if (p == NULL)
@@ -40,7 +62,7 @@ void applyHomogeneousDirichletBC(REAL **p, int imax, int jmax)
     return;
 }
 
-void setBCond(double **U, double **V, int imax, int jmax, boundaryCond *bCond)
+void setBCond(REAL **U, REAL **V, int imax, int jmax, boundaryCond *bCond)
 {
     if (bCond == NULL) /* OUTFLOW on all four edges is the default. */
     {
@@ -76,4 +98,19 @@ void setSpecBCond(REAL **U, REAL **V, int imax, int jmax, char *problem)
     }
     return;
     V = V;
+}
+
+void initFlags(const char *problem, short **FLAG, int imax, int jmax)
+{
+    if (strcmp(problem,"Step") == 0)
+        for (int i = 1; i <= imax/2; i++)
+            for (int j = 1; j <= jmax/2; j++)
+            {
+                FLAG[i][j] |= C_B;
+                if (i == imax/2)
+                    FLAG[i][j] |= B_W;
+                if (j == jmax/2)
+                    FLAG[i][j] |= B_N;
+            }
+    return;
 }

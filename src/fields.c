@@ -30,7 +30,7 @@ short** create2DIntegerField(int imax, int jmax)
     if (imax <= 0 || jmax <= 0)
         return NULL;
     short **matrix = malloc(imax*sizeof(short*));
-    for (int i = 0; i < sizeX; i++)
+    for (int i = 0; i < imax; i++)
     {
         matrix[i] = malloc(jmax*sizeof(short));
         if (matrix[i] == NULL)
@@ -38,6 +38,8 @@ short** create2DIntegerField(int imax, int jmax)
             destroy2DIntegerField(matrix,i);
             return NULL;
         }
+        for (int j = 0; j < jmax; j++)
+            matrix[i][j] = 0;
     }
     return matrix;
 }
