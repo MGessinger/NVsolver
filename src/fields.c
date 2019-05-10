@@ -25,6 +25,23 @@ REAL** create2Dfield(int sizeX, int sizeY)
     return matrix;
 }
 
+int** create2DIntegerField(int imax, int jmax)
+{
+    if (imax <= 0 || jmax <= 0)
+        return NULL;
+    REAL **matrix = malloc(imax*sizeof(int*));
+    for (int i = 0; i < sizeX; i++)
+    {
+        matrix[i] = malloc(jmax*sizeof(int));
+        if (matrix[i] == NULL)
+        {
+            destroy2DIntegerField(matrix,i);
+            return NULL;
+        }
+    }
+    return matrix;
+}
+
 REAL* createVector(int len)
 {
     return create1Dfield(len);
@@ -37,17 +54,31 @@ REAL** createMatrix(int rows, int cols)
 
 void destroy1Dfield(REAL* field)
 {
-    if (field == NULL) return;
+    if (field == NULL)
+        return;
     free(field);
     return;
 }
 
 void destroy2Dfield(REAL** field, int sizeX)
 {
-    if (field == NULL) return;
+    if (field == NULL)
+        return;
     for (int i = 0; i < sizeX; i++)
     {
         destroy1Dfield(field[i]);
+    }
+    free(field);
+    return;
+}
+
+void destroy2DIntegerField(int **field, int imax)
+{
+    if (field == NULL)
+        return;
+    for (int i = 0; i < imax; i++)
+    {
+        free(field[i]);
     }
     free(field);
     return;
@@ -65,7 +96,8 @@ void destroyMatrix(REAL** matrix, int rows)
 
 void fill1Dfield(REAL value, REAL* field, int size)
 {
-    if (field == NULL) return;
+    if (field == NULL)
+        return;
     for (int i = 0; i < size; i++)
     {
         field[i] = value;
@@ -75,7 +107,8 @@ void fill1Dfield(REAL value, REAL* field, int size)
 
 void fill2Dfield(REAL value, REAL** field, int sizeX, int sizeY)
 {
-    if (field == NULL) return;
+    if (field == NULL)
+        return;
     for (int i = 0; i < sizeX; i++)
     {
         fill1Dfield(value,field[i],sizeY);
@@ -86,13 +119,15 @@ void fill2Dfield(REAL value, REAL** field, int sizeX, int sizeY)
 int isEqualScalar(REAL x, REAL y, REAL eps)
 {
     /* In any case, one of these inequalities is trivial, but both have to hold */
-    if (x-y <= eps && y-x <= eps) return 1;
+    if (x-y <= eps && y-x <= eps)
+        return 1;
     return 0;
 }
 
 int isEqual1Dfield(REAL* field1, REAL* field2, int size, REAL eps)
 {
-    if (field1 == NULL || field2 == NULL) return 0;
+    if (field1 == NULL || field2 == NULL)
+        return 0;
     for (int i = 0; i < size; i++)
     {
         if (isEqualScalar(field1[i],field2[i],eps) == 0)
@@ -103,7 +138,8 @@ int isEqual1Dfield(REAL* field1, REAL* field2, int size, REAL eps)
 
 int isEqual2Dfield(REAL** field1, REAL** field2, int sizeX, int sizeY, REAL eps)
 {
-    if (field1 == NULL || field2 == NULL) return 0;
+    if (field1 == NULL || field2 == NULL)
+        return 0;
     for (int i = 0; i < sizeX; i++)
     {
         if (isEqual1Dfield(field1[i],field2[i],sizeY,eps) == 0)
@@ -114,8 +150,10 @@ int isEqual2Dfield(REAL** field1, REAL** field2, int sizeX, int sizeY, REAL eps)
 
 void applyFunctionTo1Dfield(REAL (*func)(REAL), REAL* field, int size)
 {
-    if (field == NULL) return;
-    if (func == NULL) return;
+    if (field == NULL)
+        return;
+    if (func == NULL)
+        return;
     for (int i = 0; i < size; i++)
         field[i] = func(field[i]);
     return;
@@ -123,8 +161,10 @@ void applyFunctionTo1Dfield(REAL (*func)(REAL), REAL* field, int size)
 
 void	applyFunctionTo2Dfield(REAL (*func)(REAL), REAL** field, int sizeX, int sizeY)
 {
-    if (field == NULL) return;
-    if (func == NULL) return;
+    if (field == NULL)
+        return;
+    if (func == NULL)
+        return;
     for (int i = 0; i < sizeX; i++)
         applyFunctionTo1Dfield(func,field[i],sizeY);
     return;

@@ -251,7 +251,7 @@ void writeVTKfileFor2DvectorField(const char* fileName, const char* description,
 
 int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
                    REAL *delx, REAL *dely, REAL *delt, REAL *tau,
-                   REAL *UI, REAL *VI, REAL *PI)
+                   REAL *UI, REAL *VI, REAL *PI, char *problem)
 {
     FILE *input = open_file(inputFile,"r");
     if (input == NULL)
@@ -259,6 +259,10 @@ int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
     char variableType[128];
     REAL value;
     int readVars = 0;
+    if (fscanf(input,"%[^\n]\n",problem) == 0)
+        printf("The problem could not be detected. Assuming trivial fluid.\n");
+    else
+        printf("Initialising problem %s\n",problem);
     while (fscanf(input,"%s%*[^0-9-]%lg\n",variableType,&value) != EOF)
     {
         switch(variableType[0])

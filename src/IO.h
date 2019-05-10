@@ -6,7 +6,7 @@
 #include "real.h"
 #include "fields.h"
 
-#define USER "matthias"
+#define USER "gessinge"
 
 FILE    *open_file (const char *fileName, const char *mode);
 /* Redirects fileName to the /data/ directory on the USB stick */
@@ -33,7 +33,7 @@ void    outputVec (REAL **U, REAL **V, REAL **P, lattice *grid, int n);
 /* Outputs the given fields as VTK file for visualisation with Paraview */
 
 int     readParameters (const char *inputFile, lattice *grid, fluidSim *fluid,
-                        REAL *delx, REAL *dely, REAL *delt, REAL *tau, REAL *UI, REAL *VI, REAL *PI);
+                        REAL *delx, REAL *dely, REAL *delt, REAL *tau, REAL *UI, REAL *VI, REAL *PI, char *problem);
 /* Read parameters for a simulation from inputFile */
 
 #endif /* IO_H_ */
