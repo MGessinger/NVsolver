@@ -25,14 +25,14 @@ REAL** create2Dfield(int sizeX, int sizeY)
     return matrix;
 }
 
-int** create2DIntegerField(int imax, int jmax)
+short** create2DIntegerField(int imax, int jmax)
 {
     if (imax <= 0 || jmax <= 0)
         return NULL;
-    REAL **matrix = malloc(imax*sizeof(int*));
+    short **matrix = malloc(imax*sizeof(short*));
     for (int i = 0; i < sizeX; i++)
     {
-        matrix[i] = malloc(jmax*sizeof(int));
+        matrix[i] = malloc(jmax*sizeof(short));
         if (matrix[i] == NULL)
         {
             destroy2DIntegerField(matrix,i);
@@ -72,7 +72,7 @@ void destroy2Dfield(REAL** field, int sizeX)
     return;
 }
 
-void destroy2DIntegerField(int **field, int imax)
+void destroy2DIntegerField(short **field, int imax)
 {
     if (field == NULL)
         return;
