@@ -5,7 +5,10 @@ boundaryCond* createBoundCond(int imax, int jmax, int wl, int wr, int wt, int wb
     boundaryCond *bCond = malloc(sizeof(boundaryCond));
     if (bCond == NULL)
         return NULL;
-    bCond->FLAG = create2DIntegerField(imax,jmax);
+    if (imax*jmax == 0)
+        bCond->FLAG = NULL;
+    else
+        bCond->FLAG = create2DIntegerField(imax,jmax);
     bCond->wl = wl;
     bCond->wr = wr;
     bCond->wt = wt;
@@ -64,7 +67,7 @@ void applyHomogeneousDirichletBC(REAL **p, int imax, int jmax)
 
 void setBCond(REAL **U, REAL **V, int imax, int jmax, boundaryCond *bCond)
 {
-    if (bCond == NULL) /* OUTFLOW on all four edges is the default. */
+    if (bCond == NULL) /* OUTFLOW on all four edges and trivial geometry is the default. */
     {
         applyHomogeneousNeumannBC(U,imax-1,jmax);
         applyHomogeneousNeumannBC(V,imax,jmax-1);
@@ -84,12 +87,66 @@ void setBCond(REAL **U, REAL **V, int imax, int jmax, boundaryCond *bCond)
         V[0][j] = (bCond->wl == NOSLIP) ? -V[1][j] : V[1][j];
         V[imax+1][j] = (bCond->wr == NOSLIP) ? -V[imax][j] : V[imax][j];
     }
+    short flag;
     for (int i = 1; i <= imax; i++)
         for (int j = 1; j <= jmax; j++)
         {
-            if (bCond->FLAG[i][j] == C_F)
+            flag = bCond->FLAG[i-1][j-1];
+            if (flag == C_F)
                 continue;
+            /* Deep inside an obstacle */
+            if (flag == C_B)
+            {
+                U[i][j] = V[i][j] = 0;
+                continue;
+            }
             /* Set boundary conditions */
+            switch (flag^C_B)
+            {
+            case B_N:
+                V[i][j] = 0;
+                U[i][j] = -U[i][j+1];
+                U[i-1][j] = -U[i-1][j+1];
+                break;
+            case B_O:
+                U[i][j] = 0;
+                V[i][j] = V[i+1][j];
+                V[i][j-1] = V[i+1][j-1];
+                break;
+            case B_S:
+                V[i][j-1] = 0;
+                U[i][j] = -U[i][j-1];
+                U[i-1][j] = -U[i-1][j-1];
+                break;
+            case B_W:
+                U[i-1][j] = 0;
+                V[i][j] = V[i-1][j];
+                V[i][j-1] = V[i-1][j-1];
+                break;
+            case B_N | B_O:
+                U[i][j] = V[i][j] = 0;
+                U[i-1][j] = -U[i-1][j+1];
+                V[i][j-1] = -V[i+1][j-1];
+                break;
+            case B_N | B_W:
+                U[i-1][j] = V[i][j] = 0;
+                U[i-1][j] = -U[i-1][j+1];
+                V[i][j-1] = V[i-1][j-1];
+                break;
+            case B_S | B_O:
+                U[i][j] = V[i][j-1] = 0;
+                U[i-1][j] = -U[i-1][j-1];
+                V[i][j-1] = V[i+1][j-1];
+                break;
+            case B_S | B_W:
+                U[i-1][j] = V[i][j-1] = 0;
+                U[i-1][j] = -U[i-1][j-1];
+                V[i][j-1] = V[i-1][j-1];
+                break;
+            default:
+                U[i][j] = V[i][j] = 0;
+                break;
+            }
         }
     return;
 }
@@ -102,22 +159,58 @@ void setSpecBCond(REAL **U, REAL **V, int imax, int jmax, char *problem)
     {
         for (int i = 1; i <= imax; i++)
             U[i][jmax+1] = 2-U[i][jmax];
+        return;
+    }
+    if (strcmp(problem,"Step") == 0)
+    {
+        for (int j = jmax/2; j <= jmax; j++)
+        {
+            U[0][j] = 1;
+            V[0][j] = V[1][j];
+        }
+        return;
+    }
+    if (strcmp(problem,"Tunnel") == 0 || strcmp(problem,"Von Karman") == 0)
+    {
+        for (int j = 0; j <= jmax+1; j++)
+        {
+            U[0][j] = 1;
+        }
+        return;
     }
     return;
-    V = V;
 }
 
 void initFlags(const char *problem, short **FLAG, int imax, int jmax)
 {
     if (strcmp(problem,"Step") == 0)
-        for (int i = 1; i <= imax/2; i++)
-            for (int j = 1; j <= jmax/2; j++)
+    {
+        for (int i = 0; i < jmax/2; i++)
+            for (int j = 0; j < jmax/2; j++)
+                FLAG[i][j] = C_B;
+    }
+    else if (strcmp(problem,"Von Karman") == 0){
+        for (int i = jmax/3; i < (2*jmax)/3; i++)
+            for (int j = -(jmax/4)/2; j <= (jmax/4)/2; j++)
             {
-                FLAG[i][j] |= C_B;
-                if (i == imax/2)
-                    FLAG[i][j] |= B_W;
-                if (j == jmax/2)
-                    FLAG[i][j] |= B_N;
+                if (i+j < jmax/3 || i+j >= 2*jmax/3)
+                    continue;
+                FLAG[i+j][i] = C_B;
             }
+    }
+    for (int i = 0; i < imax; i++)
+        for (int j = 0; j < jmax; j++)
+        {
+            if (FLAG[i][j] == C_F)
+                continue;
+            if (FLAG[i][j+1] == C_F)
+                FLAG[i][j] |= B_N;
+            else if (j != 0 && FLAG[i][j-1] == C_F)
+                FLAG[i][j] |= B_S;
+            if (FLAG[i+1][j] == C_F)
+                FLAG[i][j] |= B_O;
+            else if (i != 0 && FLAG[i-1][j] == C_F)
+                FLAG[i][j] |= B_W;
+        }
     return;
 }

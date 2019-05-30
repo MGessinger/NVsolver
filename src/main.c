@@ -23,18 +23,23 @@ void writeHorizontalAxis(REAL **U, int imax, int jmax)
 
 int main (int argc, char **argv)
 {
-    REAL **U, **V, **P;
+    REAL **U = NULL, **V = NULL, **P = NULL;
     int out = (argc >= 3) ? atoi(argv[2]) : 10;
-    boundaryCond *bCond = createBoundCond(0,0,NOSLIP,NOSLIP,NOSLIP,NOSLIP);
+    boundaryCond *bCond = createBoundCond(0,0,NOSLIP,OUTFLOW,NOSLIP,NOSLIP);
     lattice *grid = simulateFluid(&U,&V,&P,(argc >= 2 ? argv[1] : "dcavity.par"),PRINT | out*OUTPUT, bCond);
     outputVec(U,V,P,grid,0);
-    writeHorizontalAxis(U,grid->imax,grid->jmax);
     /* Destroy simulated grids */
-    destroyMatrix(U,grid->imax+2);
-    destroyMatrix(V,grid->imax+2);
-    destroyMatrix(P,grid->imax+2);
-    destroyBoundCond(bCond,grid->imax+2);
     if (grid != NULL)
+    {
+        destroyMatrix(U,grid->imax+2);
+        destroyMatrix(V,grid->imax+2);
+        destroyMatrix(P,grid->imax+2);
+        destroyBoundCond(bCond,grid->imax);
         free(grid);
+    }
+    else
+    {
+        destroyBoundCond(bCond,0);
+    }
     return 0;
 }

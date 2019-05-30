@@ -40,7 +40,7 @@ void print2Dfield(REAL** field, int sizeX, int sizeY)
     {
         for (int i = 0; i < sizeX; i++)
         {
-            printf("%g\t",field[i][j]);
+            printf("%5g\t",field[i][j]);
         }
         printf("\n");
     }
@@ -255,7 +255,10 @@ int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
 {
     FILE *input = open_file(inputFile,"r");
     if (input == NULL)
+    {
+        printf("The requested file probably doesn't exist. Please check your input!\n");
         return 0;
+    }
     char variableType[128];
     REAL value;
     REAL xlength = 0, ylength = 0;

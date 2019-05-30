@@ -2,7 +2,8 @@
 
 REAL* create1Dfield(int size)
 {
-    if (size <= 0) return NULL;
+    if (size <= 0)
+        return NULL;
     REAL *array = malloc(size*sizeof(REAL));
     fill1Dfield(0,array,size);
     return array; /* Checking for NULL is done elsewhere */
@@ -10,7 +11,8 @@ REAL* create1Dfield(int size)
 
 REAL** create2Dfield(int sizeX, int sizeY)
 {
-    if (sizeX <= 0 || sizeY <= 0) return NULL;
+    if (sizeX <= 0 || sizeY <= 0)
+        return NULL;
     REAL **matrix = malloc(sizeX*sizeof(REAL*));
     for (int i = 0; i < sizeX; i++)
     {

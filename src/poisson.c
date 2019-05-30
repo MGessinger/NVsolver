@@ -64,27 +64,78 @@ int solveSOR(REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REAL ep
     return it;
 }
 
-int solveSORforPoisson(REAL **p, REAL **rhs, REAL omega, REAL epsilon,
+void applyPboundaryCond(REAL **P, int imax, int jmax, REAL dxSqrd, REAL dySqrd, short **FLAG)
+{
+    if (P == NULL || FLAG == NULL)
+        return;
+    for (int i = 1; i <= imax; i++)
+        for (int j = 1; j <= jmax; j++)
+        {
+            if (FLAG[i-1][j-1] == C_F)
+                continue;
+            else if (FLAG[i-1][j-1] == C_B)
+            {
+                P[i][j] = 0;
+                continue;
+            }
+            switch (FLAG[i-1][j-1] - C_B)
+            {
+            case B_N:
+                P[i][j] = P[i][j+1];
+                break;
+            case B_O:
+                P[i][j] = P[i+1][j];
+                break;
+            case B_S:
+                P[i][j] = P[i][j-1];
+                break;
+            case B_W:
+                P[i][j] = P[i-1][j];
+                break;
+            case (B_N | B_O):
+                P[i][j] = (dxSqrd*P[i][j+1] + dySqrd*P[i+1][j])/(dxSqrd + dySqrd);
+                break;
+            case (B_N | B_W):
+                P[i][j] = (dxSqrd*P[i][j+1] + dySqrd*P[i-1][j])/(dxSqrd + dySqrd);
+                break;
+            case (B_S | B_O):
+                P[i][j] = (dxSqrd*P[i][j-1] + dySqrd*P[i+1][j])/(dxSqrd + dySqrd);
+                break;
+            case (B_S | B_W):
+                P[i][j] = (dxSqrd*P[i][j-1] + dySqrd*P[i-1][j])/(dxSqrd + dySqrd);
+                break;
+            default:
+                P[i][j] = 0;
+            }
+
+        }
+    return;
+}
+
+int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG, REAL omega, REAL epsilon,
                         int itermax, int useNeumann, lattice *grid)
 {
-    if (p == NULL || rhs == NULL)
-    {
+    if (p == NULL || rhs == NULL || grid == NULL || FLAG == NULL)
         return 0;
-    }
     int it = 0;
     REAL temporary, error;
     REAL invXWidthSqrd = 1/(grid->delx*grid->delx);
     REAL invYWidthSqrd = 1/(grid->dely*grid->dely);
+    long numberOfCells = 0;
     do {
         /* Apply the boundary condition */
         if (useNeumann == 1)
             applyHomogeneousNeumannBC(p,grid->imax,grid->jmax);
         else
             applyHomogeneousDirichletBC(p,grid->imax,grid->jmax);
+        applyPboundaryCond(p,grid->imax,grid->jmax,invXWidthSqrd,invYWidthSqrd,FLAG);
         /* Compute the new coefficients iteratively */
         for (int i = 1; i <= grid->imax; i++)
             for (int j = 1; j <= grid->jmax; j++)
             {
+                if (FLAG[i-1][j-1] != C_F)
+                    continue;
+                numberOfCells++;
                 temporary = invXWidthSqrd*(p[i+1][j] + p[i-1][j]);
                 temporary += invYWidthSqrd*(p[i][j+1] + p[i][j-1]) - rhs[i-1][j-1];
                 temporary *= omega/(2*invXWidthSqrd+2*invYWidthSqrd);
@@ -95,14 +146,16 @@ int solveSORforPoisson(REAL **p, REAL **rhs, REAL omega, REAL epsilon,
         for (int i = 1; i <= grid->imax; i++)
             for (int j = 1; j <= grid->jmax; j++)
             {
+                if (FLAG[i-1][j-1] != C_F)
+                    continue;
                 temporary = invXWidthSqrd*(p[i+1][j] - 2*p[i][j] + p[i-1][j]);
                 temporary += invYWidthSqrd*(p[i][j+1] - 2*p[i][j] + p[i][j-1]);
                 temporary -= rhs[i-1][j-1];
                 error += temporary*temporary;
             }
-        error = error/(grid->imax*grid->jmax);
+        error = sqrt(error)/numberOfCells;
         it++;
-    } while (sqrt(error) > epsilon && it < itermax);
+    } while (error > epsilon && it < itermax);
     return it;
 }
 
@@ -111,7 +164,7 @@ REAL sqr(REAL x)
     return x*x;
 }
 
-void compDelt(REAL *delt, lattice *grid,  REAL **U, REAL **V, REAL Re, REAL tau)
+void compDelt(REAL *delt, lattice *grid, REAL **U, REAL **V, REAL Re, REAL tau)
 {
     if (tau <= 0)
         return;
@@ -133,7 +186,7 @@ void compDelt(REAL *delt, lattice *grid,  REAL **U, REAL **V, REAL Re, REAL tau)
     return;
 }
 
-void compRHS(REAL **F, REAL **G, REAL **RHS, lattice *grid, REAL delt)
+void compRHS(REAL **F, REAL **G, REAL **RHS, short **FLAG, lattice *grid, REAL delt)
 {
     if (F == NULL || G == NULL || RHS == NULL)
     {
@@ -143,6 +196,8 @@ void compRHS(REAL **F, REAL **G, REAL **RHS, lattice *grid, REAL delt)
     for (int i = 1; i <= grid->imax; i++)
         for (int j = 1; j <= grid->jmax; j++)
         {
+            if (FLAG[i-1][j-1] != C_F)
+                continue;
             RHS[i-1][j-1] = (F[i][j] - F[i-1][j])/(delt*(grid->delx));
             RHS[i-1][j-1] += (G[i][j] - G[i][j-1])/(delt*(grid->dely));
         }
@@ -155,10 +210,13 @@ void adaptUV(REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
     for (int i = 1; i <= grid->imax; i++)
         for (int j = 1; j <= grid->jmax; j++)
         {
-            if (FLAG[i][j] != C_F)
-                continue;
-            U[i][j] = F[i][j] - delt/grid->delx*(P[i+1][j] - P[i][j]);
-            V[i][j] = G[i][j] - delt/grid->dely*(P[i][j+1] - P[i][j]);
+            if (FLAG[i-1][j-1] != C_F)
+                U[i][j] = V[i][j] = 0;
+            else
+            {
+                U[i][j] = F[i][j] - delt/grid->delx*(P[i+1][j] - P[i][j]);
+                V[i][j] = G[i][j] - delt/grid->dely*(P[i][j+1] - P[i][j]);
+            }
         }
     return;
 }
@@ -207,19 +265,26 @@ REAL delFSqrdByDelZ(REAL **F, int i, int j, int z, REAL alpha, REAL delz)
 void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
                 lattice *grid, fluidSim *simulation)
 {
-    if (FLAG == NULL)
-        return;
     REAL d2ux, d2uy, d2vx, d2vy;
     REAL du2x, dv2y;
     REAL duvx, duvy;
-    copy(U[0],F[0],grid->imax+1);
+    short flag;
     for (int i = 1; i <= grid->imax; i++)
     {
         for (int j = 1; j <= grid->jmax; j++)
         {
-            if (FLAG[i][j] == C_B) /* Cells with no neighboring fluid cells */
+            flag = FLAG[i-1][j-1];
+            if (flag == C_B) /* Boundary cells with no neighboring fluid cells */
                 continue;
-            if (FLAG[i][j] == C_F) /* Pure fluid cells */
+            if (flag & B_N)     /* North */
+                G[i][j] = V[i][j];
+            if (flag & B_O)     /* East */
+                F[i][j] = U[i][j];
+            if (flag & B_S)     /* South */
+                G[i-1][j] = V[i-1][j];
+            if (flag & B_W)     /* West */
+                F[i-1][j] = U[i-1][j];
+            else    /* Pure fluid cells */
             {
                 d2ux = (U[i+1][j] - 2*U[i][j] + U[i-1][j])/sqr(grid->delx);
                 d2uy = (U[i][j+1] - 2*U[i][j] + U[i][j-1])/sqr(grid->dely);
@@ -228,19 +293,24 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
                 du2x = delFSqrdByDelZ(U,i,j,DERIVE_BY_X,simulation->alpha,grid->delx);
 
                 F[i][j] = U[i][j] + delt*((d2ux+d2uy)/simulation->Re - du2x - duvy + simulation->GX);
+
+                d2vx = (V[i+1][j] - 2*V[i][j] + V[i-1][j])/sqr(grid->delx);
+                d2vy = (V[i][j+1] - 2*V[i][j] + V[i][j-1])/sqr(grid->dely);
+
+                dv2y = delFSqrdByDelZ(V,i,j,DERIVE_BY_Y,simulation->alpha,grid->dely);
+                duvx = delUVbyDelZ(U,V,i,j,DERIVE_BY_X,simulation->alpha,grid->delx);
+
+                G[i][j] = V[i][j] + delt*((d2vx+d2vy)/simulation->Re - dv2y - duvx + simulation->GY);
             }
-            else
-                F[i][j] = U[i][j];
-            if (j == grid->jmax) /* G will not be updated for j == jmax */
-                continue;
-            d2vx = (V[i+1][j] - 2*V[i][j] + V[i-1][j])/sqr(grid->delx);
-            d2vy = (V[i][j+1] - 2*V[i][j] + V[i][j-1])/sqr(grid->dely);
-
-            dv2y = delFSqrdByDelZ(V,i,j,DERIVE_BY_Y,simulation->alpha,grid->dely);
-            duvx = delUVbyDelZ(U,V,i,j,DERIVE_BY_X,simulation->alpha,grid->delx);
-
-            G[i][j] = V[i][j] + delt*((d2vx+d2vy)/simulation->Re - dv2y - duvx + simulation->GY);
         }
+    }
+    for (int j = 1; j<= grid->jmax; j++)
+    {
+        F[0][j] = U[0][j];
+        F[grid->imax][j] = U[grid->imax][j];
+    }
+    for (int i = 1; i <= grid->imax; i++)
+    {
         G[i][0] = V[i][0];
         G[i][grid->jmax] = V[i][grid->jmax];
     }
@@ -259,11 +329,22 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     char problem[128];
     /* Read prameters from a file */
     if (readParameters(fileName,grid,&simulation,&delt,&t_end,&UI,&VI,&PI,problem) < 17)
-        return grid;
+    {
+        free(grid);
+        return NULL;
+    }
     if (bCond->FLAG == NULL)
     {
-        bCond->FLAG = create2DIntegerField(grid->imax+2,grid->jmax+2);
+        bCond->FLAG = create2DIntegerField(grid->imax,grid->jmax);
         initFlags(problem,bCond->FLAG,grid->imax,grid->jmax);
+        /*for (int i = 0; i < grid->imax; i++)
+        {
+            for (int j = 0; j < grid->jmax; j++)
+                printf("%hi,",bCond->FLAG[i][j]);
+            printf("\n");
+        }
+        if (getchar() == 'C')
+            return grid;*/
     }
     REAL del_vec;
     if (opt >= OUTPUT)
@@ -287,28 +368,23 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
         return grid;
     for (REAL time = 0; time <= t_end; time += delt)
     {
+        if (opt & PRINT)
+            printf("Time is at %lg seconds\n",time);
         /* Update all parameters and fields for the iteration */
-        compDelt(&delt,grid,*U,*V,simulation.Re,simulation.tau);
         setBCond(*U,*V,grid->imax,grid->jmax,bCond);
         setSpecBCond(*U,*V,grid->imax,grid->jmax,problem);
         compFG(*U,*V,F,G,bCond->FLAG,delt,grid,&simulation);
-        compRHS(F,G,RHS,grid,delt);
+        compRHS(F,G,RHS,bCond->FLAG,grid,delt);
 
         /* Solve the Poisson Equation */
-        printf("%i\n",solveSORforPoisson(*P,RHS,simulation.omega,simulation.eps,simulation.itmax*10,1,grid));
+        solveSORforPoisson(*P,RHS,bCond->FLAG,simulation.omega,simulation.eps,simulation.itmax,1,grid);
         /* Update U and V through F,G and P */
         adaptUV(*U,*V,*P,F,G,delt,bCond->FLAG,grid);
+        compDelt(&delt,grid,*U,*V,simulation.Re,simulation.tau);
 
         if (time > del_vec*n)
         {
             outputVec(*U,*V,*P,grid,++n);
-        }
-        if (opt & PRINT)
-            printf("Time is at %lg\n",time);
-        if (delt <= 1e-5)
-        {
-            printf("Aborting loop. Please verify the output for correctness.\n");
-            break;
         }
     }
     printf("[Simulation complete!]\n");

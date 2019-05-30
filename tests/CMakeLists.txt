@@ -19,6 +19,7 @@ set(TESTSOURCES
     blatt1_tests.cpp
     blatt2_tests.cpp
     blatt3_tests.cpp
+    blatt4_tests.cpp
 )
 
 # this is our executable for the unit tests
