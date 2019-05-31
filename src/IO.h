@@ -5,6 +5,7 @@
 #include <string.h>
 #include "real.h"
 #include "fields.h"
+#include "particle.h"
 
 #define USER "matthias"
 
@@ -29,7 +30,8 @@ void    writeVTKfileFor2DscalarField (const char* fileName, const char* descript
                                       REAL** field, int sizeX, int sizeY, REAL dx, REAL dy);
 void    writeVTKfileFor2DvectorField (const char* fileName, const char* description,
                                       REAL** fieldU, REAL** fieldV, int sizeX, int sizeY, REAL dx, REAL dy);
-void    outputVec (REAL **U, REAL **V, REAL **P, lattice *grid, int n);
+void    outputVec (REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int partcount, int n);
+void    WriteParticle (particle *parts, int partcount, int n);
 /* Outputs the given fields as VTK file for visualisation with Paraview */
 
 int     readParameters (const char *inputFile, lattice *grid, fluidSim *fluid, REAL *delt,

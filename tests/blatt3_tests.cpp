@@ -40,7 +40,7 @@ TEST(Simulation,TrivialFluid)
     REAL **U, **V, **P;
     boundaryCond *bCond = createBoundCond(0,0,NOSLIP,NOSLIP,NOSLIP,NOSLIP);
     lattice *grid = simulateFluid(&U,&V,&P,"empty.par",SILENT,bCond);
-    outputVec(U,V,P,grid,0);
+    outputVec(U,V,P,NULL,grid,0,0);
     REAL **zero = createMatrix(grid->imax+2,grid->jmax+2);
     EXPECT_TRUE(isEqual2Dfield(U,zero,grid->imax+2,grid->jmax+2,1e-3));
 
@@ -58,7 +58,7 @@ TEST(Simulation,Tunnel)
     REAL **U, **V, **P;
     boundaryCond *bCond = createBoundCond(0,0,NOSLIP,OUTFLOW,FREESLIP,FREESLIP);
     lattice *grid = simulateFluid(&U,&V,&P,"tunnel.par",SILENT,bCond);
-    outputVec(U,V,P,grid,0);
+    outputVec(U,V,P,NULL,grid,0,0);
     REAL **expected = createMatrix(grid->imax,grid->jmax);
     fill2Dfield(1,expected,grid->imax,grid->jmax);
     EXPECT_TRUE(isEqual2Dfield(U+1,expected,grid->imax,grid->jmax,1e-3));

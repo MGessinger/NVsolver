@@ -320,6 +320,7 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
 lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, int opt, boundaryCond *bCond)
 {
     int n = 0;
+    int partcount = 10000;
     lattice *grid = malloc(sizeof(lattice));
     if (grid == NULL)
         return NULL;
@@ -352,6 +353,7 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     else
         del_vec = t_end*2;
     printf("Computing Reynoldsnumber %lg.\n",simulation.Re);
+    particle *parts = createParticleArray(partcount);
 
     /* Initialise Simulated Grids */
     initUVP(U,V,P,grid->imax,grid->jmax,UI,VI,PI);
@@ -360,12 +362,17 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     REAL **G = createMatrix(grid->imax+1,grid->jmax+1);
     /* RHS is used for the Poisson-Solver so no ghost cells are neccessary */
     REAL **RHS = createMatrix(grid->imax,grid->jmax);
+    /* Create Particles */
 
     /* Error checking */
     if (U == NULL || V == NULL || P == NULL)
         return grid;
     if (F == NULL || G == NULL || RHS == NULL)
         return grid;
+    if (parts == NULL)
+        return grid;
+
+    /* Begin the simulation */
     for (REAL time = 0; time <= t_end; time += delt)
     {
         if (opt & PRINT)
@@ -384,13 +391,19 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
 
         if (time > del_vec*n)
         {
-            outputVec(*U,*V,*P,grid,++n);
+            outputVec(*U,*V,*P,parts,grid,partcount,++n);
+            ParticleSeed(parts,0,0,grid->jmax/4*grid->dely,3*grid->jmax/4*grid->dely,partcount,50);
         }
+        ParticleVelocity(*U,*V,parts,grid,partcount);
+        ParticleTransport(parts,partcount,delt);
     }
     printf("[Simulation complete!]\n");
+
     /* Destroy non-simulated grids */
     destroyMatrix(F,grid->imax+1);
     destroyMatrix(G,grid->imax+1);
     destroyMatrix(RHS,grid->imax);
+    /* Destroy particles */
+    destroyParticleArray(parts);
     return grid;
 }

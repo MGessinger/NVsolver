@@ -1,6 +1,7 @@
 #ifndef POISSON_H_
 #define POISSON_H_
 
+#include <math.h>
 #include "fields.h"
 #include "blas.h"
 #include "boundary.h"

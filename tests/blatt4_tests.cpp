@@ -9,6 +9,7 @@ extern "C" {
     #include "real.h"
     #include "poisson.h"
     #include "IO.h"
+    #include "particle.h"
 }
 
 TEST(Geometrie,Stufe)
@@ -28,5 +29,15 @@ TEST(Geometrie,Stufe)
         printf("\n");
     }
     destroyBoundCond(bCond,grid.imax);
+    return;
+}
+
+TEST(Particle,IO)
+{
+    int partcount = 100;
+    particle *parts = createParticleArray(partcount);
+    ParticleSeed(parts,0,10,0,10,partcount,partcount);
+    WriteParticle(parts,partcount,0);
+    destroyParticleArray(parts);
     return;
 }

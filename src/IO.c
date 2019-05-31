@@ -249,6 +249,34 @@ void writeVTKfileFor2DvectorField(const char* fileName, const char* description,
     fclose(vtkFile);
 }
 
+void WriteParticle (particle *parts, int partcount, int n)
+{
+    if (parts == NULL || partcount == 0)
+        return;
+    char fileName[128];
+    if (n != 0)
+        sprintf(fileName, "ParticleField_%i.vtk",n);
+    else
+        sprintf(fileName, "ParticleField.vtk");
+    FILE *out = open_file(fileName,"w");
+    if (out == NULL)
+        return;
+    fprintf(out,"# vtk DataFile Version 3.0\n");
+    fprintf(out,"Partikel\n");
+    fprintf(out,"ASCII\n");
+
+    fprintf(out,"DATASET POLYDATA\n");
+    fprintf(out,"POINTS %i double\n",partcount);
+    for (int p = 0; p < partcount; p++)
+    {
+        if (parts[p].onScreen == 0)
+            fprintf(out,"0.0 0.0 0.0\n");
+        else
+            fprintf(out,"%e %e 0.0\n",parts[p].x,parts[p].y);
+    }
+    fclose(out);
+}
+
 int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
                    REAL *delt, REAL *t_end,
                    REAL *UI, REAL *VI, REAL *PI, char *problem)
@@ -328,7 +356,7 @@ int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
     return readVars;
 }
 
-void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
+void outputVec(REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int partcount, int n)
 {
     if (grid == NULL)
         return;
@@ -361,6 +389,7 @@ void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
             S[i-1][j-1] = (V[i][j] + V[i][j-1])/2;
         }
     writeVTKfileFor2DvectorField(fileName,"momentumfield",T,S,imax,jmax,grid->delx,grid->dely);
+    WriteParticle(parts,partcount,n);
     destroyMatrix(T,imax);
     destroyMatrix(S,imax);
     return;

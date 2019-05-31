@@ -6,7 +6,7 @@
 
 REAL*	create1Dfield (int size);
 REAL**	create2Dfield (int sizeX, int sizeY);
-short**   create2DIntegerField(int imax, int jmax);
+short** create2DIntegerField(int imax, int jmax);
 REAL*	createVector (int len);
 REAL**	createMatrix (int rows, int cols);
 /* Creates arrays of the given size */
