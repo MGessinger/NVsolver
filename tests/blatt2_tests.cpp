@@ -9,7 +9,7 @@ extern "C" {
     #include "real.h"
     #include "poisson.h"
 }
-
+/*
 TEST(Poisson,MatrixCreation)
 {
     REAL **A = create2DpoissonMatrix(0.5,1.5,3,2);
@@ -45,7 +45,7 @@ TEST(Poisson,GaussSolver)
     destroyVector(x);
     destroyVector(b);
     return;
-}
+}*/
 
 REAL f(REAL x, REAL y)
 {
@@ -56,7 +56,7 @@ REAL f_act(REAL x, REAL y)
 {
     return sin(2*M_PI*x)*sin(2*M_PI*y);
 }
-
+/*
 TEST(Poisson,NaiveSolver)
 {
     int imax = 20, jmax = 20;
@@ -86,17 +86,18 @@ TEST(Poisson,NaiveSolver)
     destroyVector(x);
     destroyVector(b);
     return;
-}
-/*
+}*/
+
 TEST(Poisson,EfficientSolver)
 {
-    int imax = 20, jmax = 20;
+    int imax = 100, jmax = 20;
     lattice grid = (lattice){ .imax = imax, .jmax = jmax, .delx = 0.05, .dely = 0.05};
     REAL **p = createMatrix(imax+2,jmax+2);
     REAL **rhs = sampleFDgridOnCellCenters(f,&grid);
     REAL **F = sampleFDgridOnCellCenters(f_act,&grid);
+    short **FLAG = create2DIntegerField(imax,jmax);
     fill2Dfield(1,p,imax+2,jmax+2);
-    int it = solveSORforPoisson(p,rhs,NULL,1.7,1e-10,5000,0,&grid);
+    int it = solveSORforPoisson(p,rhs,FLAG,1.7,1e-10,10000,&grid);
     REAL diff = 0;
     for (int i = 0; i < imax; i++)
         for (int j = 0; j < jmax; j++)
@@ -110,5 +111,6 @@ TEST(Poisson,EfficientSolver)
     destroyMatrix(p,imax+2);
     destroyMatrix(rhs,imax);
     destroyMatrix(F,imax);
+    destroy2DIntegerField(FLAG,imax);
     return;
-}*/
+}

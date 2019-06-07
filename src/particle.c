@@ -38,7 +38,7 @@ int ParticleSeed (particle *parts, REAL posx1, REAL posx2, REAL posy1, REAL posy
     return anzahl;
 }
 
-void ParticleVelocity (REAL **U, REAL **V, particle *parts, lattice *grid, int partcount)
+void ParticleVelocity (REAL **U, REAL **V, particle *parts, lattice *grid, short **FLAG, int partcount)
 {
     int i,j;
     REAL x2, y2;
@@ -49,6 +49,11 @@ void ParticleVelocity (REAL **U, REAL **V, particle *parts, lattice *grid, int p
         i = parts[p].x/grid->delx + 1;
         j = parts[p].y/grid->dely+1.5;
         if((i < 1 || i >= grid->imax) || (j < 1 || j >= grid->jmax))
+        {
+            parts[p].onScreen = 0;
+            continue;
+        }
+        if (FLAG[i-1][j-1] != C_F)
         {
             parts[p].onScreen = 0;
             continue;
@@ -64,6 +69,11 @@ void ParticleVelocity (REAL **U, REAL **V, particle *parts, lattice *grid, int p
         i = parts[p].x/grid->delx + 1.5;
         j = parts[p].y/grid->dely + 1;
         if((i < 1 || i >= grid->imax) || (j < 1 || j >= grid->jmax))
+        {
+            parts[p].onScreen = 0;
+            continue;
+        }
+        if (FLAG[i-1][j-1] != C_F)
         {
             parts[p].onScreen = 0;
             continue;

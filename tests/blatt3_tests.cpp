@@ -16,15 +16,13 @@ TEST(Simulation,Initialisation)
     fluidSim fluid;
     lattice grid;
     REAL delt, t_end;
-    REAL UI, VI, PI;
     /* Must cast to char* explicitly because C++ is a pile of shit */
     char problem[128];
-    int vars = readParameters((char*)"dcavity.par",&grid,&fluid,&delt,&t_end,&UI,&VI,&PI,problem);
+    REAL **U, **V, **P;
+    int vars = readParameters((char*)"dcavity.par",&U,&V,&P,&grid,&fluid,&delt,&t_end,problem);
     ASSERT_EQ(vars,17);
     EXPECT_EQ(grid.delx,0.2);
     EXPECT_EQ(grid.dely,0.2);
-    REAL **U, **V, **P;
-    initUVP(&U,&V,&P,grid.imax,grid.jmax,UI,VI,PI);
     setBCond(U,V,grid.imax,grid.jmax,NULL);
     EXPECT_TRUE(isEqual1Dfield(V[0],V[grid.imax+1],grid.jmax+2,1e-10));
     compDelt(&delt,&grid,U,V,fluid.Re,fluid.tau);
@@ -62,7 +60,6 @@ TEST(Simulation,Tunnel)
     REAL **expected = createMatrix(grid->imax,grid->jmax);
     fill2Dfield(1,expected,grid->imax,grid->jmax);
     EXPECT_TRUE(isEqual2Dfield(U+1,expected,grid->imax,grid->jmax,1e-3));
-    print2Dfield(U,grid->imax+2,grid->jmax+2);
 
     destroyMatrix(U,grid->imax+2);
     destroyMatrix(V,grid->imax+2);

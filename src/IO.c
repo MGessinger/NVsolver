@@ -277,9 +277,9 @@ void WriteParticle (particle *parts, int partcount, int n)
     fclose(out);
 }
 
-int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
-                   REAL *delt, REAL *t_end,
-                   REAL *UI, REAL *VI, REAL *PI, char *problem)
+int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
+                   lattice *grid, fluidSim *fluid,
+                   REAL *delt, REAL *t_end, char *problem)
 {
     FILE *input = open_file(inputFile,"r");
     if (input == NULL)
@@ -290,6 +290,7 @@ int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
     char variableType[128];
     REAL value;
     REAL xlength = 0, ylength = 0;
+    REAL UI = 0, VI = 0, PI = 0;
     int readVars = 0;
     if (fscanf(input,"%[^\n\r]\n",problem) == 0)
         printf("The problem could not be detected. Assuming trivial fluid.\n");
@@ -332,13 +333,13 @@ int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
             fluid->Re = value;
             break;
         case 'U':
-            *UI = value;
+            UI = value;
             break;
         case 'V':
-            *VI = value;
+            VI = value;
             break;
         case 'P':
-            *PI = value;
+            PI = value;
             break;
         case 'G':
             if (variableType[1] == 'X') fluid->GX = value;
@@ -350,6 +351,7 @@ int readParameters(const char *inputFile, lattice *grid, fluidSim *fluid,
         }
         readVars++;
     }
+    initUVP(U,V,P,grid->imax,grid->jmax,UI,VI,PI);
     grid->delx = xlength/grid->imax;
     grid->dely = ylength/grid->jmax;
     fclose(input);

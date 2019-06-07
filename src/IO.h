@@ -7,7 +7,7 @@
 #include "fields.h"
 #include "particle.h"
 
-#define USER "matthias"
+#define USER "gessinge"
 
 FILE    *open_file (const char *fileName, const char *mode);
 /* Redirects fileName to the /data/ directory on the USB stick */
@@ -34,8 +34,8 @@ void    outputVec (REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid,
 void    WriteParticle (particle *parts, int partcount, int n);
 /* Outputs the given fields as VTK file for visualisation with Paraview */
 
-int     readParameters (const char *inputFile, lattice *grid, fluidSim *fluid, REAL *delt,
-                        REAL *t_end, REAL *UI, REAL *VI, REAL *PI, char *problem);
+int     readParameters (const char *inputFile, REAL ***U, REAL ***V, REAL ***P, lattice *grid, fluidSim *fluid, REAL *delt,
+                        REAL *t_end, char *problem);
 /* Read parameters for a simulation from inputFile */
 
 #endif /* IO_H_ */

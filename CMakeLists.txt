@@ -4,8 +4,6 @@ project(Simulation)
 # just lists the sources that we need to build our lib
 # note that "main" is exluded here
 set(FIELDLIB_SOURCES
-  src/blas.c
-  src/blas.h
   src/fields.c
   src/fields.h
   src/poisson.c
@@ -18,8 +16,6 @@ set(FIELDLIB_SOURCES
   src/particle.h
   src/real.h
 )
-
-
 
 # adds a library target called fieldlib to be built from the source files
 add_library(fieldlib ${FIELDLIB_SOURCES})

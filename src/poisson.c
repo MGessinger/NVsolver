@@ -1,5 +1,5 @@
 #include "poisson.h"
-
+/*
 REAL** create2DpoissonMatrix(REAL ilength, REAL jlength, int imax, int jmax)
 {
     int size = imax*jmax;
@@ -11,7 +11,6 @@ REAL** create2DpoissonMatrix(REAL ilength, REAL jlength, int imax, int jmax)
         return NULL;
     fill2Dfield(0,A,size,size);
     fill2Dfield(0,B,size,size);
-    /* Explicitly set-up the Poisson-matrix for the dicrete lattice */
     for (int i = 0; i < size; i++)
     {
         A[i][i] = 2;
@@ -45,7 +44,6 @@ int solveSOR(REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REAL ep
     }
     REAL DeltaX, error;
     int it = 0;
-    /* Use the relaxed Gauss-Seidel-Algorithm to solve the equation Ax=b */
     do {
         error = 0;
         for (int i = 0; i < cols; i++)
@@ -62,7 +60,7 @@ int solveSOR(REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REAL ep
         it++;
     } while (sqrt(error) > epsilon && it < itermax);
     return it;
-}
+}*/
 
 void applyPboundaryCond(REAL **P, int imax, int jmax, REAL dxSqrd, REAL dySqrd, short **FLAG)
 {
@@ -113,7 +111,7 @@ void applyPboundaryCond(REAL **P, int imax, int jmax, REAL dxSqrd, REAL dySqrd, 
 }
 
 int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG, REAL omega, REAL epsilon,
-                        int itermax, int useNeumann, lattice *grid)
+                        int itermax, lattice *grid)
 {
     if (p == NULL || rhs == NULL || grid == NULL || FLAG == NULL)
         return 0;
@@ -121,25 +119,25 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG, REAL omega, REAL epsi
     REAL temporary, error;
     REAL invXWidthSqrd = 1/(grid->delx*grid->delx);
     REAL invYWidthSqrd = 1/(grid->dely*grid->dely);
-    long numberOfCells = 0;
+    REAL eps = epsilon*epsilon;
+    int numberOfCells;
     do {
+        numberOfCells = grid->imax*grid->jmax;
         /* Apply the boundary condition */
-        if (useNeumann == 1)
-            applyHomogeneousNeumannBC(p,grid->imax,grid->jmax);
-        else
-            applyHomogeneousDirichletBC(p,grid->imax,grid->jmax);
+        applyHomogeneousNeumannBC(p,grid->imax,grid->jmax);
         applyPboundaryCond(p,grid->imax,grid->jmax,invXWidthSqrd,invYWidthSqrd,FLAG);
         /* Compute the new coefficients iteratively */
         for (int i = 1; i <= grid->imax; i++)
             for (int j = 1; j <= grid->jmax; j++)
             {
                 if (FLAG[i-1][j-1] != C_F)
+                {
+                    numberOfCells--;
                     continue;
-                numberOfCells++;
+                }
                 temporary = invXWidthSqrd*(p[i+1][j] + p[i-1][j]);
                 temporary += invYWidthSqrd*(p[i][j+1] + p[i][j-1]) - rhs[i-1][j-1];
-                temporary *= omega/(2*invXWidthSqrd+2*invYWidthSqrd);
-                p[i][j] = temporary + (1-omega)*p[i][j];
+                p[i][j] = omega*temporary/(2*invXWidthSqrd+2*invYWidthSqrd) + (1-omega)*p[i][j];
             }
         error = 0;
         /* Calculate the residue with respect to the rhs field */
@@ -153,9 +151,9 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG, REAL omega, REAL epsi
                 temporary -= rhs[i-1][j-1];
                 error += temporary*temporary;
             }
-        error = sqrt(error)/numberOfCells;
-        it++;
-    } while (error > epsilon && it < itermax);
+    } while (error/numberOfCells > eps && ++it < itermax);
+    if (it != 0)
+        printf("Remaining error after %i iterations: %e/%i vs. %e\n",it,error,numberOfCells,eps);
     return it;
 }
 
@@ -211,12 +209,12 @@ void adaptUV(REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
         for (int j = 1; j <= grid->jmax; j++)
         {
             if (FLAG[i-1][j-1] != C_F)
-                U[i][j] = V[i][j] = 0;
-            else
             {
-                U[i][j] = F[i][j] - delt/grid->delx*(P[i+1][j] - P[i][j]);
-                V[i][j] = G[i][j] - delt/grid->dely*(P[i][j+1] - P[i][j]);
+                U[i][j] = V[i][j] = 0;
+                continue;
             }
+            U[i][j] = F[i][j] - delt/grid->delx*(P[i+1][j] - P[i][j]);
+            V[i][j] = G[i][j] - delt/grid->dely*(P[i][j+1] - P[i][j]);
         }
     return;
 }
@@ -319,17 +317,17 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
 
 lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, int opt, boundaryCond *bCond)
 {
-    int n = 0;
-    int partcount = 10000;
     lattice *grid = malloc(sizeof(lattice));
     if (grid == NULL)
         return NULL;
+
+    int n = 0;
+    int partcount = 1000;
     fluidSim simulation;
     REAL delt, t_end;
-    REAL UI, VI, PI;
     char problem[128];
     /* Read prameters from a file */
-    if (readParameters(fileName,grid,&simulation,&delt,&t_end,&UI,&VI,&PI,problem) < 17)
+    if (readParameters(fileName,U,V,P,grid,&simulation,&delt,&t_end,problem) < 17)
     {
         free(grid);
         return NULL;
@@ -338,14 +336,6 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     {
         bCond->FLAG = create2DIntegerField(grid->imax,grid->jmax);
         initFlags(problem,bCond->FLAG,grid->imax,grid->jmax);
-        /*for (int i = 0; i < grid->imax; i++)
-        {
-            for (int j = 0; j < grid->jmax; j++)
-                printf("%hi,",bCond->FLAG[i][j]);
-            printf("\n");
-        }
-        if (getchar() == 'C')
-            return grid;*/
     }
     REAL del_vec;
     if (opt >= OUTPUT)
@@ -355,8 +345,6 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     printf("Computing Reynoldsnumber %lg.\n",simulation.Re);
     particle *parts = createParticleArray(partcount);
 
-    /* Initialise Simulated Grids */
-    initUVP(U,V,P,grid->imax,grid->jmax,UI,VI,PI);
     /* Helping Grids: */
     REAL **F = createMatrix(grid->imax+1,grid->jmax+1);
     REAL **G = createMatrix(grid->imax+1,grid->jmax+1);
@@ -384,7 +372,7 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
         compRHS(F,G,RHS,bCond->FLAG,grid,delt);
 
         /* Solve the Poisson Equation */
-        solveSORforPoisson(*P,RHS,bCond->FLAG,simulation.omega,simulation.eps,simulation.itmax,1,grid);
+        solveSORforPoisson(*P,RHS,bCond->FLAG,simulation.omega,simulation.eps,simulation.itmax,grid);
         /* Update U and V through F,G and P */
         adaptUV(*U,*V,*P,F,G,delt,bCond->FLAG,grid);
         compDelt(&delt,grid,*U,*V,simulation.Re,simulation.tau);
@@ -392,9 +380,9 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
         if (time > del_vec*n)
         {
             outputVec(*U,*V,*P,parts,grid,partcount,++n);
-            ParticleSeed(parts,0,0,grid->jmax/4*grid->dely,3*grid->jmax/4*grid->dely,partcount,50);
+            ParticleSeed(parts,0.1,0.1,0.7,1.3,partcount,50);
         }
-        ParticleVelocity(*U,*V,parts,grid,partcount);
+        ParticleVelocity(*U,*V,parts,grid,bCond->FLAG,partcount);
         ParticleTransport(parts,partcount,delt);
     }
     printf("[Simulation complete!]\n");

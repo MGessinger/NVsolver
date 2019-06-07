@@ -29,8 +29,6 @@ void applyHomogeneousNeumannBC(REAL **p, int imax, int jmax)
 {
     if (p == NULL)
         return;
-    /* Set the corners to zero because they are irrelevant */
-    p[0][0] = p[0][jmax+1] = p[imax+1][0] = p[imax+1][jmax+1] = 0;
     /* Ghost cells just copy the value next to them */
     for (int i = 1; i <= imax; i++)
     {
@@ -41,26 +39,6 @@ void applyHomogeneousNeumannBC(REAL **p, int imax, int jmax)
     {
         p[0][j] = p[1][j];
         p[imax+1][j] = p[imax][j];
-    }
-    return;
-}
-
-void applyHomogeneousDirichletBC(REAL **p, int imax, int jmax)
-{
-    if (p == NULL)
-        return;
-    /* Set the corners to zero because they are irrelevant */
-    p[0][0] = p[0][jmax+1] = p[imax+1][0] = p[imax+1][jmax+1] = 0;
-    /* Ghost cells copy the negative value of the cell next to them */
-    for (int i = 1; i <= imax; i++)
-    {
-        p[i][0] = -p[i][1];
-        p[i][jmax+1] = -p[i][jmax];
-    }
-    for (int j = 1; j <= jmax; j++)
-    {
-        p[0][j] = -p[1][j];
-        p[imax+1][j] = -p[imax][j];
     }
     return;
 }
@@ -170,6 +148,11 @@ void setSpecBCond(REAL **U, REAL **V, int imax, int jmax, char *problem)
         }
         return;
     }
+    if (strcmp(problem,"Ramp") == 0)
+    {
+        for (int i = 2; i < imax/3; i++)
+            V[i][0] = -1;
+    }
     if (strcmp(problem,"Tunnel") == 0 || strcmp(problem,"Von Karman") == 0)
     {
         for (int j = 0; j <= jmax+1; j++)
@@ -190,13 +173,28 @@ void initFlags(const char *problem, short **FLAG, int imax, int jmax)
                 FLAG[i][j] = C_B;
     }
     else if (strcmp(problem,"Von Karman") == 0){
-        for (int i = jmax/3; i < (2*jmax)/3; i++)
+        for (int i = jmax/3; i < 2*jmax/3; i++)
             for (int j = -(jmax/4)/2; j <= (jmax/4)/2; j++)
             {
                 if (i+j < jmax/3 || i+j >= 2*jmax/3)
                     continue;
                 FLAG[i+j][i] = C_B;
             }
+    }
+    else if (strcmp(problem,"Ramp") == 0)
+    {
+        for (int j = jmax/2+5; j < jmax; j++)
+        {
+            FLAG[0][j] = FLAG[1][j] = C_B;
+            FLAG[imax/3][j] = FLAG[imax/3+1][j] = C_B;
+        }
+        FLAG[0][jmax/2+1] = FLAG[0][jmax/2+2] = C_B;
+        FLAG[0][jmax/2+3] = FLAG[0][jmax/2+4] = C_B;
+        FLAG[1][jmax/2+1] = FLAG[1][jmax/2+2] = C_B;
+        FLAG[1][jmax/2+3] = FLAG[1][jmax/2+4] = C_B;
+        for (int i = 0; i < imax/3+5; i++)
+            FLAG[i][jmax/2-1] = FLAG[i][jmax/2] = C_B;
+
     }
     for (int i = 0; i < imax; i++)
         for (int j = 0; j < jmax; j++)
