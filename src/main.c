@@ -7,20 +7,15 @@
 #include "IO.h"
 #include "boundary.h"
 #include "particle.h"
-
-void writeHorizontalAxis(REAL **U, int imax, int jmax)
-{
-    FILE *out = open_file("horizontal.dat","w");
-    if (out == NULL)
-        return;
-    for (int j = 1; j <= jmax; j++)
-        fprintf(out,"%i,%lg\n",j,U[imax/2-1][j]);
-    fclose(out);
-    return;
-}
+#include "geometry.h"
 
 int main (int argc, char **argv)
 {
+    int minimiumHeight = 32, minimumWidth = 32;
+    readGeometry(argv[1],minimiumHeight,minimumWidth);
+    return 0;
+
+
     REAL **U = NULL, **V = NULL, **P = NULL;
     int out = (argc >= 3) ? atoi(argv[2]) : 10;
     boundaryCond *bCond = createBoundCond(0,0,NOSLIP,OUTFLOW,NOSLIP,NOSLIP);

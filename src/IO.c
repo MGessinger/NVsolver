@@ -270,7 +270,7 @@ void WriteParticle (particle *parts, int partcount, int n)
     for (int p = 0; p < partcount; p++)
     {
         if (parts[p].onScreen == 0)
-            fprintf(out,"0.0 0.0 0.0\n");
+            fprintf(out,"0.1 0.1 -0.1\n");
         else
             fprintf(out,"%e %e 0.0\n",parts[p].x,parts[p].y);
     }

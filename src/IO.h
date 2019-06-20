@@ -7,7 +7,7 @@
 #include "fields.h"
 #include "particle.h"
 
-#define USER "gessinge"
+#define USER "matthias"
 
 FILE    *open_file (const char *fileName, const char *mode);
 /* Redirects fileName to the /data/ directory on the USB stick */

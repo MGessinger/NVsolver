@@ -10,6 +10,8 @@ set(FIELDLIB_SOURCES
   src/poisson.h
   src/boundary.c
   src/boundary.h
+  src/geometry.c
+  src/geometry.h
   src/IO.c
   src/IO.h
   src/particle.c
@@ -28,7 +30,7 @@ target_include_directories(fieldlib PUBLIC src)
 # The linker presumes all libraries to begin with lib, so to link to libm you link to m.
 # This is probably not required for Windows which is why we use the "if (NOT MSVC)" here
 if (NOT MSVC)
-  target_link_libraries(fieldlib m)
+  target_link_libraries(fieldlib m png)
 endif(NOT MSVC)
 
 # Catch Bugs Before Testing

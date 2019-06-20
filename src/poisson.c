@@ -151,7 +151,9 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG, REAL omega, REAL epsi
                 temporary -= rhs[i-1][j-1];
                 error += temporary*temporary;
             }
-    } while (error/numberOfCells > eps && ++it < itermax);
+        if (++it >= itermax)
+            break;
+    } while (error/numberOfCells > eps);
     if (it != 0)
         printf("Remaining error after %i iterations: %e/%i vs. %e\n",it,error,numberOfCells,eps);
     return it;

@@ -166,6 +166,8 @@ void setSpecBCond(REAL **U, REAL **V, int imax, int jmax, char *problem)
 
 void initFlags(const char *problem, short **FLAG, int imax, int jmax)
 {
+    /* Manually sets the flag field for arbitrary generalised geometries.
+     * If the flags are read from a file, set problem to "Image" */
     if (strcmp(problem,"Step") == 0)
     {
         for (int i = 0; i < jmax/2; i++)
