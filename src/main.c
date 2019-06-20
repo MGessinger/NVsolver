@@ -11,8 +11,16 @@
 
 int main (int argc, char **argv)
 {
-    int minimiumHeight = 32, minimumWidth = 32;
-    readGeometry(argv[1],minimiumHeight,minimumWidth);
+    int height = 32, width = 32;
+    short **FLAG = readGeometry(argv[1],&height,&width);
+    initFlags("Image",FLAG,height,width);
+    for (int j = height-1; j >= 0; j--)
+    {
+        for (int i = 0; i < width; i++)
+            printf("%2x, ",FLAG[i][j]);
+        printf("\n");
+    }
+    destroy2DIntegerField(FLAG,height);
     return 0;
 
 

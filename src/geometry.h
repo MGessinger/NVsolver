@@ -13,6 +13,6 @@ int check_if_png(const char *fileName, FILE **file);
 
 void readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr);
 
-void readGeometry (const char *flagFile, int minimumHeight, int minimumWidth);
+short **readGeometry(const char *flagFile, int *minimumHeight, int *minimumWidth);
 
 #endif /* GEOMETRY_H_ */
