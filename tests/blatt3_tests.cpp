@@ -19,7 +19,7 @@ TEST(Simulation,Initialisation)
     /* Must cast to char* explicitly because C++ is a pile of shit */
     char problem[128];
     REAL **U, **V, **P;
-    int vars = readParameters((char*)"dcavity.par",&U,&V,&P,&grid,&fluid,&delt,&t_end,problem);
+    int vars = readParameters((char*)"dcavity.par",&U,&V,&P,&grid,&fluid,NULL,&delt,&t_end,problem);
     ASSERT_EQ(vars,17);
     EXPECT_EQ(grid.delx,0.2);
     EXPECT_EQ(grid.dely,0.2);
@@ -36,8 +36,9 @@ TEST(Simulation,Initialisation)
 TEST(Simulation,TrivialFluid)
 {
     REAL **U, **V, **P;
-    boundaryCond *bCond = createBoundCond(0,0,NOSLIP,NOSLIP,NOSLIP,NOSLIP);
-    lattice *grid = simulateFluid(&U,&V,&P,"empty.par",SILENT,bCond);
+    int imax = 32, jmax = 32;
+    boundaryCond *bCond = createBoundCond(NOSLIP,NOSLIP,NOSLIP,NOSLIP);
+    lattice *grid = simulateFluid(&U,&V,&P,"empty.par",SILENT);
     outputVec(U,V,P,NULL,grid,0,0);
     REAL **zero = createMatrix(grid->imax+2,grid->jmax+2);
     EXPECT_TRUE(isEqual2Dfield(U,zero,grid->imax+2,grid->jmax+2,1e-3));
@@ -54,8 +55,9 @@ TEST(Simulation,TrivialFluid)
 TEST(Simulation,Tunnel)
 {
     REAL **U, **V, **P;
-    boundaryCond *bCond = createBoundCond(0,0,NOSLIP,OUTFLOW,FREESLIP,FREESLIP);
-    lattice *grid = simulateFluid(&U,&V,&P,"tunnel.par",SILENT,bCond);
+    int imax = 32, jmax = 32;
+    boundaryCond *bCond = createBoundCond(NOSLIP,OUTFLOW,FREESLIP,FREESLIP);
+    lattice *grid = simulateFluid(&U,&V,&P,"tunnel.par",SILENT);
     outputVec(U,V,P,NULL,grid,0,0);
     REAL **expected = createMatrix(grid->imax,grid->jmax);
     fill2Dfield(1,expected,grid->imax,grid->jmax);

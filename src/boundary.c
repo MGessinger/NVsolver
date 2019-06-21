@@ -1,14 +1,10 @@
 #include "boundary.h"
 
-boundaryCond* createBoundCond(int imax, int jmax, int wl, int wr, int wt, int wb)
+boundaryCond* createBoundCond(int wl, int wr, int wt, int wb)
 {
     boundaryCond *bCond = malloc(sizeof(boundaryCond));
     if (bCond == NULL)
         return NULL;
-    if (imax*jmax == 0)
-        bCond->FLAG = NULL;
-    else
-        bCond->FLAG = create2DIntegerField(imax,jmax);
     bCond->wl = wl;
     bCond->wr = wr;
     bCond->wt = wt;
@@ -166,6 +162,8 @@ void setSpecBCond(REAL **U, REAL **V, int imax, int jmax, char *problem)
 
 void initFlags(const char *problem, short **FLAG, int imax, int jmax)
 {
+    if (FLAG == NULL)
+        return;
     /* Manually sets the flag field for arbitrary generalised geometries.
      * If the flags are read from a file, set problem to "Image" */
     if (strcmp(problem,"Step") == 0)

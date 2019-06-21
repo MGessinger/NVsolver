@@ -5,7 +5,7 @@
 #include "fields.h"
 #include "boundary.h"
 
-typedef struct particle{
+typedef struct particle {
     REAL x;
     REAL y;
     REAL u;

@@ -10,8 +10,6 @@ set(FIELDLIB_SOURCES
   src/poisson.h
   src/boundary.c
   src/boundary.h
-  src/geometry.c
-  src/geometry.h
   src/IO.c
   src/IO.h
   src/particle.c

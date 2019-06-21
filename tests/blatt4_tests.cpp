@@ -16,10 +16,10 @@ TEST(Geometrie,Stufe)
 {
     fluidSim fluid;
     lattice grid;
+    boundaryCond *bCond;
     REAL delt, t_end;
     char problem[128];
-    ASSERT_EQ(readParameters((char*)"step.par",NULL,NULL,NULL,&grid,&fluid,&delt,&t_end,problem),17);
-    boundaryCond *bCond = createBoundCond(grid.imax,grid.jmax,NOSLIP,OUTFLOW,NOSLIP,NOSLIP);
+    ASSERT_EQ(readParameters((char*)"step.par",NULL,NULL,NULL,&grid,&fluid,&bCond,&delt,&t_end,problem),17);
     initFlags("Step",bCond->FLAG,grid.imax,grid.jmax);
     /*for (int j = grid.jmax-1; j >= 0; j--)
     {

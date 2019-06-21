@@ -3,11 +3,15 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <png.h>
 #include "real.h"
+#include "boundary.h"
 #include "fields.h"
 #include "particle.h"
 
 #define USER "matthias"
+
+#define NOT_PNG (0)
 
 FILE    *open_file (const char *fileName, const char *mode);
 /* Redirects fileName to the /data/ directory on the USB stick */
@@ -30,12 +34,18 @@ void    writeVTKfileFor2DscalarField (const char* fileName, const char* descript
                                       REAL** field, int sizeX, int sizeY, REAL dx, REAL dy);
 void    writeVTKfileFor2DvectorField (const char* fileName, const char* description,
                                       REAL** fieldU, REAL** fieldV, int sizeX, int sizeY, REAL dx, REAL dy);
-void    outputVec (REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int partcount, int n);
 void    WriteParticle (particle *parts, int partcount, int n);
+void    outputVec (REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int partcount, int n);
 /* Outputs the given fields as VTK file for visualisation with Paraview */
 
-int     readParameters (const char *inputFile, REAL ***U, REAL ***V, REAL ***P, lattice *grid, fluidSim *fluid, REAL *delt,
-                        REAL *t_end, char *problem);
+int check_if_png(const char *fileName, FILE **file);
+void readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr);
+short **readGeometry(const char *flagFile, int *minimumWidth, int *minimumHeight);
+/* Opens, confirms and reads a png-file into a flag array */
+
+int     readParameters (const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
+                        lattice *grid, fluidSim *fluid, boundaryCond **bCond,
+                        REAL *delt, REAL *t_end, char *problem);
 /* Read parameters for a simulation from inputFile */
 
 #endif /* IO_H_ */

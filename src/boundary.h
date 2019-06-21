@@ -26,7 +26,7 @@ typedef struct boundaryCondition {
 #define OUTFLOW (2)
 #define INFLOW (3)
 
-boundaryCond *createBoundCond(int imax, int jmax, int wl, int wr, int wt, int wb);
+boundaryCond* createBoundCond(int wl, int wr, int wt, int wb);
 void    destroyBoundCond(boundaryCond *bCond, int imax);
 /* Create and destroy a boundaryCond structure */
 

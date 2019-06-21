@@ -317,11 +317,12 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
     return;
 }
 
-lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, int opt, boundaryCond *bCond)
+lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, int opt)
 {
     lattice *grid = malloc(sizeof(lattice));
     if (grid == NULL)
         return NULL;
+    boundaryCond *bCond;
 
     int n = 0;
     int partcount = 1000;
@@ -329,7 +330,7 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     REAL delt, t_end;
     char problem[128];
     /* Read prameters from a file */
-    if (readParameters(fileName,U,V,P,grid,&simulation,&delt,&t_end,problem) < 17)
+    if (readParameters(fileName,U,V,P,grid,&simulation,&bCond,&delt,&t_end,problem) < 17)
     {
         free(grid);
         return NULL;
@@ -393,7 +394,8 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     destroyMatrix(F,grid->imax+1);
     destroyMatrix(G,grid->imax+1);
     destroyMatrix(RHS,grid->imax);
-    /* Destroy particles */
+    /* Destroy structures */
     destroyParticleArray(parts);
+    destroyBoundCond(bCond,grid->imax);
     return grid;
 }
