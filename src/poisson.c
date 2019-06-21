@@ -322,6 +322,8 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     lattice *grid = malloc(sizeof(lattice));
     if (grid == NULL)
         return NULL;
+    grid->imax = 0;
+    grid->jmax = 0;
     boundaryCond *bCond;
 
     int n = 0;
@@ -389,6 +391,7 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
         ParticleTransport(parts,partcount,delt);
     }
     printf("[Simulation complete!]\n");
+    writeVTKfileFor2DintegerField("GeometryField.vtk","geometryfield",bCond->FLAG,grid->imax,grid->jmax,grid->delx,grid->dely);
 
     /* Destroy non-simulated grids */
     destroyMatrix(F,grid->imax+1);

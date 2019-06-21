@@ -201,11 +201,11 @@ void initFlags(const char *problem, short **FLAG, int imax, int jmax)
         {
             if (FLAG[i][j] == C_F)
                 continue;
-            if (FLAG[i][j+1] == C_F)
+            if ((j+1) != jmax && FLAG[i][j+1] == C_F)
                 FLAG[i][j] |= B_N;
             else if (j != 0 && FLAG[i][j-1] == C_F)
                 FLAG[i][j] |= B_S;
-            if (FLAG[i+1][j] == C_F)
+            if ((i+1) != imax && FLAG[i+1][j] == C_F)
                 FLAG[i][j] |= B_O;
             else if (i != 0 && FLAG[i-1][j] == C_F)
                 FLAG[i][j] |= B_W;

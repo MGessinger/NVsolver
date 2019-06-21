@@ -32,6 +32,8 @@ REAL**  read2Dfield (const char* fileName, int* sizeX, int* sizeY);
 
 void    writeVTKfileFor2DscalarField (const char* fileName, const char* description,
                                       REAL** field, int sizeX, int sizeY, REAL dx, REAL dy);
+void    writeVTKfileFor2DintegerField(const char* fileName, const char* description,
+                                   short** field, int sizeX, int sizeY, REAL dx, REAL dy);
 void    writeVTKfileFor2DvectorField (const char* fileName, const char* description,
                                       REAL** fieldU, REAL** fieldV, int sizeX, int sizeY, REAL dx, REAL dy);
 void    WriteParticle (particle *parts, int partcount, int n);

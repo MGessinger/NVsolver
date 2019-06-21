@@ -172,6 +172,43 @@ REAL** read2Dfield(const char *fileName, int *sizeX, int *sizeY)
     return field;
 }
 
+void writeVTKfileFor2DintegerField(const char* fileName, const char* description, short** field, int sizeX, int sizeY, REAL dx, REAL dy)
+{
+    FILE* vtkFile = open_file(fileName, "w");
+    if (vtkFile == NULL)
+        return;
+
+    fprintf(vtkFile, "# vtk DataFile Version 3.0\n");
+    fprintf(vtkFile, "Scalar Field\n");
+    fprintf(vtkFile, "ASCII\n");
+
+    fprintf(vtkFile, "DATASET RECTILINEAR_GRID \n");
+    fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", sizeX, sizeY);
+    fprintf(vtkFile, "X_COORDINATES %d double\n", sizeX);
+    for (int i=0;i<sizeX;i++)
+        fprintf(vtkFile, "%lf ", dx*(double)i);
+    fprintf(vtkFile, "\n");
+    fprintf(vtkFile, "Y_COORDINATES %d double\n", sizeY);
+    for (int j=0;j<sizeY;j++)
+        fprintf(vtkFile, "%lf ", dy*(double)j);
+    fprintf(vtkFile, "\n");
+    fprintf(vtkFile, "Z_COORDINATES 1 double\n");
+    fprintf(vtkFile, "0.0\n");
+
+    fprintf(vtkFile, "POINT_DATA %d\n", 1 * sizeX * sizeY);
+    fprintf(vtkFile, "SCALARS %s double 1\n", description);
+    fprintf(vtkFile, "LOOKUP_TABLE default \n");
+    for(int j=0;j<sizeY;j++)
+    {
+        for(int i=0;i<sizeX;i++)
+        {
+            fprintf(vtkFile, "%i\n", (field[i][j]!=0));
+        }
+    }
+    fprintf(vtkFile,"\n");
+
+    fclose(vtkFile);
+}
 
 void writeVTKfileFor2DscalarField(const char* fileName, const char* description, REAL** field, int sizeX, int sizeY, REAL dx, REAL dy)
 {
@@ -363,22 +400,24 @@ short** readGeometry (const char *flagFile, int *minimumWidth, int *minimumHeigh
     return FLAG;
 }
 
-void adjustFlags(short **FLAG, int height, int width, int imax, int jmax)
+short** adjustFlags(short **FLAG, int height, int width, int imax, int jmax)
 {
     if (FLAG == NULL)
-        return;
+        return FLAG;
     short **newFLAG = create2DIntegerField(imax,jmax);
     if (newFLAG == NULL)
-        return;
+        return FLAG;
     short average;
     for (int i = 0; i < imax; i++)
     {
         for (int j = 0; j < jmax; j++)
         {
             average = 0;
-            for (int k = (i*width)/imax; k < ((i+1)*width)/imax; k++)
-                for (int l = (j*height)/jmax; l < ((l+1)*height)/jmax; j++)
+            for (int k = (i*width)/imax; k <= ((i+1)*width)/imax; k++)
+                for (int l = (j*height)/jmax; l <= ((j+1)*height)/jmax; l++)
                 {
+                    if (k == width || l == height)
+                        continue;
                     average += FLAG[k][l];
                 }
             if (average > (width*height)/(imax*jmax*2))
@@ -387,7 +426,8 @@ void adjustFlags(short **FLAG, int height, int width, int imax, int jmax)
                 newFLAG[i][j] = C_F;
         }
     }
-    return;
+    destroy2DIntegerField(FLAG,width);
+    return newFLAG;
 }
 /* Adjust the number of cells to a predefined number */
 
@@ -408,6 +448,7 @@ int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
     REAL value;
     REAL xlength = 0, ylength = 0;
     REAL UI = 0, VI = 0, PI = 0;
+    int height = 0, width = 0;
     int readVars = 0;
     if (fscanf(input,"%[^\n\r]\n",problem) == 0)
         printf("The problem could not be detected. Assuming trivial fluid.\n");
@@ -471,7 +512,8 @@ int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
     fclose(input);
 
     *bCond = createBoundCond(NOSLIP,OUTFLOW,NOSLIP,NOSLIP);
-    (*bCond)->FLAG = readGeometry(variableType,&(grid->imax),&(grid->jmax));
+    short **image = readGeometry(variableType,&height,&width);
+    (*bCond)->FLAG = adjustFlags(image,height,width,grid->imax,grid->jmax);
     initFlags("Image",(*bCond)->FLAG,grid->imax,grid->jmax);
     initUVP(U,V,P,grid->imax,grid->jmax,UI,VI,PI);
     grid->delx = xlength/grid->imax;
