@@ -1,20 +1,5 @@
 #include "IO.h"
 
-FILE *open_file(const char *fileName, const char *mode)
-{
-    char filePath[256];
-    #ifdef linux
-    strcpy(filePath,"/media/");
-    strcat(filePath,USER);
-    strcat(filePath,"/STICK/");
-    #else
-    strcpy(filePath,"E:/");
-    #endif
-    strcat(filePath,"Programming/Praktikum/Blatt1/data/");
-    strcat(filePath,fileName);
-    return fopen(filePath,mode);
-}
-
 void print1Dfield(REAL* field, int size)
 {
     if (field == NULL)
@@ -65,7 +50,7 @@ void write1Dfield(const char *fileName, REAL* field, int size)
         printf("The field in invalid.\n");
         return;
     }
-    FILE *out = open_file(fileName,"wb");
+    FILE *out = fopen(fileName,"wb");
     if (out == NULL)
     {
         printf("The file %s could not be opened.\n",fileName);
@@ -84,7 +69,7 @@ void write2Dfield(const char* fileName, REAL** field, int sizeX, int sizeY)
         printf("The field in invalid.\n");
         return;
     }
-    FILE *out = open_file(fileName,"wb");
+    FILE *out = fopen(fileName,"wb");
     if (out == NULL)
     {
         printf("The file %s could not be opened.\n",fileName);
@@ -107,7 +92,7 @@ REAL* read1Dfield(const char* fileName, int* size)
         printf("There is no way to save the size. Please provide a pointer.\n");
         return NULL;
     }
-    FILE *in = open_file(fileName,"rb");
+    FILE *in = fopen(fileName,"rb");
     if (in == NULL)
     {
         printf("The file %s could not be read.\n",fileName);
@@ -141,7 +126,7 @@ REAL** read2Dfield(const char *fileName, int *sizeX, int *sizeY)
         printf("Cannot save the size of the array. Please check the pointers.\n");
         return NULL;
     }
-    FILE *in = open_file(fileName,"rb");
+    FILE *in = fopen(fileName,"rb");
     if (in == NULL)
     {
         printf("The file %s could not be read.\n",fileName);
@@ -174,7 +159,7 @@ REAL** read2Dfield(const char *fileName, int *sizeX, int *sizeY)
 
 void writeVTKfileFor2DintegerField(const char* fileName, const char* description, short** field, int sizeX, int sizeY, REAL dx, REAL dy)
 {
-    FILE* vtkFile = open_file(fileName, "w");
+    FILE* vtkFile = fopen(fileName, "w");
     if (vtkFile == NULL)
         return;
 
@@ -212,7 +197,7 @@ void writeVTKfileFor2DintegerField(const char* fileName, const char* description
 
 void writeVTKfileFor2DscalarField(const char* fileName, const char* description, REAL** field, int sizeX, int sizeY, REAL dx, REAL dy)
 {
-    FILE* vtkFile = open_file(fileName, "w");
+    FILE* vtkFile = fopen(fileName, "w");
     if (vtkFile == NULL)
         return;
 
@@ -250,7 +235,7 @@ void writeVTKfileFor2DscalarField(const char* fileName, const char* description,
 
 void writeVTKfileFor2DvectorField(const char* fileName, const char* description, REAL** fieldU, REAL** fieldV, int sizeX, int sizeY, REAL dx, REAL dy)
 {
-    FILE* vtkFile = open_file(fileName, "w");
+    FILE* vtkFile = fopen(fileName, "w");
     if (vtkFile == NULL)
         return;
 
@@ -295,7 +280,7 @@ void WriteParticle (particle *parts, int partcount, int n)
         sprintf(fileName, "ParticleField_%i.vtk",n);
     else
         sprintf(fileName, "ParticleField.vtk");
-    FILE *out = open_file(fileName,"w");
+    FILE *out = fopen(fileName,"w");
     if (out == NULL)
         return;
     fprintf(out,"# vtk DataFile Version 3.0\n");
@@ -318,7 +303,7 @@ int check_if_png(const char *fileName, FILE **file)
 {
    unsigned char buf[8];
    /* Open the alleged PNG file. */
-   if ((*file = open_file(fileName, "rb")) == NULL)
+   if ((*file = fopen(fileName, "rb")) == NULL)
       return NOT_PNG;
 
    /* Read the first eight bytes and compare them to the signature */
@@ -402,6 +387,7 @@ short** readGeometry (const char *flagFile, int *minimumWidth, int *minimumHeigh
 
 short** adjustFlags(short **FLAG, int height, int width, int imax, int jmax)
 {
+    /* Adjust the number of cells to a predefined number */
     if (FLAG == NULL)
         return FLAG;
     short **newFLAG = create2DIntegerField(imax,jmax);
@@ -429,16 +415,24 @@ short** adjustFlags(short **FLAG, int height, int width, int imax, int jmax)
     destroy2DIntegerField(FLAG,width);
     return newFLAG;
 }
-/* Adjust the number of cells to a predefined number */
 
-void findOptimalFlags(short FLAG, lattice *grid);
-/* Find the number of cells necessary to avoid forbidden cells */
+void findOptimalFlags(short **FLAG, int *height, int *width)
+{
+    if (!FLAG || !height || !width)
+        return;
+    /* Find the structure size in x-direction */
+    for (int i = 0; i < *width; i++)
+    {
+        for (int j = 0; j < *height; j++)
+            continue;
+    }
+}
 
 int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
                    lattice *grid, fluidSim *fluid, boundaryCond **bCond,
                    REAL *delt, REAL *t_end, char *problem)
 {
-    FILE *input = open_file(inputFile,"r");
+    FILE *input = fopen(inputFile,"r");
     if (input == NULL)
     {
         printf("The requested file probably doesn't exist. Please check your input!\n");

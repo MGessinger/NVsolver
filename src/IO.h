@@ -9,8 +9,6 @@
 #include "fields.h"
 #include "particle.h"
 
-#define USER "matthias"
-
 #define NOT_PNG (0)
 
 FILE    *open_file (const char *fileName, const char *mode);
