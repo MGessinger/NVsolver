@@ -157,7 +157,8 @@ REAL** read2Dfield(const char *fileName, int *sizeX, int *sizeY)
     return field;
 }
 
-void writeVTKfileFor2DintegerField(const char* fileName, const char* description, short** field, int sizeX, int sizeY, REAL dx, REAL dy)
+void writeVTKfileFor2DintegerField(const char* fileName, const char* description, short** field,
+                                   int sizeX, int sizeY, REAL dx, REAL dy)
 {
     FILE* vtkFile = fopen(fileName, "w");
     if (vtkFile == NULL)
@@ -195,7 +196,8 @@ void writeVTKfileFor2DintegerField(const char* fileName, const char* description
     fclose(vtkFile);
 }
 
-void writeVTKfileFor2DscalarField(const char* fileName, const char* description, REAL** field, int sizeX, int sizeY, REAL dx, REAL dy)
+void writeVTKfileFor2DscalarField(const char* fileName, const char* description, REAL** field,
+                                  int sizeX, int sizeY, REAL dx, REAL dy)
 {
     FILE* vtkFile = fopen(fileName, "w");
     if (vtkFile == NULL)
@@ -233,7 +235,8 @@ void writeVTKfileFor2DscalarField(const char* fileName, const char* description,
     fclose(vtkFile);
 }
 
-void writeVTKfileFor2DvectorField(const char* fileName, const char* description, REAL** fieldU, REAL** fieldV, int sizeX, int sizeY, REAL dx, REAL dy)
+void writeVTKfileFor2DvectorField(const char* fileName, const char* description, REAL** fieldU, REAL** fieldV,
+                                  int sizeX, int sizeY, REAL dx, REAL dy)
 {
     FILE* vtkFile = fopen(fileName, "w");
     if (vtkFile == NULL)
@@ -338,7 +341,7 @@ void readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr)
 
     /* Start reading data from the file (except for the signature, which has been read before) */
     png_set_sig_bytes(*png_ptr, 8);
-    png_read_png(*png_ptr, *info_ptr, PNG_TRANSFORM_PACKING, NULL);
+    png_read_png(*png_ptr, *info_ptr, PNG_TRANSFORM_PACKING | PNG_TRANSFORM_GRAY_TO_RGB, NULL);
     fclose(flagData);
     return;
 }
@@ -372,7 +375,7 @@ short** readGeometry (const char *flagFile, int *minimumWidth, int *minimumHeigh
     short **FLAG = create2DIntegerField(width,height);
     for (int i = 0; i < height; i++)
     {
-        for (int j = 0; j < 3*width; j+=3)
+        for (int j = 0; j+2 < 3*width; j+=3)
         {
             if ( rows[i][j] < 0x90 || rows[i][j+1] < 0x90 || rows[i][j+2] < 0x90)
                 FLAG[j/3][height-1-i] = C_B;
@@ -454,11 +457,46 @@ void findOptimalFlags(short **FLAG, int height, int width, int *imax, int *jmax)
             break;
     }
     free(structureVec);
-    /* Extract the necessary Height to represent the image, but no less than *jmax */
+    /* Extract the height necessary to represent the image, but no less than *jmax */
     newHeight = (height * 2)/blockSize;
     if (newHeight < *jmax)
         newHeight = *jmax;
-    printf("blockSize was found to be %hi and hence newHeight = 2*%i/%hi = %i\n",blockSize,height,blockSize,newHeight);
+    /* Now do exactly the same thing for the x-direction */
+    blockSize = width;
+    structureVec = malloc(width*sizeof(short));
+    if (structureVec == NULL)
+        return;
+    for (i = 0; i < width; i++)
+        structureVec[i] = 0;
+    for (j = 0; j < height; j++)
+    {
+        blockType = FLAG[0][j];
+        for (i = 1; i < width; i++)
+        {
+            if (FLAG[i][j] != blockType)
+                structureVec[i] = 1;
+            blockType = FLAG[i][j];
+        }
+    }
+    for (i = 0; i < width; i+=j)
+    {
+        j = 1;
+        while (j+i < width && structureVec[j+i] == 0)
+        {
+            j++;
+        }
+        if (j < blockSize)
+            blockSize = j;
+        if (blockSize == 1)
+            break;
+    }
+    free(structureVec);
+    /* Extract the width necessary to represent the image, but no less than *imax */
+    newWidth = (width * 2)/blockSize;
+    if (newWidth < *imax)
+        newWidth = *imax;
+    *jmax = newWidth;
+    *imax = newHeight;
     return;
 }
 
@@ -540,10 +578,9 @@ int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
     fclose(input);
 
     *bCond = createBoundCond(NOSLIP,OUTFLOW,NOSLIP,NOSLIP);
-    short **image = readGeometry(variableType,&height,&width);
+    short **image = readGeometry(variableType,&width,&height);
+    findOptimalFlags(image,height,width,&(grid->imax),&(grid->jmax));
     (*bCond)->FLAG = adjustFlags(image,height,width,grid->imax,grid->jmax);
-    int H = 1, W = 1;
-    findOptimalFlags((*bCond)->FLAG,grid->imax,grid->jmax,&H,&W);
     initFlags("Image",(*bCond)->FLAG,grid->imax,grid->jmax);
     initUVP(U,V,P,grid->imax,grid->jmax,UI,VI,PI);
     grid->delx = xlength/grid->imax;
