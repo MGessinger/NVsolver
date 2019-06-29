@@ -2,6 +2,7 @@
 #define IO_H_
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <png.h>
 #include "real.h"
@@ -10,9 +11,6 @@
 #include "particle.h"
 
 #define NOT_PNG (0)
-
-FILE    *open_file (const char *fileName, const char *mode);
-/* Redirects fileName to the /data/ directory on the USB stick */
 
 void    print1Dfield (REAL* field, int size);
 void    print2Dfield (REAL** field, int sizeX, int sizeY);

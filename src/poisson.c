@@ -334,6 +334,7 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     /* Read prameters from a file */
     if (readParameters(fileName,U,V,P,grid,&simulation,&bCond,&delt,&t_end,problem) < 17)
     {
+        destroyBoundCond(bCond,grid->imax);
         free(grid);
         return NULL;
     }

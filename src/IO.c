@@ -416,16 +416,50 @@ short** adjustFlags(short **FLAG, int height, int width, int imax, int jmax)
     return newFLAG;
 }
 
-void findOptimalFlags(short **FLAG, int *height, int *width)
+void findOptimalFlags(short **FLAG, int height, int width, int *imax, int *jmax)
 {
-    if (!FLAG || !height || !width)
+    if (!FLAG || !imax || !jmax)
         return;
-    /* Find the structure size in x-direction */
-    for (int i = 0; i < *width; i++)
+    if (height == 0 || width == 0)
+        return;
+    /* Find the structure size in y-direction */
+    short blockType, blockSize = height;
+    int newHeight, newWidth;
+    int i, j;
+    short *structureVec = malloc(height*sizeof(short));
+    if (structureVec == NULL)
+        return;
+    for (j = 0; j < height; j++)
+        structureVec[j] = 0;
+    for (i = 0; i < width; i++)
     {
-        for (int j = 0; j < *height; j++)
-            continue;
+        blockType = FLAG[i][0];
+        for (j = 1; j < height; j++)
+        {
+            if (FLAG[i][j] != blockType)
+                structureVec[j] = 1;
+            blockType = FLAG[i][j];
+        }
     }
+    for (j = 0; j < height; j+=i)
+    {
+        i = 1;
+        while (j+i < height && structureVec[j+i] == 0)
+        {
+            i++;
+        }
+        if (i < blockSize)
+            blockSize = i;
+        if (blockSize == 1)
+            break;
+    }
+    free(structureVec);
+    /* Extract the necessary Height to represent the image, but no less than *jmax */
+    newHeight = (height * 2)/blockSize;
+    if (newHeight < *jmax)
+        newHeight = *jmax;
+    printf("blockSize was found to be %hi and hence newHeight = 2*%i/%hi = %i\n",blockSize,height,blockSize,newHeight);
+    return;
 }
 
 int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
@@ -508,6 +542,8 @@ int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
     *bCond = createBoundCond(NOSLIP,OUTFLOW,NOSLIP,NOSLIP);
     short **image = readGeometry(variableType,&height,&width);
     (*bCond)->FLAG = adjustFlags(image,height,width,grid->imax,grid->jmax);
+    int H = 1, W = 1;
+    findOptimalFlags((*bCond)->FLAG,grid->imax,grid->jmax,&H,&W);
     initFlags("Image",(*bCond)->FLAG,grid->imax,grid->jmax);
     initUVP(U,V,P,grid->imax,grid->jmax,UI,VI,PI);
     grid->delx = xlength/grid->imax;
