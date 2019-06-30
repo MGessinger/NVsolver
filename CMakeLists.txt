@@ -15,6 +15,8 @@ set(FIELDLIB_SOURCES
   src/particle.c
   src/particle.h
   src/real.h
+  src/FlagCreator.c
+  src/FlagCreator.h
 )
 
 # adds a library target called fieldlib to be built from the source files
