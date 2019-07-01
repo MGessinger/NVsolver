@@ -1,82 +1,36 @@
 #include "poisson.h"
-/*
-REAL** create2DpoissonMatrix(REAL ilength, REAL jlength, int imax, int jmax)
-{
-    int size = imax*jmax;
-    REAL DX = (imax+1)/ilength;
-    REAL DY = (jmax+1)/jlength;
-    REAL **A = createMatrix(size,size);
-    REAL **B = createMatrix(size,size);
-    if (A == NULL || B == NULL)
-        return NULL;
-    fill2Dfield(0,A,size,size);
-    fill2Dfield(0,B,size,size);
-    for (int i = 0; i < size; i++)
-    {
-        A[i][i] = 2;
-        if (i < size-jmax)
-        {
-            A[i][i+jmax] = -1;
-            A[i+jmax][i] = -1;
-        }
-        B[i][i] = 2;
-        if ((i+1)%jmax != 0)
-        {
-            B[i][i+1] = -1;
-            B[i+1][i] = -1;
-        }
-    }
-    scal2Dfield(DY*DY,B,size,size);
-    axpy2Dfield(DX*DX,A,B,size,size);
-    destroyMatrix(A,size);
-    return B;
-}
 
-int solveSOR(REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REAL epsilon, int itermax)
-{
-    if (rows != cols)
-    {
-        return 0;
-    }
-    if (A == NULL || x == NULL || b == NULL)
-    {
-        return 0;
-    }
-    REAL DeltaX, error;
-    int it = 0;
-    do {
-        error = 0;
-        for (int i = 0; i < cols; i++)
-        {
-            DeltaX = omega*(b[i] - dot(A[i],x,cols))/A[i][i];
-            x[i] += DeltaX;
-            error += DeltaX*DeltaX;
-            if (error >= 1e100)
-            {
-                fill1Dfield(0,x,cols);
-                return solveSOR(A,x,b,rows,cols,1,epsilon,itermax);
-            }
-        }
-        it++;
-    } while (sqrt(error) > epsilon && it < itermax);
-    return it;
-}*/
-
-void applyPboundaryCond(REAL **P, int imax, int jmax, REAL dxSqrd, REAL dySqrd, short **FLAG)
+void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
 {
     if (P == NULL || FLAG == NULL)
         return;
-    for (int i = 1; i <= imax; i++)
-        for (int j = 1; j <= jmax; j++)
+    short flag = 0;
+    /* First set values on the actual boundary of the region */
+    if (grid->il == 0)
+        for (int j = grid->jb; j <= grid->jt; j++)
+            P[0][j] = P[1][j];
+    if (grid->ir == grid->imax)
+        for (int j = grid->jb; j <= grid->jt; j++)
+            P[grid->imax+1][j] = P[grid->imax][j];
+    if (grid->jb == 0)
+        for (int i = grid->il; i <= grid->ir; i++)
+            P[i][0] = P[i][1];
+    if (grid->jt == grid->jmax)
+        for (int i = grid->il; i <= grid->ir; i++)
+            P[i][grid->jmax+1] = P[i][grid->jmax];
+    REAL dxSqrd = grid->delx*grid->delx;
+    REAL dySqrd = grid->dely*grid->dely;
+    for (int i = grid->il+1; i <= grid->ir; i++)
+        for (int j = grid->jb+1; j <= grid->jt; j++)
         {
-            if (FLAG[i-1][j-1] == C_F)
+            flag = FLAG[i-1][j-1];
+            if (flag == C_F)
                 continue;
-            else if (FLAG[i-1][j-1] == C_B)
+            else if (flag == C_B)
             {
-                P[i][j] = 0;
                 continue;
             }
-            switch (FLAG[i-1][j-1] - C_B)
+            switch (flag - C_B)
             {
             case B_N:
                 P[i][j] = P[i][j+1];
@@ -120,29 +74,32 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG, REAL omega, REAL epsi
     REAL invXWidthSqrd = 1/(grid->delx*grid->delx);
     REAL invYWidthSqrd = 1/(grid->dely*grid->dely);
     REAL eps = epsilon*epsilon;
-    int numberOfCells;
+    int i,j;
+    /* Count the number of fluid cells */
+    int numberOfCells = 0;
+    for (i = grid->il+1; i <= grid->ir; i++)
+        for (j = grid->jb+1; j <= grid->jt; j++)
+        {
+            if (FLAG[i-1][j-1] == C_F)
+                numberOfCells++;
+        }
     do {
-        numberOfCells = grid->imax*grid->jmax;
         /* Apply the boundary condition */
-        applyHomogeneousNeumannBC(p,grid->imax,grid->jmax);
-        applyPboundaryCond(p,grid->imax,grid->jmax,invXWidthSqrd,invYWidthSqrd,FLAG);
+        applyPboundaryCond(p,grid,FLAG);
         /* Compute the new coefficients iteratively */
-        for (int i = 1; i <= grid->imax; i++)
-            for (int j = 1; j <= grid->jmax; j++)
+        for (i = grid->il+1; i <= grid->ir; i++)
+            for (j = grid->jb+1; j <= grid->jt; j++)
             {
                 if (FLAG[i-1][j-1] != C_F)
-                {
-                    numberOfCells--;
                     continue;
-                }
                 temporary = invXWidthSqrd*(p[i+1][j] + p[i-1][j]);
                 temporary += invYWidthSqrd*(p[i][j+1] + p[i][j-1]) - rhs[i-1][j-1];
-                p[i][j] = omega*temporary/(2*invXWidthSqrd+2*invYWidthSqrd) + (1-omega)*p[i][j];
+                p[i][j] = omega*temporary/(2*(invXWidthSqrd+invYWidthSqrd)) + (1-omega)*p[i][j];
             }
         error = 0;
         /* Calculate the residue with respect to the rhs field */
-        for (int i = 1; i <= grid->imax; i++)
-            for (int j = 1; j <= grid->jmax; j++)
+        for (i = grid->il+1; i <= grid->ir; i++)
+            for (j = grid->jb+1; j <= grid->jt; j++)
             {
                 if (FLAG[i-1][j-1] != C_F)
                     continue;
@@ -169,8 +126,8 @@ void compDelt(REAL *delt, lattice *grid, REAL **U, REAL **V, REAL Re, REAL tau)
     if (tau <= 0)
         return;
     REAL dt = Re/(2/(sqr(grid->delx) + sqr(grid->dely)));
-    for (int i = 1; i <= grid->imax; i++)
-        for (int j = 1; j <= grid->jmax; j++)
+    for (int i = grid->il+1; i <= grid->ir; i++)
+        for (int j = grid->jb+1; j <= grid->jt; j++)
         {
             /* Once again, one of the inequalities is trivial */
             if (U[i][j] > 0 && grid->delx/U[i][j] < dt)
@@ -193,8 +150,8 @@ void compRHS(REAL **F, REAL **G, REAL **RHS, short **FLAG, lattice *grid, REAL d
         fill2Dfield(INFINITY,RHS,grid->imax,grid->jmax);
         return;
     }
-    for (int i = 1; i <= grid->imax; i++)
-        for (int j = 1; j <= grid->jmax; j++)
+    for (int i = grid->il+1; i <= grid->ir; i++)
+        for (int j = grid->jb+1; j <= grid->jt; j++)
         {
             if (FLAG[i-1][j-1] != C_F)
                 continue;
@@ -207,14 +164,11 @@ void compRHS(REAL **F, REAL **G, REAL **RHS, short **FLAG, lattice *grid, REAL d
 void adaptUV(REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
              REAL delt, short **FLAG, lattice *grid)
 {
-    for (int i = 1; i <= grid->imax; i++)
-        for (int j = 1; j <= grid->jmax; j++)
+    for (int i = grid->il+1; i <= grid->ir; i++)
+        for (int j = grid->jb+1; j <= grid->jt; j++)
         {
             if (FLAG[i-1][j-1] != C_F)
-            {
-                U[i][j] = V[i][j] = 0;
                 continue;
-            }
             U[i][j] = F[i][j] - delt/grid->delx*(P[i+1][j] - P[i][j]);
             V[i][j] = G[i][j] - delt/grid->dely*(P[i][j+1] - P[i][j]);
         }
@@ -269,9 +223,10 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
     REAL du2x, dv2y;
     REAL duvx, duvy;
     short flag;
-    for (int i = 1; i <= grid->imax; i++)
+    int i,j;
+    for (i = grid->il+1; i <= grid->ir; i++)
     {
-        for (int j = 1; j <= grid->jmax; j++)
+        for (j = grid->jb+1; j <= grid->jt; j++)
         {
             flag = FLAG[i-1][j-1];
             if (flag == C_B) /* Boundary cells with no neighboring fluid cells */
@@ -284,7 +239,7 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
                 G[i-1][j] = V[i-1][j];
             if (flag & B_W)     /* West */
                 F[i-1][j] = U[i-1][j];
-            else    /* Pure fluid cells */
+            if (flag == C_F)    /* Pure fluid cells */
             {
                 d2ux = (U[i+1][j] - 2*U[i][j] + U[i-1][j])/sqr(grid->delx);
                 d2uy = (U[i][j+1] - 2*U[i][j] + U[i][j-1])/sqr(grid->dely);
@@ -304,15 +259,25 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
             }
         }
     }
-    for (int j = 1; j<= grid->jmax; j++)
+    if (grid->il == 0)
     {
-        F[0][j] = U[0][j];
-        F[grid->imax][j] = U[grid->imax][j];
+        for (j = 1; j<= grid->jmax; j++)
+            F[0][j] = U[0][j];
     }
-    for (int i = 1; i <= grid->imax; i++)
+    if (grid->ir == grid->imax)
     {
-        G[i][0] = V[i][0];
-        G[i][grid->jmax] = V[i][grid->jmax];
+        for (j = 1; j<= grid->jmax; j++)
+            F[grid->imax][j] = U[grid->imax][j];
+    }
+    if (grid->jb == 0)
+    {
+        for (i = 1; i <= grid->imax; i++)
+            G[i][0] = V[i][0];
+    }
+    if (grid->jt == grid->jmax)
+    {
+        for (i = 1; i <= grid->imax; i++)
+            G[i][grid->jmax] = V[i][grid->jmax];
     }
     return;
 }
@@ -322,9 +287,9 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     lattice *grid = malloc(sizeof(lattice));
     if (grid == NULL)
         return NULL;
-    grid->imax = 0;
-    grid->jmax = 0;
-    boundaryCond *bCond;
+    grid->imax = grid->il = 0;
+    grid->jmax = grid->jb = 0;
+    boundaryCond *bCond = NULL;
 
     int n = 0;
     int partcount = 1000;
@@ -338,6 +303,8 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
         free(grid);
         return NULL;
     }
+    grid->ir = grid->imax;
+    grid->jt = grid->jmax;
     if (bCond->FLAG == NULL)
     {
         bCond->FLAG = create2DIntegerField(grid->imax,grid->jmax);
@@ -392,7 +359,7 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
         ParticleTransport(parts,partcount,delt);
     }
     printf("[Simulation complete!]\n");
-    writeVTKfileFor2DintegerField("GeometryField.vtk","geometryfield",bCond->FLAG,grid->imax,grid->jmax,grid->delx,grid->dely);
+    writeVTKfileFor2DintegerField("GeometryField.vtk","geometryfield",bCond->FLAG,grid);
 
     /* Destroy non-simulated grids */
     destroyMatrix(F,grid->imax+1);
