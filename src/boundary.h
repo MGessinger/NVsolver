@@ -24,7 +24,6 @@ typedef struct boundaryCondition {
 #define NOSLIP (0)
 #define FREESLIP (1)
 #define OUTFLOW (2)
-#define INFLOW (3)
 
 boundaryCond* createBoundCond(int wl, int wr, int wt, int wb);
 void    destroyBoundCond(boundaryCond *bCond, int imax);
