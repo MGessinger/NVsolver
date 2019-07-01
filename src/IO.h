@@ -38,7 +38,7 @@ void    outputVec (REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid,
 
 int check_if_png(const char *fileName, FILE **file);
 void readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr);
-short **readGeometry(const char *flagFile, int *minimumWidth, int *minimumHeight);
+short **readGeometry(const char *flagFile, int *width, int *height);
 /* Opens, confirms and reads a png-file into a flag array */
 
 int     readParameters (const char *inputFile, REAL ***U, REAL ***V, REAL ***P,

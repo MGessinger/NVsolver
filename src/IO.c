@@ -346,13 +346,12 @@ void readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr)
     return;
 }
 
-short** readGeometry (const char *flagFile, int *minimumWidth, int *minimumHeight)
+short** readGeometry (const char *flagFile, int *width, int *height)
 {
     /* Variables */
     FILE *flagData;
     png_structp png_ptr;
     png_infop info_ptr;
-    int height, width;
 
     if (!check_if_png(flagFile,&flagData))
     {
@@ -361,26 +360,21 @@ short** readGeometry (const char *flagFile, int *minimumWidth, int *minimumHeigh
     }
     readImageData(flagData,&png_ptr,&info_ptr);
 
-    height = png_get_image_height(png_ptr,info_ptr);
-    width = png_get_image_width(png_ptr,info_ptr);
-
-    if (height < *minimumHeight || width < *minimumWidth)
-        printf("The image has height %i and width %i.\n",height,width);
-    *minimumHeight = height;
-    *minimumWidth = width;
+    *height = png_get_image_height(png_ptr,info_ptr);
+    *width = png_get_image_width(png_ptr,info_ptr);
 
     png_bytepp rows;
     rows = png_get_rows(png_ptr,info_ptr);
 
-    short **FLAG = create2DIntegerField(width,height);
-    for (int i = 0; i < height; i++)
+    short **FLAG = create2DIntegerField(*width,*height);
+    for (int i = 0; i < *height; i++)
     {
-        for (int j = 0; j+2 < 3*width; j+=3)
+        for (int j = 0; j+2 < 3*(*width); j+=3)
         {
             if ( rows[i][j] < 0x90 || rows[i][j+1] < 0x90 || rows[i][j+2] < 0x90)
-                FLAG[j/3][height-1-i] = C_B;
+                FLAG[j/3][*height-1-i] = C_B;
             else
-                FLAG[j/3][height-1-i] = C_F;
+                FLAG[j/3][*height-1-i] = C_F;
         }
     }
 
@@ -429,7 +423,7 @@ void findOptimalFlags(short **FLAG, int height, int width, int *imax, int *jmax)
     short blockType, blockSize = height;
     int newHeight, newWidth;
     int i, j;
-    short *structureVec = malloc(height*sizeof(short));
+    short *structureVec = malloc(((short)height)*sizeof(short));
     if (structureVec == NULL)
         return;
     for (j = 0; j < height; j++)
