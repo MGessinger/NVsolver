@@ -93,12 +93,12 @@ void CreateFlag()
         do {scanf("%d",&ipos);} while ( getchar() != '\n' );
         printf("\nAnd now in y-direction:\ ");
         do {scanf("%d",&jpos);} while ( getchar() != '\n' );
-        if(ipos<1 | jpos<1 | (ipos+size)>sizeX | (jpos+size) > sizeY){
+        if(ipos<1 | jpos<1 | (ipos+isize)>sizeX | (jpos+jsize) > sizeY){
             printf("\nWrong positions or size too big. No obstacle added.");
         }else{
-            for(int i=ipos;i<=ipos+size;i++){
-                for(int j=jpos;j<=jpos+size;j++){
-                    field[i-1][j-1]=1;
+            for(int i=ipos;i<ipos+isize;i++){
+                for(int j=jpos;j<jpos+jsize;j++){
+                    field[i-1][j-1]=C_B;
                 }
             }
         }
@@ -117,11 +117,12 @@ void CreateFlag()
     if(answer == Y){
             correct=CorrectnessCheck(field,sizeX,sizeY);
     }
-    if(correct == 0){
+    while(correct == 1){
         printf("\nYour field is not correct. Check the error(s) above and edit it.");
-        EditFlag(field,sizeX,sizeY);
+        EditFlag(field,sizeX,sizeY,delx,dely);
+        correct=CorrectnessCheck(field,sizeX,sizeY);
     }
-    if(correct == 1){
+    if(correct == 0 && answer == Y){
         printf("\nYour field is correct!");
         }
     printf("\nDo you want to save your field? Enter Y or N: ");
@@ -143,10 +144,105 @@ void CreateFlag()
 
 short CorrectnessCheck(short** flag, int sizeX, int sizeY)
 {
-
+    for(int i=2;i<sizeX;i++){
+        for(int j=2;j<sizeY;j++){
+            if(flag[i][j]==C_B){
+                if(flag[i+1][j]==C_F && flag[i-1][j]==C_F){
+                    printf("\nError: (%d,%d) has fluid to the east and west.",i,j);
+                    return 1;
+                }
+                if(flag[i][j+1]==C_F && flag[i][j-1]==C_F){
+                    printf("\nError: (%d,%d) has fluid to the north and south.",i,j);
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
 }
 
-void EditFlag(short** flag, int sizeX, int sizeY)
+void EditFlag(short** flag, int sizeX, int sizeY, double dx, double dy)
 {
-
+    char run=Y;
+    char answer;
+    int isize;
+    int jsize;
+    int ipos;
+    int jpos;
+    char* filepath;
+    printf("\nYou're editing an existing field. You can remove and add obstacles.");
+    while(run == Y){
+        printf("\nDo you want to save the field as .vtk for visualization? Enter Y or N");
+        do {scanf("%c",&answer);} while ( getchar() != '\n' );
+        if(answer == Y){
+            printf("\nEnter a filepath to save the file:");
+            do {scanf("%s",filepath);} while ( getchar() != '\n' );
+            writeVTKfileFor2DintegerField(filepath,"shows obstacles",flag,sizeX,sizeY,dx,dy);
+        }
+        printf("\nDo you want to add or remove an obstacle? Enter A or R: ");
+        do {scanf("%c",&answer);} while ( getchar() != '\n' );
+        if(answer == A){
+            printf("\nWhich size should the new obstacle have in x-direction? Enter a number: ");
+            do {scanf("%d",&isize);} while ( getchar() != '\n' );
+            while(isize>sizeX){
+                printf("\nPick a smaller size please. Enter a new number: ");
+                do {scanf("%d",&isize);} while ( getchar() != '\n' );
+            }
+            printf("\nWhich size should the new obstacle have in y-direction? Enter a number: ");
+            do {scanf("%d",&jsize);} while ( getchar() != '\n' );
+            while(jsize>sizeY){
+                printf("\nPick a smaller size please. Enter a new number: ");
+                do {scanf("%d",&jsize);} while ( getchar() != '\n' );
+            }
+            printf("\nSet the position for the lower left block of the new obstacle: in x-direction: ");
+            do {scanf("%d",&ipos);} while ( getchar() != '\n' );
+            printf("\nAnd now in y-direction:\ ");
+            do {scanf("%d",&jpos);} while ( getchar() != '\n' );
+            if(ipos<1 | jpos<1 | (ipos+isize)>sizeX | (jpos+jsize) > sizeY){
+                printf("\nWrong positions or size too big. No obstacle added.");
+            }else{
+                for(int i=ipos;i<ipos+size;i++){
+                    for(int j=jpos;j<jpos+size;j++){
+                        flag[i-1][j-1]=C_B;
+                    }
+                }
+            }
+        }
+        if(answer == R){
+            printf("\nOf which size do you want to remove in x-direction? Enter a number: ");
+            do {scanf("%d",&isize);} while ( getchar() != '\n' );
+            while(isize>sizeX){
+                printf("\nPick a smaller size please. Enter a new number: ");
+                do {scanf("%d",&isize);} while ( getchar() != '\n' );
+            }
+            printf("\nOf which size do you want to remove in y-direction? Enter a number: ");
+            do {scanf("%d",&jsize);} while ( getchar() != '\n' );
+            while(jsize>sizeY){
+                printf("\nPick a smaller size please. Enter a new number: ");
+                do {scanf("%d",&jsize);} while ( getchar() != '\n' );
+            }
+            printf("\nSet the position for the lower left block of the removal: in x-direction: ");
+            do {scanf("%d",&ipos);} while ( getchar() != '\n' );
+            printf("\nAnd now in y-direction:\ ");
+            do {scanf("%d",&jpos);} while ( getchar() != '\n' );
+            if(ipos<1 | jpos<1 | (ipos+isize)>sizeX | (jpos+jsize) > sizeY){
+                printf("\nWrong positions or size too big. No obstacle removed.");
+            }else{
+                for(int i=ipos;i<ipos+isize;i++){
+                    for(int j=jpos;j<jpos+jsize;j++){
+                        flag[i-1][j-1]=C_F;
+                    }
+                }
+            }
+        }
+        printf("Do you want to continue editing? Enter Y or N: ");
+        do {scanf("%c",&run);} while ( getchar() != '\n' );
+    }
+    printf("\nDo you want to save your field? Enter Y or N: ");
+    do {scanf("%c",&answer);} while ( getchar() != '\n' );
+    if(answer == Y){
+        printf("\nEnter a filepath to save the file:");
+        do {scanf("%s",filepath);} while ( getchar() != '\n' );
+        WriteFlag(filepath,flag,sizeX,sizeY);
+    }
 }
