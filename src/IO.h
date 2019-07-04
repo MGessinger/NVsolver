@@ -26,12 +26,10 @@ REAL*   read1Dfield (const char* fileName, int* size);
 REAL**  read2Dfield (const char* fileName, int* sizeX, int* sizeY);
 /* Reads a field from fileName */
 
-void    writeVTKfileFor2DscalarField (const char* fileName, const char* description,
-                                      REAL** field, int sizeX, int sizeY, REAL dx, REAL dy);
-void    writeVTKfileFor2DintegerField(const char* fileName, const char* description,
-                                   short** field, int sizeX, int sizeY, REAL dx, REAL dy);
+void    writeVTKfileFor2DscalarField (const char* fileName, const char* description, REAL** field, lattice *grid);
+void    writeVTKfileFor2DintegerField(const char* fileName, const char* description, short** field, lattice *grid);
 void    writeVTKfileFor2DvectorField (const char* fileName, const char* description,
-                                      REAL** fieldU, REAL** fieldV, int sizeX, int sizeY, REAL dx, REAL dy);
+                                      REAL** fieldU, REAL** fieldV, lattice *grid);
 void    WriteParticle (particle *parts, int partcount, int n);
 void    outputVec (REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int partcount, int n);
 /* Outputs the given fields as VTK file for visualisation with Paraview */
