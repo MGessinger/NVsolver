@@ -4,8 +4,9 @@
 #define REAL double
 
 typedef struct lattice {
-    int imax;
-    int jmax;
+    int imax, jmax;
+    int il, ir;
+    int jb, jt;
     REAL delx;
     REAL dely;
 } lattice;

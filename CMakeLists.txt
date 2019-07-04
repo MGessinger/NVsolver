@@ -39,7 +39,7 @@ endif(NOT MSVC)
 if(MSVC)
   target_compile_options(fieldlib PRIVATE /W4 /WX)
 else(MSVC)
-  target_compile_options(fieldlib PRIVATE -Wall -Wextra -pedantic -O3 -g2)
+  target_compile_options(fieldlib PRIVATE -Wall -Wextra -pedantic -g2)
 endif(MSVC)
 
 # Adds an executable target called blatt1 to be built from the source/main.c

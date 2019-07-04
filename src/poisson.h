@@ -12,7 +12,7 @@
 /*REAL**  create2DpoissonMatrix (REAL ilength, REAL jlength, int imax, int jmax);
 Compute the 2D-Laplacian in discrete form */
 
-void    applyPboundaryCond(REAL **P, int imax, int jmax, REAL dxSqrd, REAL dySqrd, short **FLAG);
+void    applyPboundaryCond(REAL **P, lattice *grid, short **FLAG);
 int     solveSOR(REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REAL epsilon, int itermax);
 int     solveSORforPoisson (REAL **p, REAL **rhs, short **FLAG, REAL omega, REAL epsilon, int itermax, lattice *grid);
 /* Solve Ax = b for x. solveSORforPoisson uses an optimised algorithm for this application.

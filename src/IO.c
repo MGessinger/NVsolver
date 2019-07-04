@@ -157,7 +157,7 @@ REAL** read2Dfield(const char *fileName, int *sizeX, int *sizeY)
     return field;
 }
 
-void writeVTKfileFor2DintegerField(const char* fileName, const char* description, short** field, int sizeX, int sizeY, REAL dx, REAL dy)
+void writeVTKfileFor2DintegerField(const char* fileName, const char* description, short** field, lattice *grid)
 {
     FILE* vtkFile = fopen(fileName, "w");
     if (vtkFile == NULL)
@@ -168,26 +168,26 @@ void writeVTKfileFor2DintegerField(const char* fileName, const char* description
     fprintf(vtkFile, "ASCII\n");
 
     fprintf(vtkFile, "DATASET RECTILINEAR_GRID \n");
-    fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", sizeX, sizeY);
-    fprintf(vtkFile, "X_COORDINATES %d double\n", sizeX);
-    for (int i=0;i<sizeX;i++)
-        fprintf(vtkFile, "%lf ", dx*(double)i);
+    fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", grid->imax, grid->jmax);
+    fprintf(vtkFile, "X_COORDINATES %d double\n", grid->imax);
+    for (int i = 0; i < grid->imax; i++)
+        fprintf(vtkFile, "%lf ", grid->delx*(double)i);
     fprintf(vtkFile, "\n");
-    fprintf(vtkFile, "Y_COORDINATES %d double\n", sizeY);
-    for (int j=0;j<sizeY;j++)
-        fprintf(vtkFile, "%lf ", dy*(double)j);
+    fprintf(vtkFile, "Y_COORDINATES %d double\n", grid->jmax);
+    for (int j=0;j<grid->jmax;j++)
+        fprintf(vtkFile, "%lf ", grid->dely*(double)j);
     fprintf(vtkFile, "\n");
     fprintf(vtkFile, "Z_COORDINATES 1 double\n");
     fprintf(vtkFile, "0.0\n");
 
-    fprintf(vtkFile, "POINT_DATA %d\n", 1 * sizeX * sizeY);
+    fprintf(vtkFile, "POINT_DATA %d\n", grid->imax * grid->jmax);
     fprintf(vtkFile, "SCALARS %s double 1\n", description);
     fprintf(vtkFile, "LOOKUP_TABLE default \n");
-    for(int j=0;j<sizeY;j++)
+    for(int j=0;j<grid->jmax;j++)
     {
-        for(int i=0;i<sizeX;i++)
+        for(int i=0;i<grid->imax;i++)
         {
-            fprintf(vtkFile, "%i\n", (field[i][j]!=0));
+            fprintf(vtkFile, "%i\n", (field[i][j]!=C_F));
         }
     }
     fprintf(vtkFile,"\n");
@@ -195,7 +195,7 @@ void writeVTKfileFor2DintegerField(const char* fileName, const char* description
     fclose(vtkFile);
 }
 
-void writeVTKfileFor2DscalarField(const char* fileName, const char* description, REAL** field, int sizeX, int sizeY, REAL dx, REAL dy)
+void writeVTKfileFor2DscalarField(const char* fileName, const char* description, REAL** field, lattice *grid)
 {
     FILE* vtkFile = fopen(fileName, "w");
     if (vtkFile == NULL)
@@ -206,24 +206,24 @@ void writeVTKfileFor2DscalarField(const char* fileName, const char* description,
     fprintf(vtkFile, "ASCII\n");
 
     fprintf(vtkFile, "DATASET RECTILINEAR_GRID \n");
-    fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", sizeX, sizeY);
-    fprintf(vtkFile, "X_COORDINATES %d double\n", sizeX);
-    for (int i=0;i<sizeX;i++)
-        fprintf(vtkFile, "%lf ", dx*(double)i);
+    fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", grid->imax, grid->jmax);
+    fprintf(vtkFile, "X_COORDINATES %d double\n", grid->imax);
+    for (int i = 0; i < grid->imax; i++)
+        fprintf(vtkFile, "%lf ", grid->delx*(double)i);
     fprintf(vtkFile, "\n");
-    fprintf(vtkFile, "Y_COORDINATES %d double\n", sizeY);
-    for (int j=0;j<sizeY;j++)
-        fprintf(vtkFile, "%lf ", dy*(double)j);
+    fprintf(vtkFile, "Y_COORDINATES %d double\n", grid->jmax);
+    for (int j=0;j<grid->jmax;j++)
+        fprintf(vtkFile, "%lf ", grid->dely*(double)j);
     fprintf(vtkFile, "\n");
     fprintf(vtkFile, "Z_COORDINATES 1 double\n");
     fprintf(vtkFile, "0.0\n");
 
-    fprintf(vtkFile, "POINT_DATA %d\n", 1 * sizeX * sizeY);
+    fprintf(vtkFile, "POINT_DATA %d\n", grid->imax * grid->jmax);
     fprintf(vtkFile, "SCALARS %s double 1\n", description);
     fprintf(vtkFile, "LOOKUP_TABLE default \n");
-    for(int j=0;j<sizeY;j++)
+    for(int j=0;j<grid->jmax;j++)
     {
-        for(int i=0;i<sizeX;i++)
+        for(int i=0;i<grid->imax;i++)
         {
             fprintf(vtkFile, "%e\n", field[i][j]);
         }
@@ -233,7 +233,8 @@ void writeVTKfileFor2DscalarField(const char* fileName, const char* description,
     fclose(vtkFile);
 }
 
-void writeVTKfileFor2DvectorField(const char* fileName, const char* description, REAL** fieldU, REAL** fieldV, int sizeX, int sizeY, REAL dx, REAL dy)
+void writeVTKfileFor2DvectorField(const char* fileName, const char* description,
+                                  REAL** fieldU, REAL** fieldV, lattice *grid)
 {
     FILE* vtkFile = fopen(fileName, "w");
     if (vtkFile == NULL)
@@ -244,24 +245,23 @@ void writeVTKfileFor2DvectorField(const char* fileName, const char* description,
     fprintf(vtkFile, "ASCII\n");
 
     fprintf(vtkFile, "DATASET RECTILINEAR_GRID \n");
-    fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", sizeX, sizeY);
-    fprintf(vtkFile, "X_COORDINATES %d double\n", sizeX);
-    for (int i=0;i<sizeX;i++)
-        fprintf(vtkFile, "%lf ", dx*(double)i);
+    fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", grid->imax, grid->jmax);
+    fprintf(vtkFile, "X_COORDINATES %d double\n", grid->imax);
+    for (int i = 0; i < grid->imax; i++)
+        fprintf(vtkFile, "%lf ", grid->delx*(double)i);
     fprintf(vtkFile, "\n");
-    fprintf(vtkFile, "Y_COORDINATES %d double\n", sizeY);
-    for (int j=0;j<sizeY;j++)
-        fprintf(vtkFile, "%lf ", dy*(double)j);
+    fprintf(vtkFile, "Y_COORDINATES %d double\n", grid->jmax);
+    for (int j=0;j<grid->jmax;j++)
+        fprintf(vtkFile, "%lf ", grid->dely*(double)j);
     fprintf(vtkFile, "\n");
     fprintf(vtkFile, "Z_COORDINATES 1 double\n");
     fprintf(vtkFile, "0.0\n");
 
-
-    fprintf(vtkFile, "POINT_DATA %d\n", 1 * sizeX * sizeY);
+    fprintf(vtkFile, "POINT_DATA %d\n", grid->imax * grid->jmax);
     fprintf(vtkFile, "VECTORS %s double \n", description);
-    for(int j=0;j<sizeY;j++)
+    for(int j=0;j<grid->jmax;j++)
     {
-        for(int i=0;i<sizeX;i++)
+        for(int i=0;i<grid->imax;i++)
         {
             fprintf(vtkFile, "%e %e 0.0\n", fieldU[i][j], fieldV[i][j]);
         }
@@ -309,7 +309,7 @@ int check_if_png(const char *fileName, FILE **file)
    /* Read the first eight bytes and compare them to the signature */
    if (fread(buf, 1, 8, *file) != 8)
       return NOT_PNG;
-   return(!png_sig_cmp(buf, 0, 8));
+   return !png_sig_cmp(buf, 0, 8);
 }
 
 void readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr)
@@ -338,18 +338,17 @@ void readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr)
 
     /* Start reading data from the file (except for the signature, which has been read before) */
     png_set_sig_bytes(*png_ptr, 8);
-    png_read_png(*png_ptr, *info_ptr, PNG_TRANSFORM_PACKING, NULL);
+    png_read_png(*png_ptr, *info_ptr, PNG_TRANSFORM_PACKING | PNG_TRANSFORM_GRAY_TO_RGB, NULL);
     fclose(flagData);
     return;
 }
 
-short** readGeometry (const char *flagFile, int *minimumWidth, int *minimumHeight)
+short** readGeometry (const char *flagFile, int *height, int *width)
 {
     /* Variables */
     FILE *flagData;
     png_structp png_ptr;
     png_infop info_ptr;
-    int height, width;
 
     if (!check_if_png(flagFile,&flagData))
     {
@@ -358,26 +357,21 @@ short** readGeometry (const char *flagFile, int *minimumWidth, int *minimumHeigh
     }
     readImageData(flagData,&png_ptr,&info_ptr);
 
-    height = png_get_image_height(png_ptr,info_ptr);
-    width = png_get_image_width(png_ptr,info_ptr);
-
-    if (height < *minimumHeight || width < *minimumWidth)
-        printf("The image has height %i and width %i.\n",height,width);
-    *minimumHeight = height;
-    *minimumWidth = width;
+    *height = png_get_image_height(png_ptr,info_ptr);
+    *width = png_get_image_width(png_ptr,info_ptr);
 
     png_bytepp rows;
     rows = png_get_rows(png_ptr,info_ptr);
 
-    short **FLAG = create2DIntegerField(width,height);
-    for (int i = 0; i < height; i++)
+    short **FLAG = create2DIntegerField(*width,*height);
+    for (int i = 0; i < *height; i++)
     {
-        for (int j = 0; j < 3*width; j+=3)
+        for (int j = 0; j+2 < 3*(*width); j+=3)
         {
             if ( rows[i][j] < 0x90 || rows[i][j+1] < 0x90 || rows[i][j+2] < 0x90)
-                FLAG[j/3][height-1-i] = C_B;
+                FLAG[j/3][*height-1-i] = C_B;
             else
-                FLAG[j/3][height-1-i] = C_F;
+                FLAG[j/3][*height-1-i] = C_F;
         }
     }
 
@@ -416,16 +410,87 @@ short** adjustFlags(short **FLAG, int height, int width, int imax, int jmax)
     return newFLAG;
 }
 
-void findOptimalFlags(short **FLAG, int *height, int *width)
+void findOptimalFlags(short **FLAG, int height, int width, int *imax, int *jmax)
 {
-    if (!FLAG || !height || !width)
+    if (!FLAG || !imax || !jmax)
         return;
-    /* Find the structure size in x-direction */
-    for (int i = 0; i < *width; i++)
+    if (height == 0 || width == 0)
+        return;
+    /* Find the structure size in y-direction */
+    short blockType, blockSize = height;
+    int newHeight, newWidth;
+    int i, j;
+    short *structureVec = malloc(((short)height)*sizeof(short));
+    if (structureVec == NULL)
+        return;
+    for (j = 0; j < height; j++)
+        structureVec[j] = 0;
+    for (i = 0; i < width; i++)
     {
-        for (int j = 0; j < *height; j++)
-            continue;
+        blockType = FLAG[i][0];
+        for (j = 1; j < height; j++)
+        {
+            if (FLAG[i][j] != blockType)
+            {
+                structureVec[j] = 1;
+                blockType = FLAG[i][j];
+            }
+        }
     }
+    for (j = 0; j < height; j+=i)
+    {
+        i = 1;
+        while (j+i < height && structureVec[j+i] == 0)
+        {
+            i++;
+        }
+        if (i < blockSize)
+            blockSize = i;
+        if (blockSize == 1)
+            break;
+    }
+    free(structureVec);
+    /* Extract the height necessary to represent the image, but no less than *jmax */
+    newHeight = (height * 2)/blockSize;
+    if (newHeight < *jmax)
+        newHeight = *jmax;
+    /* Now do exactly the same thing for the x-direction */
+    blockSize = width;
+    structureVec = malloc((short)width*sizeof(short));
+    if (structureVec == NULL)
+        return;
+    for (i = 0; i < width; i++)
+        structureVec[i] = 0;
+    for (j = 0; j < height; j++)
+    {
+        blockType = FLAG[0][j];
+        for (i = 1; i < width; i++)
+        {
+            if (FLAG[i][j] != blockType)
+                structureVec[i] = 1;
+            blockType = FLAG[i][j];
+        }
+    }
+    for (i = 0; i < width; i+=j)
+    {
+        j = 1;
+        while (j+i < width && structureVec[j+i] == 0)
+        {
+            j++;
+        }
+        if (j < blockSize)
+            blockSize = j;
+        if (blockSize == 1)
+            break;
+    }
+    free(structureVec);
+    /* Extract the width necessary to represent the image, but no less than *imax */
+    newWidth = (width * 2)/blockSize;
+    if (newWidth < *imax)
+        newWidth = *imax;
+    *jmax = newHeight;
+    *imax = newWidth;
+    return;
 }
 
 int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
@@ -448,6 +513,8 @@ int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
         printf("The problem could not be detected. Assuming trivial fluid.\n");
     else
         printf("Initialising problem \"%s\"\n",problem);
+
+    *bCond = createBoundCond(NOSLIP,NOSLIP,NOSLIP,NOSLIP);
     while (fscanf(input,"%s%*[^0-9-]%lg\n",variableType,&value) == 2)
     {
         switch(variableType[0])
@@ -497,6 +564,12 @@ int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
             if (variableType[1] == 'X') fluid->GX = value;
             else fluid->GY = value;
             break;
+        case 'w':
+            if (variableType[1] == 't') (*bCond)->wt = value;
+            else if (variableType[1] == 'b') (*bCond)->wb = value;
+            else if (variableType[1] == 'r') (*bCond)->wr = value;
+            else if (variableType[1] == 'l') (*bCond)->wl = value;
+            break;
         default:
             printf("Found unexpected Variable %s of value %lg.\n",variableType,value);
             readVars--;
@@ -505,8 +578,8 @@ int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
     }
     fclose(input);
 
-    *bCond = createBoundCond(NOSLIP,OUTFLOW,NOSLIP,NOSLIP);
     short **image = readGeometry(variableType,&height,&width);
+    findOptimalFlags(image,height,width,&(grid->imax),&(grid->jmax));
     (*bCond)->FLAG = adjustFlags(image,height,width,grid->imax,grid->jmax);
     initFlags("Image",(*bCond)->FLAG,grid->imax,grid->jmax);
     initUVP(U,V,P,grid->imax,grid->jmax,UI,VI,PI);
@@ -531,7 +604,7 @@ void outputVec(REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int
         for (int i = 0;  i < imax; i++)
             for (int j = 0; j < jmax; j++)
                 T[i][j] = P[i+1][j+1];
-        writeVTKfileFor2DscalarField(fileName,"pressurefield",T,imax,jmax,grid->delx,grid->dely);
+        writeVTKfileFor2DscalarField(fileName,"pressurefield",T,grid);
     }
     if (U == NULL || V == NULL)
     {
@@ -547,7 +620,7 @@ void outputVec(REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int
             T[i-1][j-1] = (U[i][j] + U[i-1][j])/2;
             S[i-1][j-1] = (V[i][j] + V[i][j-1])/2;
         }
-    writeVTKfileFor2DvectorField(fileName,"momentumfield",T,S,imax,jmax,grid->delx,grid->dely);
+    writeVTKfileFor2DvectorField(fileName,"momentumfield",T,S,grid);
     WriteParticle(parts,partcount,n);
     destroyMatrix(T,imax);
     destroyMatrix(S,imax);
