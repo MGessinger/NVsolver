@@ -309,7 +309,7 @@ int check_if_png(const char *fileName, FILE **file)
    /* Read the first eight bytes and compare them to the signature */
    if (fread(buf, 1, 8, *file) != 8)
       return NOT_PNG;
-   return(!png_sig_cmp(buf, 0, 8));
+   return !png_sig_cmp(buf, 0, 8);
 }
 
 void readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr)
@@ -580,7 +580,6 @@ int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
 
     short **image = readGeometry(variableType,&height,&width);
     findOptimalFlags(image,height,width,&(grid->imax),&(grid->jmax));
-    printf("imax = %i, jmax = %i\n",grid->imax,grid->jmax);
     (*bCond)->FLAG = adjustFlags(image,height,width,grid->imax,grid->jmax);
     initFlags("Image",(*bCond)->FLAG,grid->imax,grid->jmax);
     initUVP(U,V,P,grid->imax,grid->jmax,UI,VI,PI);

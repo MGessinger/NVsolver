@@ -11,13 +11,13 @@ void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
             P[0][j] = P[1][j];
     if (grid->ir == grid->imax)
         for (int j = grid->jb; j <= grid->jt; j++)
-            P[grid->imax+1][j] = P[grid->imax][j];
+            P[grid->ir-grid->il+1][j] = P[grid->ir-grid->il][j];
     if (grid->jb == 0)
         for (int i = grid->il; i <= grid->ir; i++)
             P[i][0] = P[i][1];
     if (grid->jt == grid->jmax)
         for (int i = grid->il; i <= grid->ir; i++)
-            P[i][grid->jmax+1] = P[i][grid->jmax];
+            P[i][grid->jt-grid->jb+1] = P[i][grid->jt-grid->jb];
     REAL dxSqrd = grid->delx*grid->delx;
     REAL dySqrd = grid->dely*grid->dely;
     for (int i = grid->il+1; i <= grid->ir; i++)
@@ -261,23 +261,23 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
     }
     if (grid->il == 0)
     {
-        for (j = 1; j<= grid->jmax; j++)
+        for (j = grid->jb+1; j<= grid->jt; j++)
             F[0][j] = U[0][j];
     }
     if (grid->ir == grid->imax)
     {
-        for (j = 1; j<= grid->jmax; j++)
-            F[grid->imax][j] = U[grid->imax][j];
+        for (j = grid->jb+1; j<= grid->jt; j++)
+            F[grid->ir-grid->il][j] = U[grid->ir-grid->il][j];
     }
     if (grid->jb == 0)
     {
-        for (i = 1; i <= grid->imax; i++)
+        for (i = grid->il+1; i <= grid->ir; i++)
             G[i][0] = V[i][0];
     }
     if (grid->jt == grid->jmax)
     {
-        for (i = 1; i <= grid->imax; i++)
-            G[i][grid->jmax] = V[i][grid->jmax];
+        for (i = grid->il+1; i <= grid->ir; i++)
+            G[i][grid->jt-grid->jb] = V[i][grid->jt-grid->jb];
     }
     return;
 }
@@ -339,8 +339,8 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
         if (opt & PRINT)
             printf("Time is at %lg seconds\n",time);
         /* Update all parameters and fields for the iteration */
-        setBCond(*U,*V,grid->imax,grid->jmax,bCond);
-        setSpecBCond(*U,*V,grid->imax,grid->jmax,problem);
+        setBCond(*U,*V,grid,bCond);
+        setSpecBCond(*U,*V,grid,problem);
         compFG(*U,*V,F,G,bCond->FLAG,delt,grid,&simulation);
         compRHS(F,G,RHS,bCond->FLAG,grid,delt);
 

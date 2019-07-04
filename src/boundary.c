@@ -39,31 +39,41 @@ void applyHomogeneousNeumannBC(REAL **p, int imax, int jmax)
     return;
 }
 
-void setBCond(REAL **U, REAL **V, int imax, int jmax, boundaryCond *bCond)
+void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
 {
     if (bCond == NULL) /* OUTFLOW on all four edges and trivial geometry is the default. */
     {
-        applyHomogeneousNeumannBC(U,imax-1,jmax);
-        applyHomogeneousNeumannBC(V,imax,jmax-1);
+        applyHomogeneousNeumannBC(U,grid->imax-1,grid->jmax);
+        applyHomogeneousNeumannBC(V,grid->imax,grid->jmax-1);
         return;
     }
-    for (int i = 1; i <= imax; i++)
-    {
-        U[i][0] = (bCond->wb == NOSLIP) ? -U[i][1] : U[i][1];
-        U[i][jmax+1] = (bCond->wt == NOSLIP) ? -U[i][jmax] : U[i][jmax];
-        V[i][0] = (bCond->wb == OUTFLOW) ? V[i][1] : 0;
-        V[i][jmax] = (bCond->wt == OUTFLOW) ? V[i][jmax-1] : 0;
-    }
-    for (int j = 1; j <= jmax; j++)
-    {
-        U[0][j] = (bCond->wl == OUTFLOW) ? U[1][j] : 0;
-        U[imax][j] = (bCond->wr == OUTFLOW) ? U[imax-1][j] : 0;
-        V[0][j] = (bCond->wl == NOSLIP) ? -V[1][j] : V[1][j];
-        V[imax+1][j] = (bCond->wr == NOSLIP) ? -V[imax][j] : V[imax][j];
-    }
+    if (grid->jb == 0)
+        for (int i = grid->il+1; i <= grid->ir; i++)
+        {
+            U[i][0] = (bCond->wb == NOSLIP) ? -U[i][1] : U[i][1];
+            V[i][0] = (bCond->wb == OUTFLOW) ? V[i][1] : 0;
+        }
+    if (grid->jt == grid->jmax)
+        for (int i = grid->il+1; i <= grid->ir; i++)
+        {
+            U[i][grid->jt-grid->jb+1] = (bCond->wt == NOSLIP) ? -U[i][grid->jt-grid->jb] : U[i][grid->jt-grid->jb];
+            V[i][grid->jt-grid->jb] = (bCond->wt == OUTFLOW) ? V[i][grid->jt-grid->jb-1] : 0;
+        }
+    if (grid->il == 0)
+        for (int j = grid->jb+1; j <= grid->jt; j++)
+        {
+            U[0][j] = (bCond->wl == OUTFLOW) ? U[1][j] : 0;
+            V[0][j] = (bCond->wl == NOSLIP) ? -V[1][j] : V[1][j];
+        }
+    if (grid->ir == grid->imax)
+        for (int j = grid->jb+1; j <= grid->jt; j++)
+        {
+            U[grid->ir-grid->il][j] = (bCond->wr == OUTFLOW) ? U[grid->ir-grid->il-1][j] : 0;
+            V[grid->ir-grid->il+1][j] = (bCond->wr == NOSLIP) ? -V[grid->ir-grid->il][j] : V[grid->ir-grid->il][j];
+        }
     short flag;
-    for (int i = 1; i <= imax; i++)
-        for (int j = 1; j <= jmax; j++)
+    for (int i = grid->il+1; i <= grid->ir; i++)
+        for (int j = grid->jb+1; j <= grid->jt; j++)
         {
             flag = bCond->FLAG[i-1][j-1];
             if (flag == C_F)
@@ -125,33 +135,36 @@ void setBCond(REAL **U, REAL **V, int imax, int jmax, boundaryCond *bCond)
     return;
 }
 
-void setSpecBCond(REAL **U, REAL **V, int imax, int jmax, char *problem)
+void setSpecBCond(REAL **U, REAL **V, lattice *grid, char *problem)
 {
     if (problem == NULL)
         return;
     if (strcmp(problem,"Driven Cavity") == 0)
     {
-        for (int i = 1; i <= imax; i++)
-            U[i][jmax+1] = 2-U[i][jmax];
+        if (grid->jt != grid->jmax)
+            return;
+        for (int i = grid->il+1; i <= grid->ir; i++)
+            U[i][grid->jt-grid->jb+1] = 2-U[i][grid->jt-grid->jb];
         return;
     }
     if (strcmp(problem,"Step") == 0)
     {
-        for (int j = jmax/2; j <= jmax; j++)
+        if (grid->il != 0)
+            return;
+        for (int j = grid->jb; j <= grid->jt; j++)
         {
+            if (j < grid->jmax/2)
+                continue;
             U[0][j] = 1;
             V[0][j] = V[1][j];
         }
         return;
     }
-    if (strcmp(problem,"Ramp") == 0)
-    {
-        for (int i = 2; i < imax/3; i++)
-            V[i][0] = -1;
-    }
     if (strcmp(problem,"Tunnel") == 0 || strcmp(problem,"Von Karman") == 0)
     {
-        for (int j = 0; j <= jmax+1; j++)
+        if (grid->il != 0)
+            return;
+        for (int j = grid->jb; j <= grid->jt; j++)
         {
             U[0][j] = 1;
         }

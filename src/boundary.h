@@ -33,8 +33,8 @@ void    applyHomogeneousNeumannBC (REAL **p, int imax, int jmax);
 void    applyHomogeneousDirichletBC (REAL **p, int imax, int jmax);
 /* Apply homogeneous boundary conditions to the lattice */
 
-void    setBCond (REAL **U, REAL **V, int imax, int jmax, boundaryCond *bCond);
-void    setSpecBCond (REAL **U, REAL **V, int imax, int jmax, char *problem);
+void    setBCond (REAL **U, REAL **V, lattice *grid, boundaryCond *bCond);
+void    setSpecBCond (REAL **U, REAL **V, lattice *grid, char *problem);
 /* Set the boundary conditions for the given problem */
 
 void initFlags(const char* problem, short **FLAG, int imax, int jmax);
