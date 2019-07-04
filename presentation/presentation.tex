@@ -1,0 +1,60 @@
+\documentclass{beamer}
+\usetheme{Dresden}
+\include{edv_pakete}
+
+\pagenumbering{arabic}
+
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{comic sans}%
+    \usebeamercolor[black]{footline}%
+    \hspace{3em}%
+    \fontsize {9}{0} \selectfont
+    \insertframenumber/\insertmainframenumber
+}
+
+\author{Matthias Gessinger, Frederik Theis}
+\date{\today}
+\title{Allgemeine Randbedingungen aus Bilddateien}
+\institute{Uni Bonn, Strömungspraktikum}
+
+
+\begin{document}
+
+\begin{frame}
+\maketitle
+\end{frame}
+
+\begin{frame}
+    \frametitle{Das PNG-Dateiformat}
+    \begin{minipage}[c]{0.48\textwidth}
+        \includegraphics[height=0.8\textheight]{PNG.png}
+    \end{minipage}
+    \begin{minipage}[c]{0.48\textwidth}
+        \begin{itemize}
+            \item<1-> Signatur: \\
+                  89  50  4E  47  0D  0A  1A  0A
+            \item<2-> IHDR: Header-Chunk \\
+                  Breite, Höhe, Farbtiefe...
+            \item<3-> IDAT: Daten-Chunk \\
+                  Enthält die Pixeldaten (komprimiert)
+            \item<4> IEND: End-of-File-Chunk
+        \end{itemize}
+    \end{minipage}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Die png-Library}
+    \begin{figure}
+        \includegraphics[width=\textwidth]{libpng.png}
+        \caption{Frontseite von libpng.org}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \includegraphics[width=0.9\textwidth]{highPixel.png}
+    \hrule
+    \includegraphics[width=0.9\textwidth]{lowPixel.png}
+    \hrule
+\end{frame}
+
+\end{document}
