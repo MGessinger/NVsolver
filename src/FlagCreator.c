@@ -22,7 +22,7 @@ short** ReadFlag(const char* fileName, int* sizeX, int* sizeY)
 {
     FILE* datei;
     datei=fopen(fileName,"rb");
-    short **field;
+    short **field=NULL;
     if(datei == NULL){
         printf("Can't open the file.\n");
     }
@@ -41,9 +41,9 @@ short** ReadFlag(const char* fileName, int* sizeX, int* sizeY)
 short** mallocFlag(int sizeX, int sizeY)
 {
     short** field;
-    field=malloc((sizeX)*sizeof(short*));
+    field=malloc((sizeX)*(sizeof(short*)+2));
     for (int i=0; i<sizeX;i++){
-        field[i]=malloc((sizeY)*sizeof(short));
+        field[i]=malloc(sizeY*(sizeof(short)+2));
     }
     return field;
 }
@@ -57,6 +57,11 @@ int CreateFlag()
     printf("Now enter size in y-direction: ");
     do {scanf("%d",&sizeY);} while ( getchar() != '\n' );
     short** field=mallocFlag(sizeX,sizeY);
+    for(int i=0; i<sizeX;i++){
+        for(int j=0;j<sizeX;j++){
+            field[i][j]=C_F;
+        }
+    }
     char run='Y';
     char answer;
     int isize;
@@ -64,7 +69,7 @@ int CreateFlag()
     int ipos;
     int jpos;
     short correct=0;
-    char* filepath;
+    char filepath[100];
     double xlength;
     double ylength;
     char obstacle;
@@ -80,18 +85,7 @@ int CreateFlag()
     double delx=xlength/(double)sizeX;
     double dely=ylength/(double)sizeY;
     while((run == 'Y') || (run == 'y')){
-        printf("Which size should the obstacle have in x-direction? Enter a number: ");
-        do {scanf("%d",&isize);} while ( getchar() != '\n' );
-        while(isize>sizeX){
-            printf("Pick a smaller size please. Enter a new number: ");
-            do {scanf("%d",&isize);} while ( getchar() != '\n' );
-        }
-        printf("Which size should the obstacle have in y-direction? Enter a number: ");
-        do {scanf("%d",&jsize);} while ( getchar() != '\n' );
-        while(jsize>sizeY){
-            printf("Pick a smaller size please. Enter a new number: ");
-            do {scanf("%d",&jsize);} while ( getchar() != '\n' );
-        }
+
         printf("What type of obstacle do you want to add? Press h for help: ");
         do {scanf("%c",&obstacle);} while ( getchar() != '\n' );
         if(obstacle=='h'|| obstacle == 'H'){
@@ -107,18 +101,40 @@ int CreateFlag()
             do {scanf("%d",&ipos);} while ( getchar() != '\n' );
             printf("And now in y-direction: ");
             do {scanf("%d",&jpos);} while ( getchar() != '\n' );
-            if((ipos<1) | (jpos<1) | ((ipos+isize)>sizeX) | ((jpos+jsize) > sizeY)){
+            printf("Which size should the rectangle have in x-direction? Enter a number: ");
+            do {scanf("%d",&isize);} while ( getchar() != '\n' );
+            while(isize>sizeX){
+                printf("Pick a smaller size please. Enter a new number: ");
+                do {scanf("%d",&isize);} while ( getchar() != '\n' );
+            }
+            printf("Which size should the rectangle have in y-direction? Enter a number: ");
+            do {scanf("%d",&jsize);} while ( getchar() != '\n' );
+            while(jsize>sizeY){
+                printf("Pick a smaller size please. Enter a new number: ");
+                do {scanf("%d",&jsize);} while ( getchar() != '\n' );
+            }
+            if((ipos<1) || (jpos<1) || ((ipos+isize-1)>sizeX) || ((jpos+jsize-1) > sizeY)){
                 printf("Wrong positions or size too big. No rectangle added.\n");
             }else{
                 AddRectangle(field,isize,jsize,ipos,jpos,C_B);
             }
             break;
-
+        case 'C': case 'c':
+            printf("Set the position for the lower left block in x-direction: ");
+            do {scanf("%d",&ipos);} while ( getchar() != '\n' );
+            printf("And now in y-direction: ");
+            do {scanf("%d",&jpos);} while ( getchar() != '\n' );
+            if((ipos<1) | (jpos<1)){
+                printf("Wrong positions. No CreativeMode possible.\n");
+            }else{
+                CreativeMode(field,sizeX,sizeY,ipos,jpos);
+            }
+            break;
         default:
             printf("No valid input.\n");
             break;
         }
-        printf("Do you want to check your field in Paraview? Enter Y or N: ");
+        printf("Do you want to check your field in Paraview? Enter Y or N:");
         do {scanf("%c",&answer);} while ( getchar() != '\n' );
         if(answer == 'Y' || answer == 'y'){
             printf("Enter a filepath to save the file:");
@@ -171,7 +187,7 @@ int CreateFlag()
     return 0;
 }
 
-short CorrectnessCheck(short** flag, int sizeX, int sizeY)
+short CorrectnessCheck(short **flag, int sizeX, int sizeY)
 {
     for(int i=2;i<sizeX-1;i++){
         for(int j=2;j<sizeY-1;j++){
@@ -190,7 +206,7 @@ short CorrectnessCheck(short** flag, int sizeX, int sizeY)
     return 0;
 }
 
-void EditFlag(short** flag, int sizeX, int sizeY, double dx, double dy)
+void EditFlag(short **flag, int sizeX, int sizeY, double dx, double dy)
 {
     char run='Y';
     char answer='Y';
@@ -198,7 +214,7 @@ void EditFlag(short** flag, int sizeX, int sizeY, double dx, double dy)
     int jsize;
     int ipos;
     int jpos;
-    char* filepath;
+    char filepath[100];
     char obstacle;
     printf("\nYou're editing an existing field. You can remove and add obstacles.\n");
     while((run == 'Y') || (run == 'y')){
@@ -215,21 +231,10 @@ void EditFlag(short** flag, int sizeX, int sizeY, double dx, double dy)
             writeVTKfileFor2DintegerField(filepath,"shows_obstacles",flag,grid);
             free(grid);
         }
-        printf("Do you want to add or remove an obstacle? Enter A or R: ");
+        printf("Do you want to add or remove an obstacle? CreativeMode is available in both. Enter A or R: ");
         do {scanf("%c",&answer);} while ( getchar() != '\n' );
         if((answer == 'A') || (answer == 'a')){
-            printf("Which size should the new obstacle have in x-direction? Enter a number: ");
-            do {scanf("%d",&isize);} while ( getchar() != '\n' );
-            while(isize>sizeX){
-                printf("Pick a smaller size please. Enter a new number: ");
-                do {scanf("%d",&isize);} while ( getchar() != '\n' );
-            }
-            printf("Which size should the new obstacle have in y-direction? Enter a number: ");
-            do {scanf("%d",&jsize);} while ( getchar() != '\n' );
-            while(jsize>sizeY){
-                printf("Pick a smaller size please. Enter a new number: ");
-                do {scanf("%d",&jsize);} while ( getchar() != '\n' );
-            }
+
             printf("What type of obstacle do you want to add? Press h for help: ");
             do {scanf("%c",&obstacle);} while ( getchar() != '\n' );
             if(obstacle=='h'|| obstacle == 'H'){
@@ -245,31 +250,42 @@ void EditFlag(short** flag, int sizeX, int sizeY, double dx, double dy)
                 do {scanf("%d",&ipos);} while ( getchar() != '\n' );
                 printf("And now in y-direction: ");
                 do {scanf("%d",&jpos);} while ( getchar() != '\n' );
-                if((ipos<1) | (jpos<1) | ((ipos+isize)>sizeX) | ((jpos+jsize) > sizeY)){
+                if((ipos<1) | (jpos<1) | ((ipos+isize-1)>sizeX) | ((jpos+jsize-1) > sizeY)){
                     printf("Wrong positions or size too big. No rectangle added.\n");
                 }else{
                     AddRectangle(flag,isize,jsize,ipos,jpos,C_B);
                 }
                 break;
-
+            case 'C': case 'c':
+                printf("Which size should the new rectangle have in x-direction? Enter a number: ");
+                do {scanf("%d",&isize);} while ( getchar() != '\n' );
+                while(isize>sizeX){
+                    printf("Pick a smaller size please. Enter a new number: ");
+                    do {scanf("%d",&isize);} while ( getchar() != '\n' );
+                }
+                printf("Which size should the new rectangle have in y-direction? Enter a number: ");
+                do {scanf("%d",&jsize);} while ( getchar() != '\n' );
+                while(jsize>sizeY){
+                    printf("Pick a smaller size please. Enter a new number: ");
+                    do {scanf("%d",&jsize);} while ( getchar() != '\n' );
+                }
+                printf("Set the position for the lower left block in x-direction: ");
+                do {scanf("%d",&ipos);} while ( getchar() != '\n' );
+                printf("And now in y-direction: ");
+                do {scanf("%d",&jpos);} while ( getchar() != '\n' );
+                if((ipos<1) | (jpos<1)){
+                    printf("Wrong positions. No CreativeMode possible.\n");
+                }else{
+                    CreativeMode(flag,sizeX,sizeY,ipos,jpos);
+                }
+                break;
             default:
                 printf("No valid input.\n");
                 break;
             }
         }
         if((answer == 'R') || (answer == 'r')){
-            printf("Of which size do you want to remove in x-direction? Enter a number: ");
-            do {scanf("%d",&isize);} while ( getchar() != '\n' );
-            while(isize>sizeX){
-                printf("Pick a smaller size please. Enter a new number: ");
-                do {scanf("%d",&isize);} while ( getchar() != '\n' );
-            }
-            printf("Of which size do you want to remove in y-direction? Enter a number: ");
-            do {scanf("%d",&jsize);} while ( getchar() != '\n' );
-            while(jsize>sizeY){
-                printf("Pick a smaller size please. Enter a new number: ");
-                do {scanf("%d",&jsize);} while ( getchar() != '\n' );
-            }
+
             printf("What type of obstacle do you want to remove? Press h for help: ");
             do {scanf("%c",&obstacle);} while ( getchar() != '\n' );
             if(obstacle=='h'|| obstacle == 'H'){
@@ -281,17 +297,39 @@ void EditFlag(short** flag, int sizeX, int sizeY, double dx, double dy)
             switch(obstacle)
             {
             case 'R': case 'r':
+                printf("Of which size do you want to remove in x-direction? Enter a number: ");
+                do {scanf("%d",&isize);} while ( getchar() != '\n' );
+                while(isize>sizeX){
+                    printf("Pick a smaller size please. Enter a new number: ");
+                    do {scanf("%d",&isize);} while ( getchar() != '\n' );
+                }
+                printf("Of which size do you want to remove in y-direction? Enter a number: ");
+                do {scanf("%d",&jsize);} while ( getchar() != '\n' );
+                while(jsize>sizeY){
+                    printf("Pick a smaller size please. Enter a new number: ");
+                    do {scanf("%d",&jsize);} while ( getchar() != '\n' );
+                }
                 printf("Set the position for the lower left block of the rectangle: in x-direction: ");
                 do {scanf("%d",&ipos);} while ( getchar() != '\n' );
                 printf("And now in y-direction: ");
                 do {scanf("%d",&jpos);} while ( getchar() != '\n' );
-                if((ipos<1) | (jpos<1) | ((ipos+isize)>sizeX) | ((jpos+jsize) > sizeY)){
+                if((ipos<1) || (jpos<1) || ((ipos+isize-1)>sizeX) || ((jpos+jsize-1) > sizeY)){
                     printf("Wrong positions or size too big. No rectangle removed.\n");
                 }else{
                     AddRectangle(flag,isize,jsize,ipos,jpos,C_F);
                 }
                 break;
-
+            case 'C': case 'c':
+                printf("Set the position for the lower left block in x-direction: ");
+                do {scanf("%d",&ipos);} while ( getchar() != '\n' );
+                printf("And now in y-direction: ");
+                do {scanf("%d",&jpos);} while ( getchar() != '\n' );
+                if((ipos<1) | (jpos<1)){
+                    printf("Wrong positions. No CreativeMode possible.\n");
+                }else{
+                    CreativeMode(flag,sizeX,sizeY,ipos,jpos);
+                }
+                break;
             default:
                 printf("No valid input.\n");
                 break;
@@ -300,24 +338,17 @@ void EditFlag(short** flag, int sizeX, int sizeY, double dx, double dy)
         printf("Do you want to continue editing? Enter Y or N: ");
         do {scanf("%c",&run);} while ( getchar() != '\n' );
     }
-    printf("Do you want to save your field? Enter Y or N: ");
-    do {scanf("%c",&answer);} while ( getchar() != '\n' );
-    if((answer == 'Y') || (answer == 'y')){
-        printf("Enter a filepath to save the file:");
-        do {scanf("%s",filepath);} while ( getchar() != '\n' );
-        WriteFlag(filepath,flag,sizeX,sizeY);
-    }
     printf("\nYou're finished with editing!\n");
 }
 
 
 void EditFlagFromFile()
 {
-    char* fileName;
+    char fileName[100];
     double xlength;
     double ylength;
     printf("Which file do you want to edit? Enter the filepath:");
-    do {scanf("%s",filepath);} while ( getchar() != '\n' );
+    do {scanf("%s",fileName);} while ( getchar() != '\n' );
     printf("We need more Information for Visualization. Please enter xlength: ");
     do {scanf("%lf",&xlength);} while ( getchar() != '\n' );
     printf("And now ylength: ");
@@ -330,11 +361,53 @@ void EditFlagFromFile()
     EditFlag(flag,sizeX,sizeY,delx,dely);
 }
 
-void AddRectangle(short** flag, int isize,int jsize,int ipos,int jpos, short BorF)
+void AddRectangle(short **flag, int isize, int jsize, int ipos, int jpos, short BorF)
 {
     for(int i=ipos;i<ipos+isize;i++){
         for(int j=jpos;j<jpos+jsize;j++){
             flag[i-1][j-1]=BorF;
+        }
+    }
+}
+
+void CreativeMode(short **flag, int sizeX, int sizeY, int ipos, int jpos)
+{
+    char input[101];
+    const char trenn[]=".\n";
+    char borf;
+    int num;
+    int jh=jpos;
+    int ih=ipos;
+    printf("CreativeMode is very dangerous. Please read readme.txt first. Enter your code now:\n");
+    do {scanf("%s",input);} while ( getchar() != '\n' );
+    char* todo=strtok(input,trenn);
+    while(todo != NULL){
+        borf = *todo;
+        todo = strtok(NULL, trenn);
+        num = atoi(todo);
+        todo = strtok(NULL, trenn);
+        if(((ih+num)>sizeX)||(jh>sizeY)){
+            printf("Input error: Try again");
+        }else{
+            switch(borf)
+            {
+            case 'b': case 'B':
+                for(int i=ih;i<ih+num;i++){
+                    flag[i-1][jh-1]=C_B;
+                }
+                ih=ih+num;
+                break;
+            case 'f': case 'F':
+                for (int i=ih;i<ih+num;i++){
+                    flag[i-1][jh-1]=C_F;
+                }
+                ih=ih+num;
+                break;
+            case 'n': case 'N':
+                jh++;
+                ih=ipos;
+                break;
+            }
         }
     }
 }
