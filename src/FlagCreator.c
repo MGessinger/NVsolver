@@ -258,13 +258,6 @@ void EditFlag(short **flag, int sizeX, int sizeY, double dx, double dy)
                 do {scanf("%d",&ipos);} while ( getchar() != '\n' );
                 printf("And now in y-direction: ");
                 do {scanf("%d",&jpos);} while ( getchar() != '\n' );
-                if((ipos<1) | (jpos<1) | ((ipos+isize-1)>sizeX) | ((jpos+jsize-1) > sizeY)){
-                    printf("Wrong positions or size too big. No rectangle added.\n");
-                }else{
-                    AddRectangle(flag,isize,jsize,ipos,jpos,C_B);
-                }
-                break;
-            case 'C': case 'c':
                 printf("Which size should the new rectangle have in x-direction? Enter a number: ");
                 do {scanf("%d",&isize);} while ( getchar() != '\n' );
                 while(isize>sizeX){
@@ -277,6 +270,14 @@ void EditFlag(short **flag, int sizeX, int sizeY, double dx, double dy)
                     printf("Pick a smaller size please. Enter a new number: ");
                     do {scanf("%d",&jsize);} while ( getchar() != '\n' );
                 }
+                if((ipos<1) | (jpos<1) | ((ipos+isize-1)>sizeX) | ((jpos+jsize-1) > sizeY)){
+                    printf("Wrong positions or size too big. No rectangle added.\n");
+                }else{
+                    AddRectangle(flag,isize,jsize,ipos,jpos,C_B);
+                }
+                break;
+            case 'C': case 'c':
+
                 printf("Set the position for the lower left block in x-direction: ");
                 do {scanf("%d",&ipos);} while ( getchar() != '\n' );
                 printf("And now in y-direction: ");
