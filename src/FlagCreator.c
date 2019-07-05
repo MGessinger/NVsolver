@@ -54,8 +54,16 @@ int CreateFlag()
     int sizeY;
     printf("First you need to create a field. Enter size in x-direction: ");
     do {scanf("%d",&sizeX);} while ( getchar() != '\n' );
+    while(sizeX<1){
+        printf("sizeX is too small. Pick a greater number: ");
+        do {scanf("%d",&sizeX);} while ( getchar() != '\n' );
+    }
     printf("Now enter size in y-direction: ");
     do {scanf("%d",&sizeY);} while ( getchar() != '\n' );
+    while(sizeX<1){
+        printf("sizeY is too small. Pick a greater number: ");
+        do {scanf("%d",&sizeY);} while ( getchar() != '\n' );
+    }
     short** field=mallocFlag(sizeX,sizeY);
     for(int i=0; i<sizeX;i++){
         for(int j=0;j<sizeX;j++){
