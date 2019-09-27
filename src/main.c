@@ -8,9 +8,9 @@ int main (int argc, char **argv)
         return 0;
     }
     REAL **U = NULL, **V = NULL, **P = NULL;
-    int out = (argc >= 3) ? atoi(argv[2]) : 0;
+    int out = (argc >= 3) ? (PRINT | atoi(argv[2])*OUTPUT) : SILENT;
 
-    lattice *grid = simulateFluid(&U,&V,&P,argv[1],PRINT | out*OUTPUT);
+    lattice *grid = simulateFluid(&U,&V,&P,argv[1],out);
     outputVec(U,V,P,NULL,grid,0,0);
     /* Destroy simulated grids */
     if (grid != NULL)

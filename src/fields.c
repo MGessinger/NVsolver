@@ -96,86 +96,8 @@ void fill2Dfield(REAL value, REAL** field, int sizeX, int sizeY)
     if (field == NULL)
         return;
     for (int i = 0; i < sizeX; i++)
-    {
         fill1Dfield(value,field[i],sizeY);
-    }
     return;
-}
-
-int isEqualScalar(REAL x, REAL y, REAL eps)
-{
-    /* In any case, one of these inequalities is trivial, but both have to hold */
-    if (x-y <= eps && y-x <= eps)
-        return 1;
-    return 0;
-}
-
-int isEqual1Dfield(REAL* field1, REAL* field2, int size, REAL eps)
-{
-    if (field1 == NULL || field2 == NULL)
-        return 0;
-    for (int i = 0; i < size; i++)
-    {
-        if (isEqualScalar(field1[i],field2[i],eps) == 0)
-            return 0;
-    }
-    return 1;
-}
-
-int isEqual2Dfield(REAL** field1, REAL** field2, int sizeX, int sizeY, REAL eps)
-{
-    if (field1 == NULL || field2 == NULL)
-        return 0;
-    for (int i = 0; i < sizeX; i++)
-    {
-        if (isEqual1Dfield(field1[i],field2[i],sizeY,eps) == 0)
-            return 0;
-    }
-    return 1;
-}
-
-void applyFunctionTo1Dfield(REAL (*func)(REAL), REAL* field, int size)
-{
-    if (field == NULL)
-        return;
-    if (func == NULL)
-        return;
-    for (int i = 0; i < size; i++)
-        field[i] = func(field[i]);
-    return;
-}
-
-void	applyFunctionTo2Dfield(REAL (*func)(REAL), REAL** field, int sizeX, int sizeY)
-{
-    if (field == NULL)
-        return;
-    if (func == NULL)
-        return;
-    for (int i = 0; i < sizeX; i++)
-        applyFunctionTo1Dfield(func,field[i],sizeY);
-    return;
-}
-
-REAL** sampleFDgridOnCellCorners(REAL (*func)(REAL,REAL), lattice *grid)
-{
-    REAL **A = create2Dfield(grid->imax,grid->jmax);
-    if (A == NULL)
-        return NULL;
-    for (int i = 0; i < grid->imax; i++)
-        for (int j = 0; j < grid->jmax; j++)
-            A[i][j] = func(grid->delx*(i+1),grid->dely*(j+1));
-    return A;
-}
-
-REAL** sampleFDgridOnCellCenters(REAL (*func)(REAL,REAL), lattice *grid)
-{
-    REAL **A = create2Dfield(grid->imax,grid->jmax);
-    if (A == NULL)
-        return NULL;
-    for (int i = 0; i < grid->imax; i++)
-        for (int j = 0; j < grid->jmax; j++)
-            A[i][j] = func(grid->delx*(i+1./2),grid->dely*(j+1./2));
-    return A;
 }
 
 void initUVP(REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, REAL UI, REAL VI, REAL PI)

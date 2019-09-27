@@ -18,24 +18,27 @@ void destroyParticleArray(particle *parts)
     return;
 }
 
-int ParticleSeed (particle *parts, REAL posx1, REAL posx2, REAL posy1, REAL posy2, int partcount, int anzahl)
+int ParticleSeed (particle *parts, REAL posx1, REAL posx2, REAL posy1, REAL posy2, int partcount, int num)
 {
-    if (anzahl >= partcount)
-        anzahl = partcount;
-    REAL delx = (posx2 - posx1)/anzahl;
-    REAL dely = (posy2 - posy1)/anzahl;
-    for (int i = 0; i < partcount; i++)
+    /* Place particles on the line going from (posx1,posy1) to (posx2,posy2) */
+    if (num > partcount)
+        num = partcount;
+    REAL delx = (posx2 - posx1)/num;
+    REAL dely = (posy2 - posy1)/num;
+    int i = 0;
+    while (i < partcount)
     {
         if (parts[i].onScreen == 1)
             continue;
-        parts[i].x = posx1 + delx*anzahl;
-        parts[i].y = posy1 + dely*anzahl;
         parts[i].onScreen = 1;
-        anzahl--;
-        if (anzahl <= 0)
+        parts[i].x = posx1;
+        parts[i].y = posy1;
+        posx1 += delx;
+        posx2 += dely;
+        if (++i == num)
             break;
     }
-    return anzahl;
+    return i;
 }
 
 void ParticleVelocity (REAL **U, REAL **V, particle *parts, lattice *grid, short **FLAG, int partcount)

@@ -47,6 +47,7 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
         applyHomogeneousNeumannBC(V,grid->imax,grid->jmax-1);
         return;
     }
+    /* Boundary conditions on the actual boundary of the region */
     if (grid->jb == 0)
         for (int i = grid->il+1; i <= grid->ir; i++)
         {
@@ -72,6 +73,7 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
             V[grid->ir-grid->il+1][j] = (bCond->wr == NOSLIP) ? -V[grid->ir-grid->il][j] : V[grid->ir-grid->il][j];
         }
     short flag;
+    /* Boundary condtions on obstacles */
     for (int i = grid->il+1; i <= grid->ir; i++)
         for (int j = grid->jb+1; j <= grid->jt; j++)
         {

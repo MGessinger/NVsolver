@@ -2,6 +2,7 @@
 
 void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
 {
+    /* Apply boundary conditions for the pressure field */
     if (P == NULL || FLAG == NULL)
         return;
     short flag = 0;
@@ -64,15 +65,22 @@ void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
     return;
 }
 
+static inline REAL sqr(REAL x)
+{
+    return x*x;
+}
+
 int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG, REAL omega, REAL epsilon,
                         int itermax, lattice *grid)
 {
+    /* Use a SOR algorithm to solve the poisson equation */
     if (p == NULL || rhs == NULL || grid == NULL || FLAG == NULL)
         return 0;
     int it = 0;
     REAL temporary, error;
     REAL invXWidthSqrd = 1/(grid->delx*grid->delx);
     REAL invYWidthSqrd = 1/(grid->dely*grid->dely);
+    REAL scale = omega/(2*(sqr(1/grid->delx)+sqr(1/grid->dely)));
     REAL eps = epsilon*epsilon;
     int i,j;
     /* Count the number of fluid cells */
@@ -94,7 +102,7 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG, REAL omega, REAL epsi
                     continue;
                 temporary = invXWidthSqrd*(p[i+1][j] + p[i-1][j]);
                 temporary += invYWidthSqrd*(p[i][j+1] + p[i][j-1]) - rhs[i-1][j-1];
-                p[i][j] = omega*temporary/(2*(invXWidthSqrd+invYWidthSqrd)) + (1-omega)*p[i][j];
+                p[i][j] = scale*temporary + (1-omega)*p[i][j];
             }
         error = 0;
         /* Calculate the residue with respect to the rhs field */
@@ -116,13 +124,9 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG, REAL omega, REAL epsi
     return it;
 }
 
-REAL sqr(REAL x)
-{
-    return x*x;
-}
-
 void compDelt(REAL *delt, lattice *grid, REAL **U, REAL **V, REAL Re, REAL tau)
 {
+    /* Find the optimal step width in time */
     if (tau <= 0)
         return;
     REAL dt = Re/(2/(sqr(grid->delx) + sqr(grid->dely)));
@@ -219,6 +223,7 @@ REAL delFSqrdByDelZ(REAL **F, int i, int j, int z, REAL alpha, REAL delz)
 void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
                 lattice *grid, fluidSim *simulation)
 {
+    /* Compute the auxiliary arrays F and G */
     REAL d2ux, d2uy, d2vx, d2vy;
     REAL du2x, dv2y;
     REAL duvx, duvy;
@@ -318,7 +323,7 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     printf("Computing Reynoldsnumber %lg.\n",simulation.Re);
     particle *parts = createParticleArray(partcount);
 
-    /* Helping Grids: */
+    /* Auxiliary Grids: */
     REAL **F = create2Dfield(grid->imax+1,grid->jmax+1);
     REAL **G = create2Dfield(grid->imax+1,grid->jmax+1);
     /* RHS is used for the Poisson-Solver so no ghost cells are neccessary */

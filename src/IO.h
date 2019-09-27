@@ -1,8 +1,9 @@
 #ifndef IO_H_
 #define IO_H_
 
-#include "types.h"
+#include <stdio.h>
 #include <png.h>
+#include "types.h"
 
 #define NOT_PNG (0)
 

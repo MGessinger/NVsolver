@@ -10,8 +10,6 @@
 #define B_S (8)
 #define B_W (16)
 
-#include "types.h"
-
 #define NOSLIP (0)
 #define FREESLIP (1)
 #define OUTFLOW (2)
