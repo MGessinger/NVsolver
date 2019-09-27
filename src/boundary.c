@@ -9,6 +9,7 @@ boundaryCond* createBoundCond(int wl, int wr, int wt, int wb)
     bCond->wr = wr;
     bCond->wt = wt;
     bCond->wb = wb;
+    bCond->FLAG = NULL;
     return bCond;
 }
 
@@ -137,7 +138,7 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
     return;
 }
 
-void setSpecBCond(REAL **U, REAL **V, lattice *grid, char *problem)
+void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
 {
     /* Set special (e.g. inflow) conditions */
     if (problem == NULL)

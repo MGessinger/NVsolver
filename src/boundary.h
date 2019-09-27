@@ -23,7 +23,7 @@ void    applyHomogeneousDirichletBC (REAL **p, int imax, int jmax);
 /* Apply homogeneous boundary conditions to the lattice */
 
 void    setBCond (REAL **U, REAL **V, lattice *grid, boundaryCond *bCond);
-void    setSpecBCond (REAL **U, REAL **V, lattice *grid, char *problem);
+void    setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem);
 /* Set the boundary conditions for the given problem */
 
 void initFlags(const char* problem, short **FLAG, int imax, int jmax);

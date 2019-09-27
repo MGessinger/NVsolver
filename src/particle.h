@@ -7,7 +7,7 @@ particle* createParticleArray(int partcount);
 
 void    destroyParticleArray (particle *parts);
 
-int     ParticleSeed (particle *parts, REAL posx1, REAL posx2, REAL posy1, REAL posy2, int partcount, int anzahl);
+void ParticleSeed(particle *parts, REAL posx1, REAL posx2, REAL posy1, REAL posy2, int partcount, int anzahl);
 
 void    ParticleVelocity (REAL **U, REAL **V, particle *parts, lattice *grid, short **FLAG, int partcount);
 

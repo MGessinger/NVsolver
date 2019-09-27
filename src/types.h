@@ -16,9 +16,8 @@ typedef struct lattice {
 
 typedef struct fluidSimulation {
     REAL Re;
-    REAL tau;
-    REAL GX;
-    REAL GY;
+    REAL tau, dt;
+    REAL GX, GY;
     REAL eps;
     REAL omega;
     REAL alpha;
