@@ -30,7 +30,7 @@ REAL**  sampleFDgridOnCellCorners (REAL (*func)(REAL,REAL), lattice *grid);
 REAL**  sampleFDgridOnCellCenters (REAL (*func)(REAL,REAL), lattice *grid);
 /* Returns a matrix containing the discrete values of func on a lattice */
 
-void    initUVP(REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, REAL UI, REAL VI, REAL PI);
+void    initUVP(REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, double *init);
 /* Initialise the fields U, V and P to UI, VI and PI respectively */
 
 #endif /* FIELDS_H_ */

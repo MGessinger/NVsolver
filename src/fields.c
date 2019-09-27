@@ -100,15 +100,15 @@ void fill2Dfield(REAL value, REAL** field, int sizeX, int sizeY)
     return;
 }
 
-void initUVP(REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, REAL UI, REAL VI, REAL PI)
+void initUVP(REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, REAL *init)
 {
     if (U == NULL || V == NULL || P == NULL)
         return;
     *P = create2Dfield(imax+2,jmax+2);
     *U = create2Dfield(imax+2,jmax+2);
     *V = create2Dfield(imax+2,jmax+2);
-    fill2Dfield(UI,*U,imax+2,jmax+2);
-    fill2Dfield(VI,*V,imax+2,jmax+2);
-    fill2Dfield(PI,*P,imax+2,jmax+2);
+    fill2Dfield(init[0],*U,imax+2,jmax+2);
+    fill2Dfield(init[1],*V,imax+2,jmax+2);
+    fill2Dfield(init[2],*P,imax+2,jmax+2);
     return;
 }
