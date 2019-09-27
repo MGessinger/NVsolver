@@ -1,4 +1,4 @@
-/data/*
-/extra/*
-CMakeLists.txt*
-src/simulator.exe
+data/
+extra/
+build/
+CMakeLists.txt.*

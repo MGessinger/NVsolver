@@ -14,24 +14,13 @@ set(FIELDLIB_SOURCES
   src/IO.h
   src/particle.c
   src/particle.h
-  src/real.h
-  src/FlagCreator.c
-  src/FlagCreator.h
+  src/types.h
 )
 
 # adds a library target called fieldlib to be built from the source files
 add_library(fieldlib ${FIELDLIB_SOURCES})
 # Specifies the include directory to use when compiling our target fieldlib.
 target_include_directories(fieldlib PUBLIC src)
-
-# MSVC is set to true when the compiler is some version of Microsoft Visual C++ or another compiler simulating Visual C++.
-# Many mathematical functions (pow, sqrt, fabs, log etc.) are declared in math.h and require the library libm to be linked.
-# Unlike libc, which is automatically linked, libm is a separate library and often requires explicit linkage.
-# The linker presumes all libraries to begin with lib, so to link to libm you link to m.
-# This is probably not required for Windows which is why we use the "if (NOT MSVC)" here
-if (NOT MSVC)
-  target_link_libraries(fieldlib m png)
-endif(NOT MSVC)
 
 # Catch Bugs Before Testing
 # Compiler warnings are often indicators of future bugs
