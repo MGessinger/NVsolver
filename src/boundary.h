@@ -1,10 +1,7 @@
 #ifndef BOUNDARY_H_
 #define BOUNDARY_H_
 
-#include <stdlib.h>
-#include <string.h>
-#include "real.h"
-#include "fields.h"
+#include "types.h"
 
 #define C_F (0)
 #define C_B (1)
@@ -13,13 +10,7 @@
 #define B_S (8)
 #define B_W (16)
 
-typedef struct boundaryCondition {
-    int wt : 3;
-    int wr : 3;
-    int wb : 3;
-    int wl : 3;
-    short **FLAG;
-} boundaryCond;
+#include "types.h"
 
 #define NOSLIP (0)
 #define FREESLIP (1)

@@ -319,10 +319,10 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     particle *parts = createParticleArray(partcount);
 
     /* Helping Grids: */
-    REAL **F = createMatrix(grid->imax+1,grid->jmax+1);
-    REAL **G = createMatrix(grid->imax+1,grid->jmax+1);
+    REAL **F = create2Dfield(grid->imax+1,grid->jmax+1);
+    REAL **G = create2Dfield(grid->imax+1,grid->jmax+1);
     /* RHS is used for the Poisson-Solver so no ghost cells are neccessary */
-    REAL **RHS = createMatrix(grid->imax,grid->jmax);
+    REAL **RHS = create2Dfield(grid->imax,grid->jmax);
     /* Create Particles */
 
     /* Error checking */
@@ -362,9 +362,9 @@ lattice* simulateFluid (REAL ***U, REAL ***V, REAL ***P, const char *fileName, i
     writeVTKfileFor2DintegerField("GeometryField.vtk","geometryfield",bCond->FLAG,grid);
 
     /* Destroy non-simulated grids */
-    destroyMatrix(F,grid->imax+1);
-    destroyMatrix(G,grid->imax+1);
-    destroyMatrix(RHS,grid->imax);
+    destroy2Dfield(F,grid->imax+1);
+    destroy2Dfield(G,grid->imax+1);
+    destroy2Dfield(RHS,grid->imax);
     /* Destroy structures */
     destroyParticleArray(parts);
     destroyBoundCond(bCond,grid->imax);

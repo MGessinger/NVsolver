@@ -137,6 +137,7 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
 
 void setSpecBCond(REAL **U, REAL **V, lattice *grid, char *problem)
 {
+    /* Set special (e.g. inflow) conditions */
     if (problem == NULL)
         return;
     if (strcmp(problem,"Driven Cavity") == 0)
@@ -193,21 +194,6 @@ void initFlags(const char *problem, short **FLAG, int imax, int jmax)
                     continue;
                 FLAG[i+j][i] = C_B;
             }
-    }
-    else if (strcmp(problem,"Ramp") == 0)
-    {
-        for (int j = jmax/2+5; j < jmax; j++)
-        {
-            FLAG[0][j] = FLAG[1][j] = C_B;
-            FLAG[imax/3][j] = FLAG[imax/3+1][j] = C_B;
-        }
-        FLAG[0][jmax/2+1] = FLAG[0][jmax/2+2] = C_B;
-        FLAG[0][jmax/2+3] = FLAG[0][jmax/2+4] = C_B;
-        FLAG[1][jmax/2+1] = FLAG[1][jmax/2+2] = C_B;
-        FLAG[1][jmax/2+3] = FLAG[1][jmax/2+4] = C_B;
-        for (int i = 0; i < imax/3+5; i++)
-            FLAG[i][jmax/2-1] = FLAG[i][jmax/2] = C_B;
-
     }
     for (int i = 0; i < imax; i++)
         for (int j = 0; j < jmax; j++)

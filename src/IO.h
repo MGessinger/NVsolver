@@ -1,14 +1,8 @@
 #ifndef IO_H_
 #define IO_H_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "types.h"
 #include <png.h>
-#include "real.h"
-#include "boundary.h"
-#include "fields.h"
-#include "particle.h"
 
 #define NOT_PNG (0)
 

@@ -33,16 +33,6 @@ void print2Dfield(REAL** field, int sizeX, int sizeY)
     return;
 }
 
-void printVector(REAL* vector, int len)
-{
-    print1Dfield(vector,len);
-}
-
-void printMatrix(REAL** matrix, int rows, int cols)
-{
-    print2Dfield(matrix,rows,cols);
-}
-
 void write1Dfield(const char *fileName, REAL* field, int size)
 {
     if (field == NULL)
@@ -594,8 +584,8 @@ void outputVec(REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int
         return;
     int imax = grid->imax;
     int jmax = grid->jmax;
-    REAL **S = createMatrix(imax,jmax);
-    REAL **T = createMatrix(imax,jmax);
+    REAL **S = create2Dfield(imax,jmax);
+    REAL **T = create2Dfield(imax,jmax);
     char fileName[64];
     if (P != NULL)
     {
@@ -608,8 +598,8 @@ void outputVec(REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int
     }
     if (U == NULL || V == NULL)
     {
-        destroyMatrix(T,imax);
-        destroyMatrix(S,imax);
+        destroy2Dfield(T,imax);
+        destroy2Dfield(S,imax);
         return;
     }
     if (n != 0) sprintf(fileName,"MomentumField_%i.vtk",n);
@@ -622,7 +612,7 @@ void outputVec(REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int
         }
     writeVTKfileFor2DvectorField(fileName,"momentumfield",T,S,grid);
     WriteParticle(parts,partcount,n);
-    destroyMatrix(T,imax);
-    destroyMatrix(S,imax);
+    destroy2Dfield(T,imax);
+    destroy2Dfield(S,imax);
     return;
 }

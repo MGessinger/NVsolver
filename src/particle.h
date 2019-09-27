@@ -1,17 +1,7 @@
 #ifndef PARTICLE_H_
 #define PARTICLE_H_
 
-#include "real.h"
-#include "fields.h"
-#include "boundary.h"
-
-typedef struct particle {
-    REAL x;
-    REAL y;
-    REAL u;
-    REAL v;
-    int onScreen : 2;
-} particle;
+#include "types.h"
 
 particle* createParticleArray(int partcount);
 

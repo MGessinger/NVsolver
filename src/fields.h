@@ -1,21 +1,16 @@
 #ifndef FIELDS_H_
 #define FIELDS_H_
 
-#include <stdlib.h>
-#include "real.h"
+#include "types.h"
 
 REAL*	create1Dfield (int size);
 REAL**	create2Dfield (int sizeX, int sizeY);
 short** create2DIntegerField(int imax, int jmax);
-REAL*	createVector (int len);
-REAL**	createMatrix (int rows, int cols);
 /* Creates arrays of the given size */
 
 void 	destroy1Dfield (REAL *field);
 void 	destroy2Dfield (REAL **field, int sizeX);
 void    destroy2DIntegerField(short **field, int imax);
-void	destroyVector (REAL *vector);
-void	destroyMatrix (REAL **matrix, int rows);
 /* Clears the memory allocated for field */
 
 void	fill1Dfield (REAL value, REAL *field, int size);

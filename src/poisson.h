@@ -2,9 +2,7 @@
 #define POISSON_H_
 
 #include <math.h>
-#include "fields.h"
-#include "boundary.h"
-#include "IO.h"
+#include "types.h"
 
 #define DERIVE_BY_X (1)
 #define DERIVE_BY_Y (2)

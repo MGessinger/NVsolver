@@ -1,12 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-
-#include "fields.h"
-#include "real.h"
-#include "poisson.h"
-#include "IO.h"
-#include "boundary.h"
-#include "particle.h"
+#include "types.h"
 
 int main (int argc, char **argv)
 {
@@ -23,9 +15,9 @@ int main (int argc, char **argv)
     /* Destroy simulated grids */
     if (grid != NULL)
     {
-        destroyMatrix(U,grid->imax+2);
-        destroyMatrix(V,grid->imax+2);
-        destroyMatrix(P,grid->imax+2);
+        destroy2Dfield(U,grid->imax+2);
+        destroy2Dfield(V,grid->imax+2);
+        destroy2Dfield(P,grid->imax+2);
         free(grid);
     }
     return 0;

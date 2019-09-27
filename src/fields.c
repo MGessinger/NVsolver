@@ -46,16 +46,6 @@ short** create2DIntegerField(int imax, int jmax)
     return matrix;
 }
 
-REAL* createVector(int len)
-{
-    return create1Dfield(len);
-}
-
-REAL** createMatrix(int rows, int cols)
-{
-    return create2Dfield(rows, cols);
-}
-
 void destroy1Dfield(REAL* field)
 {
     if (field == NULL)
@@ -88,16 +78,6 @@ void destroy2DIntegerField(short **field, int imax)
     }
     free(field);
     return;
-}
-
-void destroyVector(REAL* vector)
-{
-    destroy1Dfield(vector);
-}
-
-void destroyMatrix(REAL** matrix, int rows)
-{
-    destroy2Dfield(matrix,rows);
 }
 
 void fill1Dfield(REAL value, REAL* field, int size)
@@ -178,7 +158,7 @@ void	applyFunctionTo2Dfield(REAL (*func)(REAL), REAL** field, int sizeX, int siz
 
 REAL** sampleFDgridOnCellCorners(REAL (*func)(REAL,REAL), lattice *grid)
 {
-    REAL **A = createMatrix(grid->imax,grid->jmax);
+    REAL **A = create2Dfield(grid->imax,grid->jmax);
     if (A == NULL)
         return NULL;
     for (int i = 0; i < grid->imax; i++)
@@ -189,7 +169,7 @@ REAL** sampleFDgridOnCellCorners(REAL (*func)(REAL,REAL), lattice *grid)
 
 REAL** sampleFDgridOnCellCenters(REAL (*func)(REAL,REAL), lattice *grid)
 {
-    REAL **A = createMatrix(grid->imax,grid->jmax);
+    REAL **A = create2Dfield(grid->imax,grid->jmax);
     if (A == NULL)
         return NULL;
     for (int i = 0; i < grid->imax; i++)
@@ -202,9 +182,9 @@ void initUVP(REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, REAL UI, REAL 
 {
     if (U == NULL || V == NULL || P == NULL)
         return;
-    *P = createMatrix(imax+2,jmax+2);
-    *U = createMatrix(imax+2,jmax+2);
-    *V = createMatrix(imax+2,jmax+2);
+    *P = create2Dfield(imax+2,jmax+2);
+    *U = create2Dfield(imax+2,jmax+2);
+    *V = create2Dfield(imax+2,jmax+2);
     fill2Dfield(UI,*U,imax+2,jmax+2);
     fill2Dfield(VI,*V,imax+2,jmax+2);
     fill2Dfield(PI,*P,imax+2,jmax+2);

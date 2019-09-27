@@ -34,7 +34,7 @@ endif(MSVC)
 # Adds an executable target called blatt1 to be built from the source/main.c
 add_executable(simulator src/main.c)
 # links our executable with the source library fieldlib
-target_link_libraries(simulator fieldlib)
+target_link_libraries(simulator fieldlib png)
 # Add a subdirectory to the build (where another CMakeLists.txt is located)
-add_subdirectory(tests)
+#add_subdirectory(tests)
 
