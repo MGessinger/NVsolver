@@ -29,18 +29,18 @@ void    WriteParticle (particle *parts, int partcount, int n);
 void    outputVec (REAL **U, REAL **V, REAL **P, lattice *grid, int n);
 /* Outputs the given fields as VTK file for visualisation with Paraview */
 
-int check_if_png(const char *fileName, FILE **file);
-void readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr);
-short **readGeometry(const char *flagFile, int *width, int *height);
+int     check_if_png(const char *fileName, FILE **file);
+void    readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr);
+short** readGeometry(const char *flagFile, int *width, int *height);
 /* Opens, confirms and reads a png-file into a flag array */
 
 short** adjustFlags(short **FLAG, int height, int width, int imax, int jmax);
-void findOptimalFlags(short **FLAG, int height, int width, int *imax, int *jmax);
+void    findOptimalFlags(short **FLAG, int height, int width, int *imax, int *jmax);
 /* Changes the number of geomatry cells */
 
-int readParameters(const char *inputFile, REAL *init,
-                   lattice *grid, fluidSim *sim, boundaryCond *bCond,
-                   REAL *delt, REAL *t_end, char *problem);
+int     readParameters(const char *inputFile, REAL *init,
+                       lattice *grid, fluidSim *sim, boundaryCond *bCond,
+                       REAL *delt, REAL *t_end);
 /* Read parameters for a simulation from inputFile */
 
 #endif /* IO_H_ */

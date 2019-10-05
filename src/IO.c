@@ -489,7 +489,7 @@ void findOptimalFlags(short **FLAG, int height, int width, int *imax, int *jmax)
 
 int readParameters(const char *inputFile, REAL *init,
                    lattice *grid, fluidSim *sim, boundaryCond *bCond,
-                   REAL *delt, REAL *t_end, char *problem)
+                   REAL *delt, REAL *t_end)
 {
     FILE *input = fopen(inputFile,"r");
     if (input == NULL)
@@ -501,10 +501,6 @@ int readParameters(const char *inputFile, REAL *init,
     REAL value;
     REAL xlength = 0, ylength = 0;
     int readVars = 0;
-    if (fscanf(input,"%[^\n\r]\n",problem) == 0)
-        printf("The problem could not be detected. Assuming trivial fluid.\n");
-    else
-        printf("Initialising problem \"%s\"\n",problem);
 
     while (fscanf(input,"%s%*[A-Za-z ]%lg\n",variable,&value) == 2)
     {

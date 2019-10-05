@@ -12,13 +12,15 @@ lattice *createLattice()
 
 int main (int argc, char **argv)
 {
-    if (argc < 3)
+    if (argc < 3 || argv[1][0] == '-')
     {
-        printf("Usage: simulator [-p \"parameter_file\"]\n"
+        printf("Usage: simulator <scene>\n"
+               "                 [-p \"parameter_file\"]\n"
                "                 [-i \"image_file]\"\n"
                "                 [number_of_frames]\n");
         printf("When specifying both an image and a parameter file, "
                "the sizes specified from the image take precedence!\n");
+        printf("Type simulator -h for extended help.\n");
         return 0;
     }
     REAL **U = NULL, **V = NULL, **P = NULL;
@@ -30,7 +32,8 @@ int main (int argc, char **argv)
     lattice *grid = createLattice();
     fluidSim sim;
     char problem[128];
-    for (int i = 0; i < argc; i++)
+    strcpy(problem,argv[1]);
+    for (int i = 1; i < argc; i++)
     {
         if (argv[i][0] != '-')
         {
@@ -40,8 +43,9 @@ int main (int argc, char **argv)
         if (argv[i][1] == 'p' && i+1 < argc)
         {
             /* Read prameters from a file */
-            if (readParameters(argv[i+1],init,grid,&sim,bCond,&delt,&t_end,problem) < 17)
+            if (readParameters(argv[i+1],init,grid,&sim,bCond,&delt,&t_end) < 17)
             {
+                printf("The parameter file appears to be incomplete.\n");
                 destroyBoundCond(bCond,grid->imax);
                 free(grid);
                 return 0;
