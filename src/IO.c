@@ -29,18 +29,8 @@ void print2Dfield(REAL** field, int sizeX, int sizeY)
         }
         printf("\n");
     }
-    printf("\n"); /*Add another empty line for better readability in the output */
+    printf("\n"); /* Add another empty line for better readability in the output */
     return;
-}
-
-void printVector(REAL* vector, int len)
-{
-    print1Dfield(vector,len);
-}
-
-void printMatrix(REAL** matrix, int rows, int cols)
-{
-    print2Dfield(matrix,rows,cols);
 }
 
 void write1Dfield(const char *fileName, REAL* field, int size)
@@ -102,18 +92,20 @@ REAL* read1Dfield(const char* fileName, int* size)
     if (fread(size,sizeof(int),1,in) != 1)
     {
         printf("The file has incorrect format.\n");
+        fclose(in);
         return NULL;
     }
     REAL *field = create1Dfield(*size);
     if (field == NULL)
     {
         printf("Could not allocate memory. Please try again.\n");
+        fclose(in);
         return NULL;
     }
     int read = fread(field,sizeof(REAL),*size,in);
     if (read != *size)
     {
-        printf("Only %i out of %i values were read correctly.\n",read,*size);
+        printf("[WARNING] Only %i out of %i values were read correctly.\n",read,*size);
     }
     fclose(in);
     return field;
@@ -136,12 +128,14 @@ REAL** read2Dfield(const char *fileName, int *sizeX, int *sizeY)
     if (fread(sizeX,sizeof(int),1,in) == 0 || fread(sizeY,sizeof(int),1,in) == 0)
     {
         printf("The file has incorrect format.\n");
+        fclose(in);
         return NULL;
     }
     REAL **field = create2Dfield(*sizeX,*sizeY);
     if (field == NULL)
     {
         printf("Could not allocate memory. Please try again.\n");
+        fclose(in);
         return NULL;
     }
     int read = 0;
@@ -170,12 +164,12 @@ void writeVTKfileFor2DintegerField(const char* fileName, const char* description
     fprintf(vtkFile, "DATASET RECTILINEAR_GRID \n");
     fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", grid->imax, grid->jmax);
     fprintf(vtkFile, "X_COORDINATES %d double\n", grid->imax);
-    for (int i = 0; i < grid->imax; i++)
-        fprintf(vtkFile, "%lf ", grid->delx*(double)i);
+    for (REAL i = 0; i < grid->imax; i++)
+        fprintf(vtkFile, "%lf ", grid->delx*i);
     fprintf(vtkFile, "\n");
     fprintf(vtkFile, "Y_COORDINATES %d double\n", grid->jmax);
-    for (int j=0;j<grid->jmax;j++)
-        fprintf(vtkFile, "%lf ", grid->dely*(double)j);
+    for (REAL j = 0; j < grid->jmax; j++)
+        fprintf(vtkFile, "%lf ", grid->dely*j);
     fprintf(vtkFile, "\n");
     fprintf(vtkFile, "Z_COORDINATES 1 double\n");
     fprintf(vtkFile, "0.0\n");
@@ -208,12 +202,12 @@ void writeVTKfileFor2DscalarField(const char* fileName, const char* description,
     fprintf(vtkFile, "DATASET RECTILINEAR_GRID \n");
     fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", grid->imax, grid->jmax);
     fprintf(vtkFile, "X_COORDINATES %d double\n", grid->imax);
-    for (int i = 0; i < grid->imax; i++)
-        fprintf(vtkFile, "%lf ", grid->delx*(double)i);
+    for (REAL i = 0; i < grid->imax; i++)
+        fprintf(vtkFile, "%lf ", grid->delx*i);
     fprintf(vtkFile, "\n");
     fprintf(vtkFile, "Y_COORDINATES %d double\n", grid->jmax);
-    for (int j=0;j<grid->jmax;j++)
-        fprintf(vtkFile, "%lf ", grid->dely*(double)j);
+    for (REAL j = 0; j < grid->jmax; j++)
+        fprintf(vtkFile, "%lf ", grid->dely*j);
     fprintf(vtkFile, "\n");
     fprintf(vtkFile, "Z_COORDINATES 1 double\n");
     fprintf(vtkFile, "0.0\n");
@@ -221,9 +215,9 @@ void writeVTKfileFor2DscalarField(const char* fileName, const char* description,
     fprintf(vtkFile, "POINT_DATA %d\n", grid->imax * grid->jmax);
     fprintf(vtkFile, "SCALARS %s double 1\n", description);
     fprintf(vtkFile, "LOOKUP_TABLE default \n");
-    for(int j=0;j<grid->jmax;j++)
+    for(int j = 0; j < grid->jmax; j++)
     {
-        for(int i=0;i<grid->imax;i++)
+        for(int i = 0; i < grid->imax; i++)
         {
             fprintf(vtkFile, "%e\n", field[i][j]);
         }
@@ -247,33 +241,32 @@ void writeVTKfileFor2DvectorField(const char* fileName, const char* description,
     fprintf(vtkFile, "DATASET RECTILINEAR_GRID \n");
     fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", grid->imax, grid->jmax);
     fprintf(vtkFile, "X_COORDINATES %d double\n", grid->imax);
-    for (int i = 0; i < grid->imax; i++)
-        fprintf(vtkFile, "%lf ", grid->delx*(double)i);
+    for (REAL i = 0; i < grid->imax; i++)
+        fprintf(vtkFile, "%lf ", grid->delx*i);
     fprintf(vtkFile, "\n");
     fprintf(vtkFile, "Y_COORDINATES %d double\n", grid->jmax);
-    for (int j=0;j<grid->jmax;j++)
-        fprintf(vtkFile, "%lf ", grid->dely*(double)j);
+    for (REAL j = 0; j < grid->jmax; j++)
+        fprintf(vtkFile, "%lf ", grid->dely*j);
     fprintf(vtkFile, "\n");
     fprintf(vtkFile, "Z_COORDINATES 1 double\n");
     fprintf(vtkFile, "0.0\n");
 
     fprintf(vtkFile, "POINT_DATA %d\n", grid->imax * grid->jmax);
     fprintf(vtkFile, "VECTORS %s double \n", description);
-    for(int j=0;j<grid->jmax;j++)
+    for(int j = 0; j < grid->jmax; j++)
     {
-        for(int i=0;i<grid->imax;i++)
+        for(int i = 0; i < grid->imax; i++)
         {
             fprintf(vtkFile, "%e %e 0.0\n", fieldU[i][j], fieldV[i][j]);
         }
     }
     fprintf(vtkFile,"\n");
-
     fclose(vtkFile);
 }
 
 void WriteParticle (particle *parts, int partcount, int n)
 {
-    if (parts == NULL || partcount == 0)
+    if (!parts|| !partcount)
         return;
     char fileName[128];
     if (n != 0)
@@ -355,6 +348,7 @@ short** readGeometry (const char *flagFile, int *height, int *width)
         printf("The given file does not seem to be a png file. Please check your input.\n");
         return NULL;
     }
+    printf("Reading flags from \"%s\"",flagFile);
     readImageData(flagData,&png_ptr,&info_ptr);
 
     *height = png_get_image_height(png_ptr,info_ptr);
@@ -414,10 +408,10 @@ void findOptimalFlags(short **FLAG, int height, int width, int *imax, int *jmax)
 {
     if (!FLAG || !imax || !jmax)
         return;
-    if (height == 0 || width == 0)
+    if (!height || !width)
         return;
     /* Find the structure size in y-direction */
-    short blockType, blockSize = height;
+    int blockType, blockSize = height;
     int newHeight, newWidth;
     int i, j;
     short *structureVec = malloc(((short)height)*sizeof(short));
@@ -493,31 +487,26 @@ void findOptimalFlags(short **FLAG, int height, int width, int *imax, int *jmax)
     return;
 }
 
-int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
-                   lattice *grid, fluidSim *fluid, boundaryCond **bCond,
-                   REAL *delt, REAL *t_end, char *problem)
+int readParameters(const char *inputFile, REAL *init,
+                   lattice *grid, fluidSim *sim, boundaryCond *bCond,
+                   REAL *delt, REAL *t_end)
 {
     FILE *input = fopen(inputFile,"r");
     if (input == NULL)
     {
-        printf("The requested file probably doesn't exist. Please check your input!\n");
+        printf("The file \"%s\" probably doesn't exist. Please check your input!\n",inputFile);
         return 0;
     }
-    char variableType[128];
+    char variable[32];
     REAL value;
     REAL xlength = 0, ylength = 0;
-    REAL UI = 0, VI = 0, PI = 0;
-    int height = 0, width = 0;
     int readVars = 0;
-    if (fscanf(input,"%[^\n\r]\n",problem) == 0)
-        printf("The problem could not be detected. Assuming trivial fluid.\n");
-    else
-        printf("Initialising problem \"%s\"\n",problem);
 
-    *bCond = createBoundCond(NOSLIP,NOSLIP,NOSLIP,NOSLIP);
-    while (fscanf(input,"%s%*[^0-9-]%lg\n",variableType,&value) == 2)
+    while (fscanf(input,"%s%*[A-Za-z ]%lg\n",variable,&value) == 2)
     {
-        switch(variableType[0])
+        if (variable[0] == '#')
+            continue;
+        switch(variable[0])
         {
         case 'x':
             xlength = value;
@@ -526,76 +515,72 @@ int readParameters(const char *inputFile, REAL ***U, REAL ***V, REAL ***P,
             ylength = value;
             break;
         case 'i':
-            if (variableType[1] == 'm') grid->imax = (int)value;
-            else fluid->itmax = (int)value;
+            if (variable[1] == 'm') grid->imax = (int)value;
+            else sim->itmax = (int)value;
             break;
         case 'j':
             grid->jmax = (int)value;
             break;
         case 'e':
-            fluid->eps = value;
+            sim->eps = value;
             break;
         case 'o':
-            fluid->omega = value;
+            sim->omega = value;
             break;
         case 'a':
-            fluid->alpha = value;
+            sim->alpha = value;
             break;
         case 'd':
-            *delt = value;
+            *delt = sim->dt = value;
             break;
         case 't':
-            if (variableType[1] == '_') *t_end = value;
-            else fluid->tau = value;
+            if (variable[1] == 'a') sim->tau = value;
+            else *t_end = value;
             break;
         case 'R':
-            fluid->Re = value;
+            sim->Re = value;
             break;
         case 'U':
-            UI = value;
+            init[0] = value;
             break;
         case 'V':
-            VI = value;
+            init[1] = value;
             break;
         case 'P':
-            PI = value;
+            init[2] = value;
             break;
         case 'G':
-            if (variableType[1] == 'X') fluid->GX = value;
-            else fluid->GY = value;
+            if (variable[1] == 'X') sim->GX = value;
+            else sim->GY = value;
             break;
         case 'w':
-            if (variableType[1] == 't') (*bCond)->wt = value;
-            else if (variableType[1] == 'b') (*bCond)->wb = value;
-            else if (variableType[1] == 'r') (*bCond)->wr = value;
-            else if (variableType[1] == 'l') (*bCond)->wl = value;
+            if (variable[1] == 't') bCond->wt = value;
+            else if (variable[1] == 'b') bCond->wb = value;
+            else if (variable[1] == 'r') bCond->wr = value;
+            else if (variable[1] == 'l') bCond->wl = value;
             break;
         default:
-            printf("Found unexpected Variable %s of value %lg.\n",variableType,value);
-            readVars--;
+            printf("Found unexpected Variable %s of value %lg.\n",variable,value);
+            continue;
         }
         readVars++;
     }
     fclose(input);
-
-    short **image = readGeometry(variableType,&height,&width);
-    findOptimalFlags(image,height,width,&(grid->imax),&(grid->jmax));
-    (*bCond)->FLAG = adjustFlags(image,height,width,grid->imax,grid->jmax);
-    initFlags("Image",(*bCond)->FLAG,grid->imax,grid->jmax);
-    initUVP(U,V,P,grid->imax,grid->jmax,UI,VI,PI);
+    grid->ir = grid->imax;
+    grid->jt = grid->jmax;
     grid->delx = xlength/grid->imax;
     grid->dely = ylength/grid->jmax;
     return readVars;
 }
 
-void outputVec(REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int partcount, int n)
+void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
 {
     if (grid == NULL)
         return;
     int imax = grid->imax;
     int jmax = grid->jmax;
-    REAL **S = createMatrix(imax,jmax);
-    REAL **T = createMatrix(imax,jmax);
+    REAL **S = create2Dfield(imax,jmax);
+    REAL **T = create2Dfield(imax,jmax);
     char fileName[64];
     if (P != NULL)
     {
@@ -608,8 +593,8 @@ void outputVec(REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int
     }
     if (U == NULL || V == NULL)
     {
-        destroyMatrix(T,imax);
-        destroyMatrix(S,imax);
+        destroy2Dfield(T,imax);
+        destroy2Dfield(S,imax);
         return;
     }
     if (n != 0) sprintf(fileName,"MomentumField_%i.vtk",n);
@@ -621,8 +606,7 @@ void outputVec(REAL **U, REAL **V, REAL **P, particle *parts, lattice *grid, int
             S[i-1][j-1] = (V[i][j] + V[i][j-1])/2;
         }
     writeVTKfileFor2DvectorField(fileName,"momentumfield",T,S,grid);
-    WriteParticle(parts,partcount,n);
-    destroyMatrix(T,imax);
-    destroyMatrix(S,imax);
+    destroy2Dfield(T,imax);
+    destroy2Dfield(S,imax);
     return;
 }

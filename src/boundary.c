@@ -9,6 +9,7 @@ boundaryCond* createBoundCond(int wl, int wr, int wt, int wb)
     bCond->wr = wr;
     bCond->wt = wt;
     bCond->wb = wb;
+    bCond->FLAG = NULL;
     return bCond;
 }
 
@@ -47,6 +48,7 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
         applyHomogeneousNeumannBC(V,grid->imax,grid->jmax-1);
         return;
     }
+    /* Boundary conditions on the actual boundary of the region */
     if (grid->jb == 0)
         for (int i = grid->il+1; i <= grid->ir; i++)
         {
@@ -72,6 +74,7 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
             V[grid->ir-grid->il+1][j] = (bCond->wr == NOSLIP) ? -V[grid->ir-grid->il][j] : V[grid->ir-grid->il][j];
         }
     short flag;
+    /* Boundary condtions on obstacles */
     for (int i = grid->il+1; i <= grid->ir; i++)
         for (int j = grid->jb+1; j <= grid->jt; j++)
         {
@@ -135,8 +138,9 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
     return;
 }
 
-void setSpecBCond(REAL **U, REAL **V, lattice *grid, char *problem)
+void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
 {
+    /* Set special (e.g. inflow) conditions */
     if (problem == NULL)
         return;
     if (strcmp(problem,"Driven Cavity") == 0)
@@ -193,21 +197,6 @@ void initFlags(const char *problem, short **FLAG, int imax, int jmax)
                     continue;
                 FLAG[i+j][i] = C_B;
             }
-    }
-    else if (strcmp(problem,"Ramp") == 0)
-    {
-        for (int j = jmax/2+5; j < jmax; j++)
-        {
-            FLAG[0][j] = FLAG[1][j] = C_B;
-            FLAG[imax/3][j] = FLAG[imax/3+1][j] = C_B;
-        }
-        FLAG[0][jmax/2+1] = FLAG[0][jmax/2+2] = C_B;
-        FLAG[0][jmax/2+3] = FLAG[0][jmax/2+4] = C_B;
-        FLAG[1][jmax/2+1] = FLAG[1][jmax/2+2] = C_B;
-        FLAG[1][jmax/2+3] = FLAG[1][jmax/2+4] = C_B;
-        for (int i = 0; i < imax/3+5; i++)
-            FLAG[i][jmax/2-1] = FLAG[i][jmax/2] = C_B;
-
     }
     for (int i = 0; i < imax; i++)
         for (int j = 0; j < jmax; j++)

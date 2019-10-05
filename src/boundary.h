@@ -1,10 +1,7 @@
 #ifndef BOUNDARY_H_
 #define BOUNDARY_H_
 
-#include <stdlib.h>
-#include <string.h>
-#include "real.h"
-#include "fields.h"
+#include "types.h"
 
 #define C_F (0)
 #define C_B (1)
@@ -12,14 +9,6 @@
 #define B_O (4)
 #define B_S (8)
 #define B_W (16)
-
-typedef struct boundaryCondition {
-    int wt : 3;
-    int wr : 3;
-    int wb : 3;
-    int wl : 3;
-    short **FLAG;
-} boundaryCond;
 
 #define NOSLIP (0)
 #define FREESLIP (1)
@@ -34,7 +23,7 @@ void    applyHomogeneousDirichletBC (REAL **p, int imax, int jmax);
 /* Apply homogeneous boundary conditions to the lattice */
 
 void    setBCond (REAL **U, REAL **V, lattice *grid, boundaryCond *bCond);
-void    setSpecBCond (REAL **U, REAL **V, lattice *grid, char *problem);
+void    setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem);
 /* Set the boundary conditions for the given problem */
 
 void initFlags(const char* problem, short **FLAG, int imax, int jmax);

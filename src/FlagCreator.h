@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "IO.h"
-#include "real.h"
+#include "types.h"
 #include <string.h> //fuer strlength und strtok
 #define C_F (0)
 #define C_B (1)
