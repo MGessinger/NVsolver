@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(Simulation)
+project(Simulator)
 
 # just lists the sources that we need to build our lib
 # note that "main" is exluded here

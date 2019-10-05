@@ -1,9 +1,14 @@
 #include "poisson.h"
 
+static inline REAL sqr(REAL x)
+{
+    return x*x;
+}
+
 void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
 {
     /* Apply boundary conditions for the pressure field */
-    if (P == NULL || FLAG == NULL)
+    if (!P || !FLAG)
         return;
     short flag = 0;
     /* First set values on the actual boundary of the region */
@@ -19,8 +24,8 @@ void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
     if (grid->jt == grid->jmax)
         for (int i = grid->il; i <= grid->ir; i++)
             P[i][grid->jt-grid->jb+1] = P[i][grid->jt-grid->jb];
-    REAL dxSqrd = grid->delx*grid->delx;
-    REAL dySqrd = grid->dely*grid->dely;
+    REAL dxSqrd = sqr(grid->delx);
+    REAL dySqrd = sqr(grid->dely);
     for (int i = grid->il+1; i <= grid->ir; i++)
         for (int j = grid->jb+1; j <= grid->jt; j++)
         {
@@ -28,10 +33,8 @@ void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
             if (flag == C_F)
                 continue;
             else if (flag == C_B)
-            {
                 continue;
-            }
-            switch (flag - C_B)
+            switch (flag ^ C_B)
             {
             case B_N:
                 P[i][j] = P[i][j+1];
@@ -63,11 +66,6 @@ void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
 
         }
     return;
-}
-
-static inline REAL sqr(REAL x)
-{
-    return x*x;
 }
 
 int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
@@ -126,7 +124,7 @@ void compDelt(REAL *delt, lattice *grid, REAL **U, REAL **V, fluidSim *sim)
     /* Find the optimal step width in time */
     if (sim->tau <= 0)
         return;
-    REAL dt = sim->Re/(2/(sqr(grid->delx) + sqr(grid->dely)));
+    REAL dt = sim->Re*(sqr(grid->delx) + sqr(grid->dely))/2;
     for (int i = grid->il+1; i <= grid->ir; i++)
         for (int j = grid->jb+1; j <= grid->jt; j++)
         {
@@ -167,13 +165,15 @@ void compRHS(REAL **F, REAL **G, REAL **RHS, short **FLAG, lattice *grid, REAL d
 void adaptUV(REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
              REAL delt, short **FLAG, lattice *grid)
 {
+    REAL facX = delt/grid->delx;
+    REAL facY = delt/grid->dely;
     for (int i = grid->il+1; i <= grid->ir; i++)
         for (int j = grid->jb+1; j <= grid->jt; j++)
         {
             if (FLAG[i-1][j-1] != C_F)
                 continue;
-            U[i][j] = F[i][j] - delt/grid->delx*(P[i+1][j] - P[i][j]);
-            V[i][j] = G[i][j] - delt/grid->dely*(P[i][j+1] - P[i][j]);
+            U[i][j] = F[i][j] - facX*(P[i+1][j] - P[i][j]);
+            V[i][j] = G[i][j] - facY*(P[i][j+1] - P[i][j]);
         }
     return;
 }
@@ -182,11 +182,12 @@ REAL delUVbyDelZ(REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL delz)
 {
     REAL duvdz = (U[i][j] + U[i][j+1])*(V[i][j] + V[i+1][j]);
     REAL correctionTerm = 0;
+    delz *= 4;
     if (z == DERIVE_BY_X)
     {
         duvdz -= (U[i-1][j] + U[i-1][j+1])*(V[i-1][j] + V[i][j]);
         if (alpha == 0)
-            return duvdz/(4*delz);
+            return duvdz/delz;
         correctionTerm = abs(U[i][j] + U[i][j+1]) * (V[i][j] - V[i+1][j]);
         correctionTerm -= abs(U[i-1][j]+U[i-1][j+1]) * (V[i-1][j] - V[i][j]);
     }
@@ -194,20 +195,21 @@ REAL delUVbyDelZ(REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL delz)
     {
         duvdz -= (U[i][j-1] + U[i][j])*(V[i][j-1] + V[i+1][j-1]);
         if (alpha == 0)
-            return duvdz/(4*delz);
+            return duvdz/delz;
         correctionTerm = abs(V[i][j] + V[i+1][j]) * (U[i][j] - U[i][j+1]);
         correctionTerm -= abs(V[i][j-1] + V[i+1][j-1]) * (U[i][j-1] - U[i][j]);
     }
-    return (duvdz + alpha*correctionTerm)/(4*delz);
+    return (duvdz + alpha*correctionTerm)/delz;
 }
 
 REAL delFSqrdByDelZ(REAL **F, int i, int j, int z, REAL alpha, REAL delz)
 {
     int dx = (z == DERIVE_BY_X) ? 1 : 0;
     int dy = (z == DERIVE_BY_Y) ? 1 : 0;
+    delz *= 4;
     REAL df2dz = sqr(F[i][j] + F[i+dx][j+dy]) - sqr(F[i-dx][j-dy] + F[i][j]);
     if (alpha == 0)
-        return df2dz/(4*delz);
+        return df2dz/delz;
     REAL correctionTerm = sqr(F[i][j]) - sqr(F[i+dx][j+dy]);
     if (F[i+dx][j+dy] < -F[i][j])
         correctionTerm *= -1;
@@ -216,7 +218,7 @@ REAL delFSqrdByDelZ(REAL **F, int i, int j, int z, REAL alpha, REAL delz)
     if (F[i-dx][j-dy] < - F[i][j])
         correctionTerm *= -1;
     df2dz -= alpha*correctionTerm;
-    return df2dz/(4*delz);
+    return df2dz/delz;
 }
 
 void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
