@@ -74,14 +74,14 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
                        fluidSim *sim, lattice *grid)
 {
     /* Use a SOR algorithm to solve the poisson equation */
-    if (p == NULL || rhs == NULL || grid == NULL || FLAG == NULL)
+    if (!p || !rhs || !grid || !FLAG)
         return 0;
     int it = 0;
     REAL temporary, error;
-    REAL invXWidthSqrd = 1/(grid->delx*grid->delx);
-    REAL invYWidthSqrd = 1/(grid->dely*grid->dely);
-    REAL scale = sim->omega/(2*(sqr(1/grid->delx)+sqr(1/grid->dely)));
-    REAL eps = sim->eps*sim->eps;
+    REAL invXWidthSqrd = 1/sqr(grid->delx);
+    REAL invYWidthSqrd = 1/sqr(grid->dely);
+    REAL scale = sim->omega/(2*(invXWidthSqrd+invYWidthSqrd));
+    REAL eps = sqr(sim->eps);
     int i,j;
     /* Count the number of fluid cells */
     int numberOfCells = 0;
@@ -91,6 +91,7 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
             if (FLAG[i-1][j-1] == C_F)
                 numberOfCells++;
         }
+    eps *= numberOfCells;
     do {
         /* Apply the boundary condition */
         applyPboundaryCond(p,grid,FLAG);
@@ -100,8 +101,7 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
             {
                 if (FLAG[i-1][j-1] != C_F)
                     continue;
-                temporary = invXWidthSqrd*(p[i+1][j] + p[i-1][j]);
-                temporary += invYWidthSqrd*(p[i][j+1] + p[i][j-1]) - rhs[i-1][j-1];
+                temporary = invXWidthSqrd*(p[i+1][j] + p[i-1][j]) + invYWidthSqrd*(p[i][j+1] + p[i][j-1]) - rhs[i-1][j-1];
                 p[i][j] = scale*temporary + (1-sim->omega)*p[i][j];
             }
         error = 0;
@@ -111,16 +111,13 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
             {
                 if (FLAG[i-1][j-1] != C_F)
                     continue;
-                temporary = invXWidthSqrd*(p[i+1][j] - 2*p[i][j] + p[i-1][j]);
-                temporary += invYWidthSqrd*(p[i][j+1] - 2*p[i][j] + p[i][j-1]);
-                temporary -= rhs[i-1][j-1];
-                error += temporary*temporary;
+                temporary = invXWidthSqrd*(p[i+1][j] - 2*p[i][j] + p[i-1][j]) + invYWidthSqrd*(p[i][j+1] - 2*p[i][j] + p[i][j-1]) - rhs[i-1][j-1];
+                error += sqr(temporary);
             }
-        if (++it >= sim->itmax)
+        if (++it == sim->itmax)
             break;
-    } while (error/numberOfCells > eps);
-    if (it != 0)
-        printf("Remaining error after %i iterations: %e/%i vs. %e\n",it,error,numberOfCells,eps);
+    } while (error > eps);
+    printf("Remaining error after %i iterations: %e vs. %e\n",it,error,eps);
     return it;
 }
 
