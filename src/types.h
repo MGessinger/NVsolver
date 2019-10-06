@@ -16,6 +16,7 @@ typedef struct lattice {
     REAL delx;
     REAL dely;
     int imax, jmax;     /* Max coords of the entire grid */
+    int il, jb;         /* Bottom left of the partial grid */
     int deli, delj;     /* Max coords of the partial grid */
     char edges;
 } lattice;

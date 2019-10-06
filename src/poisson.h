@@ -15,7 +15,7 @@ int     solveSOR(REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REA
 int     solveSORforPoisson (REAL **p, REAL **rhs, short **FLAG, fluidSim *sim, lattice *grid);
 /* Solve Ax = b for x. solveSORforPoisson uses an optimised algorithm for this application. */
 
-void    compDelt (REAL *delt, lattice *grid, REAL **U, REAL **V, fluidSim *sim);
+REAL    compDelt(lattice *grid, REAL **U, REAL **V, fluidSim *sim);
 /* Copute the next iteration of delt */
 
 void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt, lattice *grid, fluidSim *simulation);
@@ -29,8 +29,8 @@ REAL    delUVbyDelZ(REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL de
 REAL    delFSqrdByDelZ(REAL **F, int i, int j, int z, REAL alpha, REAL delz);
 /* Compute derivatives needed in compFG */
 
-int simulateFluid(REAL **U, REAL **V, REAL **P, boundaryCond* bCond, lattice *grid, fluidSim *sim,
-                        REAL delt, REAL t_end, const char *problem, int opt);
+int     simulateFluid(REAL **U, REAL **V, REAL **P, boundaryCond* bCond, lattice *grid, fluidSim *sim,
+                      REAL t_end, const char *problem, int opt);
 /* Put all functions together and simulate the fluid */
 
 #endif /* POISSON_H_ */

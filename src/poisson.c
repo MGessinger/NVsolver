@@ -8,8 +8,6 @@ static inline REAL sqr(REAL x)
 void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
 {
     /* Apply boundary conditions for the pressure field */
-    if (!P || !FLAG)
-        return;
     short flag = 0;
     /* First set values on the actual boundary of the region */
     if (grid->edges & LEFT)
@@ -72,8 +70,6 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
                        fluidSim *sim, lattice *grid)
 {
     /* Use a SOR algorithm to solve the poisson equation */
-    if (!p || !rhs || !grid || !FLAG)
-        return 0;
     int it = 0;
     REAL temporary, error;
     REAL invXWidthSqrd = 1/sqr(grid->delx);
@@ -101,7 +97,9 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
             {
                 if (FLAG[i-1][j-1] != C_F)
                     continue;
-                temporary = invXWidthSqrd*(p[i+1][j] + p[i-1][j]) + invYWidthSqrd*(p[i][j+1] + p[i][j-1]) - rhs[i-1][j-1];
+                temporary = invXWidthSqrd*(p[i+1][j] + p[i-1][j])
+                          + invYWidthSqrd*(p[i][j+1] + p[i][j-1])
+                          - rhs[i-1][j-1];
                 p[i][j] = scale*temporary + (1-sim->omega)*p[i][j];
             }
         error = 0;
@@ -111,7 +109,9 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
             {
                 if (FLAG[i-1][j-1] != C_F)
                     continue;
-                temporary = invXWidthSqrd*(p[i+1][j] - 2*p[i][j] + p[i-1][j]) + invYWidthSqrd*(p[i][j+1] - 2*p[i][j] + p[i][j-1]) - rhs[i-1][j-1];
+                temporary = invXWidthSqrd*(p[i+1][j] - 2*p[i][j] + p[i-1][j])
+                          + invYWidthSqrd*(p[i][j+1] - 2*p[i][j] + p[i][j-1])
+                          - rhs[i-1][j-1];
                 error += sqr(temporary);
             }
         if (++it == sim->itmax)
@@ -121,11 +121,11 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
     return it;
 }
 
-void compDelt(REAL *delt, lattice *grid, REAL **U, REAL **V, fluidSim *sim)
+REAL compDelt(lattice *grid, REAL **U, REAL **V, fluidSim *sim)
 {
     /* Find the optimal step width in time */
     if (sim->tau <= 0)
-        return;
+        return sim->dt;
     REAL dt = sim->Re*(sqr(grid->delx) + sqr(grid->dely))/2;
     for (int i = 1; i <= grid->deli; i++)
         for (int j = 1; j <= grid->delj; j++)
@@ -140,19 +140,14 @@ void compDelt(REAL *delt, lattice *grid, REAL **U, REAL **V, fluidSim *sim)
             else if (V[i][j] < 0 && grid->dely/V[i][j] > -dt)
                 dt = -(grid->dely)/V[i][j];
         }
-    *delt = sim->tau*dt;
-    if (*delt > sim->dt)
-        *delt = sim->dt;
-    return;
+    dt = sim->tau*dt;
+    if (dt > sim->dt)
+        return sim->dt;
+    return dt;
 }
 
 void compRHS(REAL **F, REAL **G, REAL **RHS, short **FLAG, lattice *grid, REAL delt)
 {
-    if (F == NULL || G == NULL || RHS == NULL)
-    {
-        fill2Dfield(INFINITY,RHS,grid->imax,grid->jmax);
-        return;
-    }
     for (int i = 0; i < grid->deli; i++)
         for (int j = 0; j < grid->delj; j++)
         {
@@ -167,10 +162,10 @@ void compRHS(REAL **F, REAL **G, REAL **RHS, short **FLAG, lattice *grid, REAL d
 void adaptUV(REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
              REAL delt, short **FLAG, lattice *grid)
 {
-    REAL facX = delt/grid->delx;
-    REAL facY = delt/grid->dely;
+    REAL facX = delt/(grid->delx);
+    REAL facY = delt/(grid->dely);
     for (int i = 1; i <= grid->deli; i++)
-        for (int j = 1; j <= grid->deli; j++)
+        for (int j = 1; j <= grid->delj; j++)
         {
             if (FLAG[i-1][j-1] != C_F)
                 continue;
@@ -292,7 +287,7 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
 
 int simulateFluid (REAL **U, REAL **V, REAL **P,
                         boundaryCond* bCond, lattice *grid, fluidSim *sim,
-                        REAL delt, REAL t_end, const char *problem, int opt)
+                        REAL t_end, const char *problem, int opt)
 {
     /* Simulate the fluid characterized by sim, grid and bCond */
     /* Error checking */
@@ -301,14 +296,14 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
     if (!bCond || !grid || !sim)
         return 0;
     /* Auxiliary Grids: */
+    /* RHS is used for the Poisson-Solver so no ghost cells are neccessary */
     REAL **F = create2Dfield(grid->deli+1,grid->delj+1);
     REAL **G = create2Dfield(grid->deli+1,grid->delj+1);
-    /* RHS is used for the Poisson-Solver so no ghost cells are neccessary */
     REAL **RHS = create2Dfield(grid->deli,grid->delj);
     if (!F || !G || !RHS)
         return 0;
     int partcount = 5000, n = 0;
-    REAL del_vec;
+    REAL del_vec, delt = sim->dt;
     if (opt >= OUTPUT)
         del_vec = t_end/(opt/OUTPUT);
     else
@@ -334,19 +329,19 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
         compRHS(F,G,RHS,bCond->FLAG,grid,delt);
 
         /* Solve the Poisson Equation */
-        solveSORforPoisson(P,RHS,bCond->FLAG,sim,grid);
+        //solveSORforPoisson(P,RHS,bCond->FLAG,sim,grid);
         /* Update U and V through F,G and P */
         adaptUV(U,V,P,F,G,delt,bCond->FLAG,grid);
-        compDelt(&delt,grid,U,V,sim);
+        delt = compDelt(grid,U,V,sim);
 
-        if (time > del_vec*n)
+        /*if (time > del_vec*n)
         {
-            /*outputVec(U,V,P,grid,++n);
-            WriteParticle(parts,partcount,n);*/
+            outputVec(U,V,P,grid,++n);
+            WriteParticle(parts,partcount,n);
             ParticleSeed(parts,0.1,0.9,0.1,0.9,partcount,50);
         }
-        //ParticleVelocity(U,V,parts,grid,bCond->FLAG,partcount);
-        ParticleTransport(parts,partcount,delt);
+        ParticleVelocity(U,V,parts,grid,bCond->FLAG,partcount);
+        ParticleTransport(parts,partcount,delt);*/
     }
     printf("[Simulation complete!]\n");
     //writeVTKfileFor2DintegerField("GeometryField.vtk","geometryfield",bCond->FLAG,grid);

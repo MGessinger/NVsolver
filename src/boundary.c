@@ -183,32 +183,39 @@ void initFlags(const char *problem, short **FLAG, lattice *grid)
      * If the flags are read from a file, set problem to "Image"! */
     if (!FLAG || !grid)
         return;
-    /*if (strcmp(problem,"Step") == 0)
+    if (strcmp(problem,"Step") == 0)
     {
-        for (int i = 0; i < grid->jmax/2; i++)
-            for (int j = 0; j < grid->jmax/2; j++)
+        for (int i = 0; i < grid->deli; i++)
+        {
+            if (i + grid->il >= grid->jmax/2)
+                break;
+            for (int j = 0; j < grid->delj; j++)
+            {
+                if (j + grid->jb >= grid->jmax/2)
+                    break;
                 FLAG[i][j] = C_B;
+            }
+        }
     }
     else if (strcmp(problem,"Von Karman") == 0)
     {
-        for (int i = grid->jmax/3; i < 2*grid->jmax/3; i++)
+        for (int i = 0; i < grid->delj; i++)
         {
-            if (i < grid->il)
+            if (i + grid->il < grid->jmax/3)
                 continue;
-            if (i >= grid->deli)
+            if (i +grid->il >= 2*grid->jmax/3)
                 break;
             for (int j = -(grid->jmax/4)/2; j <= (grid->jmax/4)/2; j++)
             {
-                if (j < grid->jb)
+                int x = i+j+grid->il+grid->jb;
+                if (x < grid->jmax/3)
                     continue;
-                if (j >= grid->jt)
+                if (x >= 2*grid->jmax/3 || x >= grid->deli)
                     break;
-                if (i+j < grid->jmax/3 || i+j >= 2*grid->jmax/3)
-                    continue;
                 FLAG[i+j][i] = C_B;
             }
         }
-    }*/
+    }
     for (int i = 0; i < grid->deli; i++)
     {
         for (int j = 0; j < grid->delj; j++)

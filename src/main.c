@@ -23,7 +23,7 @@ MPI_Comm createCommGrid(int *rank, int *dims)
     return Region;
 }
 
-void splitRegion(MPI_Comm Region, int *dims, lattice *grid)
+void splitRegion(MPI_Comm Region, int *dims, lattice *grid, char *problem, boundaryCond *bCond)
 {
     if (!dims || !grid)
         return;
@@ -31,31 +31,33 @@ void splitRegion(MPI_Comm Region, int *dims, lattice *grid)
     int coords[2];
     MPI_Comm_rank(Region,&rank);
     MPI_Cart_coords(Region,rank,size,coords);
-    int il = coords[0]*grid->imax/dims[0];
-    if (il == 0)
+    grid->il = coords[0]*grid->imax/dims[0];
+    if (grid->il == 0)
         grid->edges |= LEFT;
     int ir = (coords[0]+1)*grid->imax/dims[0];
     if (ir == grid->imax)
         grid->edges |= RIGHT;
-    grid->deli = ir - il;
-    int jb = coords[1]*grid->jmax/dims[1];
-    if (jb == 0)
+    grid->deli = ir - grid->il;
+    grid->jb = coords[1]*grid->jmax/dims[1];
+    if (grid->jb == 0)
         grid->edges |= BOTTOM;
     int jt = (coords[1]+1)*grid->jmax/dims[1];
     if (jt == grid->jmax)
         grid->edges |= TOP;
-    grid->delj = jt - jb;
-    printf("%i ]\t%i,%i|%i,%i\n",rank,il,ir,jb,jt);
+    grid->delj = jt - grid->jb;
+    printf("%i ]\t%i,%i|%i,%i\n",rank,grid->il,ir,grid->jb,jt);
+    if (bCond->FLAG == NULL)
+        bCond->FLAG = create2DIntegerField(grid->deli,grid->delj);
+    initFlags(problem,bCond->FLAG,grid);
 }
 
 int main (int argc, char **argv)
 {
-    MPI_Init(&argc,&argv);
     if (argc < 3 || argv[1][0] == '-')
     {
         printf("Usage: simulator <scene>\n"
                "                 [-p\"parameter_file\"]\n"
-               /*"                 [-i\"image_file]\"\n"*/
+             /*"                 [-i\"image_file]\"\n"*/
                "                 [number_of_frames]\n");
         printf("When specifying both an image and a parameter file, "
                "the sizes specified from the image take precedence!\n");
@@ -63,6 +65,7 @@ int main (int argc, char **argv)
         return 0;
     }
     int rank, dims[2];
+    MPI_Init(&argc,&argv);
     MPI_Comm Region = createCommGrid(&rank,dims);
     REAL **U = NULL, **V = NULL, **P = NULL;
     REAL init[3];
@@ -102,15 +105,11 @@ int main (int argc, char **argv)
         }*/
     }
     /* Slice Data to process */
-    splitRegion(Region, dims, grid);
+    splitRegion(Region, dims, grid, problem, bCond);
     initUVP(&U,&V,&P,grid->deli,grid->delj,init);
-    if (bCond->FLAG == NULL)
-    {
-        bCond->FLAG = create2DIntegerField(grid->deli,grid->delj);
-        initFlags(problem,bCond->FLAG,grid);
-    }
-    simulateFluid(U,V,P,bCond,grid,&sim,delt,t_end,problem,out);
-    //outputVec(U,V,P,grid,0);
+    simulateFluid(U,V,P,bCond,grid,&sim,t_end,problem,out);
+    /*if (rank == 0)
+        outputVec(U,V,P,grid,0);*/
     /* Destroy simulated grids */
     if (grid != NULL)
     {

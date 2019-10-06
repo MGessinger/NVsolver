@@ -575,15 +575,17 @@ void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
 {
     if (grid == NULL)
         return;
-    int imax = grid->imax;
-    int jmax = grid->jmax;
+    int imax = grid->deli;
+    int jmax = grid->delj;
     REAL **S = create2Dfield(imax,jmax);
     REAL **T = create2Dfield(imax,jmax);
     char fileName[64];
     if (P != NULL)
     {
-        if (n != 0) sprintf(fileName,"PressureField_%i.vtk",n);
-        else sprintf(fileName,"PressureField.vtk");
+        if (n != 0)
+            sprintf(fileName,"PressureField_%i.vtk",n);
+        else
+            sprintf(fileName,"PressureField.vtk");
         for (int i = 0;  i < imax; i++)
             for (int j = 0; j < jmax; j++)
                 T[i][j] = P[i+1][j+1];
@@ -595,8 +597,10 @@ void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
         destroy2Dfield(S,imax);
         return;
     }
-    if (n != 0) sprintf(fileName,"MomentumField_%i.vtk",n);
-    else sprintf(fileName,"MomentumField.vtk");
+    if (n != 0)
+        sprintf(fileName,"MomentumField_%i.vtk",n);
+    else
+        sprintf(fileName,"MomentumField.vtk");
     for (int i = 1;  i <= imax; i++)
         for (int j = 1; j <= jmax; j++)
         {
