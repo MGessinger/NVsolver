@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <mpi/mpi.h>
 
 #define REAL double
 

@@ -32,7 +32,10 @@ target_compile_options(fieldlib PRIVATE ${OPTIONS})
 # Adds an executable target called simulator to be built from the source/main.c
 add_executable(simulator src/main.c)
 target_compile_options(simulator PRIVATE ${OPTIONS})
-target_link_libraries(simulator fieldlib png)
+target_link_libraries(simulator PUBLIC fieldlib png)
+
+find_package(MPI REQUIRED)
+target_link_libraries(simulator PUBLIC MPI::MPI_C)
 
 
 #add_subdirectory(tests)
