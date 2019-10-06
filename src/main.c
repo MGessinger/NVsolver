@@ -107,9 +107,8 @@ int main (int argc, char **argv)
     /* Slice Data to process */
     splitRegion(Region, dims, grid, problem, bCond);
     initUVP(&U,&V,&P,grid->deli,grid->delj,init);
-    simulateFluid(U,V,P,bCond,grid,&sim,t_end,problem,out);
-    /*if (rank == 0)
-        outputVec(U,V,P,grid,0);*/
+    int files = simulateFluid(U,V,P,bCond,grid,&sim,t_end,problem,out);
+    translateBinary(Region,grid,files,rank,dims);
     /* Destroy simulated grids */
     if (grid != NULL)
     {

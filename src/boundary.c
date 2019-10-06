@@ -157,7 +157,7 @@ void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
             return;
         for (int j = 0; j <= grid->delj; j++)
         {
-            if (j < grid->jmax/2)
+            if (j + grid->jb < grid->jmax/2)
                 continue;
             U[0][j] = 1;
             V[0][j] = V[1][j];
@@ -181,8 +181,6 @@ void initFlags(const char *problem, short **FLAG, lattice *grid)
 {
     /* Manually sets the flag field for arbitrary generalised geometries.
      * If the flags are read from a file, set problem to "Image"! */
-    if (!FLAG || !grid)
-        return;
     if (strcmp(problem,"Step") == 0)
     {
         for (int i = 0; i < grid->deli; i++)

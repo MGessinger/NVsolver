@@ -117,7 +117,7 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
         if (++it == sim->itmax)
             break;
     } while (error > eps);
-    printf("Remaining error after %i iterations: %e vs. %e\n",it,error,eps);
+    //printf("Remaining error after %i iterations: %e vs. %e\n",it,error,eps);
     return it;
 }
 
@@ -302,8 +302,8 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
     REAL **RHS = create2Dfield(grid->deli,grid->delj);
     if (!F || !G || !RHS)
         return 0;
-    int partcount = 5000, n = 0;
-    REAL del_vec, delt = sim->dt;
+    int partcount = 5000, n = 1;
+    REAL del_vec, dt = 0, delt = sim->dt;
     if (opt >= OUTPUT)
         del_vec = t_end/(opt/OUTPUT);
     else
@@ -320,28 +320,29 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
     printf("Computing Reynoldsnumber %lg.\n",sim->Re);
     for (REAL time = 0; time <= t_end; time += delt)
     {
-        if (opt & PRINT)
+        /*if (opt & PRINT)
             printf("Time is at %lg seconds\n",time);
-        /* Update all parameters and fields for the iteration */
+        Update all parameters and fields for the iteration */
         setBCond(U,V,grid,bCond);
         setSpecBCond(U,V,grid,problem);
         compFG(U,V,F,G,bCond->FLAG,delt,grid,sim);
         compRHS(F,G,RHS,bCond->FLAG,grid,delt);
 
         /* Solve the Poisson Equation */
-        //solveSORforPoisson(P,RHS,bCond->FLAG,sim,grid);
+        solveSORforPoisson(P,RHS,bCond->FLAG,sim,grid);
         /* Update U and V through F,G and P */
         adaptUV(U,V,P,F,G,delt,bCond->FLAG,grid);
-        delt = compDelt(grid,U,V,sim);
+        dt = compDelt(grid,U,V,sim);
 
-        /*if (time > del_vec*n)
+        if (time > del_vec*n)
         {
-            outputVec(U,V,P,grid,++n);
-            WriteParticle(parts,partcount,n);
-            ParticleSeed(parts,0.1,0.9,0.1,0.9,partcount,50);
+            dumpFields(U,V,P,grid,n++);
+            /*WriteParticle(parts,partcount,n);
+            ParticleSeed(parts,0.1,0.9,0.1,0.9,partcount,50);*/
         }
-        ParticleVelocity(U,V,parts,grid,bCond->FLAG,partcount);
+        /*ParticleVelocity(U,V,parts,grid,bCond->FLAG,partcount);
         ParticleTransport(parts,partcount,delt);*/
+        MPI_Allreduce(&dt,&delt,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
     }
     printf("[Simulation complete!]\n");
     //writeVTKfileFor2DintegerField("GeometryField.vtk","geometryfield",bCond->FLAG,grid);
@@ -352,5 +353,5 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
     destroy2Dfield(RHS,grid->deli);
     /* Destroy structures */
     destroyParticleArray(parts);
-    return 1;
+    return n;
 }

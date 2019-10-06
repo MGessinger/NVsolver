@@ -6,6 +6,8 @@
 #include "types.h"
 
 #define NOT_PNG (0)
+#define WRITE   (0x100)
+#define WRITTEN (0x200)
 
 void    print1Dfield (REAL* field, int size);
 void    print2Dfield (REAL** field, int sizeX, int sizeY);
@@ -14,7 +16,7 @@ void    printMatrix (REAL** matrix, int rows, int cols);
 /* Prints a field to stdio */
 
 void    write1Dfield (const char* fileName, REAL* field, int size);
-void    write2Dfield (const char* fileName, REAL** field, int sizeX, int sizeY);
+void    write2Dfield (const char* fileName, REAL** field, int sizeX, int sizeY, const char *mode);
 /* Writes a field to fileName as a binary file */
 
 REAL*   read1Dfield (const char* fileName, int* size);
@@ -28,6 +30,10 @@ void    writeVTKfileFor2DvectorField (const char* fileName, const char* descript
 void    WriteParticle (particle *parts, int partcount, int n);
 void    outputVec (REAL **U, REAL **V, REAL **P, lattice *grid, int n);
 /* Outputs the given fields as VTK file for visualisation with Paraview */
+
+int     dumpFields(REAL **U, REAL **V, REAL **P, lattice *grid, int n);
+void    translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *dims);
+/* Dump all matrices as binaries and translate them back to VTK */
 
 int     check_if_png(const char *fileName, FILE **file);
 void    readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr);

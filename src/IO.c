@@ -37,7 +37,7 @@ void write1Dfield(const char *fileName, REAL* field, int size)
 {
     if (field == NULL)
     {
-        printf("The field in invalid.\n");
+        printf("The field is invalid.\n");
         return;
     }
     FILE *out = fopen(fileName,"wb");
@@ -52,14 +52,14 @@ void write1Dfield(const char *fileName, REAL* field, int size)
     return;
 }
 
-void write2Dfield(const char* fileName, REAL** field, int sizeX, int sizeY)
+void write2Dfield(const char* fileName, REAL** field, int sizeX, int sizeY, const char *mode)
 {
     if (field == NULL)
     {
-        printf("The field in invalid.\n");
+        printf("The field is invalid.\n");
         return;
     }
-    FILE *out = fopen(fileName,"wb");
+    FILE *out = fopen(fileName,mode);
     if (out == NULL)
     {
         printf("The file %s could not be opened.\n",fileName);
@@ -177,9 +177,9 @@ void writeVTKfileFor2DintegerField(const char* fileName, const char* description
     fprintf(vtkFile, "POINT_DATA %d\n", grid->imax * grid->jmax);
     fprintf(vtkFile, "SCALARS %s double 1\n", description);
     fprintf(vtkFile, "LOOKUP_TABLE default \n");
-    for(int j=0;j<grid->jmax;j++)
+    for(int j=0;j<grid->delj;j++)
     {
-        for(int i=0;i<grid->imax;i++)
+        for(int i=0;i<grid->deli;i++)
         {
             fprintf(vtkFile, "%i\n", (field[i][j]!=C_F));
         }
@@ -269,10 +269,7 @@ void WriteParticle (particle *parts, int partcount, int n)
     if (!parts|| !partcount)
         return;
     char fileName[128];
-    if (n != 0)
-        sprintf(fileName, "ParticleField_%i.vtk",n);
-    else
-        sprintf(fileName, "ParticleField.vtk");
+    sprintf(fileName, "ParticleField_%i.vtk",n);
     FILE *out = fopen(fileName,"w");
     if (out == NULL)
         return;
@@ -284,7 +281,7 @@ void WriteParticle (particle *parts, int partcount, int n)
     fprintf(out,"POINTS %i double\n",partcount);
     for (int p = 0; p < partcount; p++)
     {
-        if (parts[p].onScreen == 0)
+        if (!parts[p].onScreen)
             fprintf(out,"0.1 0.1 -0.1\n");
         else
             fprintf(out,"%e %e 0.0\n",parts[p].x,parts[p].y);
@@ -573,34 +570,17 @@ int readParameters(const char *inputFile, REAL *init,
 
 void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
 {
-    if (grid == NULL)
-        return;
-    int imax = grid->deli;
-    int jmax = grid->delj;
+    int imax = grid->imax;
+    int jmax = grid->jmax;
     REAL **S = create2Dfield(imax,jmax);
     REAL **T = create2Dfield(imax,jmax);
-    char fileName[64];
-    if (P != NULL)
-    {
-        if (n != 0)
-            sprintf(fileName,"PressureField_%i.vtk",n);
-        else
-            sprintf(fileName,"PressureField.vtk");
-        for (int i = 0;  i < imax; i++)
-            for (int j = 0; j < jmax; j++)
-                T[i][j] = P[i+1][j+1];
-        writeVTKfileFor2DscalarField(fileName,"pressurefield",T,grid);
-    }
-    if (U == NULL || V == NULL)
-    {
-        destroy2Dfield(T,imax);
-        destroy2Dfield(S,imax);
-        return;
-    }
-    if (n != 0)
-        sprintf(fileName,"MomentumField_%i.vtk",n);
-    else
-        sprintf(fileName,"MomentumField.vtk");
+    char fileName[32];
+    sprintf(fileName,"PressureField_%i.vtk",n);
+    for (int i = 0;  i < imax; i++)
+        for (int j = 0; j < jmax; j++)
+            T[i][j] = P[i+1][j+1];
+    writeVTKfileFor2DscalarField(fileName,"pressurefield",T,grid);
+    sprintf(fileName,"MomentumField_%i.vtk",n);
     for (int i = 1;  i <= imax; i++)
         for (int j = 1; j <= jmax; j++)
         {
@@ -610,5 +590,83 @@ void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
     writeVTKfileFor2DvectorField(fileName,"momentumfield",T,S,grid);
     destroy2Dfield(T,imax);
     destroy2Dfield(S,imax);
+    return;
+}
+
+int dumpFields(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
+{
+    int rank, size, send = 1;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD,&size);
+    MPI_Status st;
+    char pFile[32], uFile[32], vFile[32];
+    char *mode = (rank == 0 ? "wb" : "ab");
+    sprintf(pFile,"P%i",n);
+    sprintf(uFile,"U%i",n);
+    sprintf(vFile,"V%i",n);
+    if (rank > 0)
+        MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 0, MPI_COMM_WORLD, &st);
+    else
+        printf("%s, %s, %s\n",pFile,uFile,vFile);
+    write2Dfield(pFile,P,grid->deli+2,grid->delj+2,mode);
+    if (rank+1 != size)
+        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 0, MPI_COMM_WORLD);
+    if (rank > 0)
+        MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 1,MPI_COMM_WORLD,&st);
+    write2Dfield(uFile,U,grid->deli+2,grid->delj+2,mode);
+    if (rank+1 != size)
+        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 1, MPI_COMM_WORLD);
+    if (rank > 0)
+        MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 2,MPI_COMM_WORLD,&st);
+    write2Dfield(vFile,V,grid->deli+2,grid->delj+2,mode);
+    if (rank+1 != size)
+        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 2,MPI_COMM_WORLD);
+    return send;
+}
+
+void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *dims)
+{
+    char pFile[32], uFile[32], vFile[32];
+    REAL **U, **V, **P;
+    REAL size[2], init[3] = {0,0,0};
+    initUVP(&U,&V,&P,grid->imax,grid->jmax,init);
+    FILE *PF, *UF, *VF;
+    int coords[2], nproc = dims[0]*dims[1];
+    int il[nproc], jb[nproc];
+    for (int k = 0; k < nproc; k++)
+    {
+        MPI_Cart_coords(Region,k,2,coords);
+        il[k] = coords[0]*grid->imax/dims[0];
+        jb[k] = coords[1]*grid->jmax/dims[1];
+    }
+    for (int i = rank; i < files; i += nproc) /* Loop over files */
+    {
+        sprintf(pFile,"P%i",i);
+        sprintf(uFile,"U%i",i);
+        sprintf(vFile,"V%i",i);
+        PF = fopen(pFile,"rb");
+        UF = fopen(uFile,"rb");
+        VF = fopen(vFile,"rb");
+        if (!PF || !UF || !VF)
+            continue;
+        for (int k = 0; k < nproc; k++) /* Loop over matrices */
+        {
+            if (fread(size,sizeof(REAL),2,PF) == 0)
+                break;
+            for (int j = 0; j < size[0]; j++) /* Loop over lines */
+            {
+                if (fread(&(P[j+il[k]][jb[k]]),sizeof(REAL),size[1],PF) == 0)
+                    break;
+                if (fread(&(U[j+il[k]][jb[k]]),sizeof(REAL),size[1],UF) == 0)
+                    break;
+                if (fread(&(V[j+il[k]][jb[k]]),sizeof(REAL),size[1],VF) == 0)
+                    break;
+            }
+        }
+        fclose(PF);
+        fclose(UF);
+        fclose(VF);
+        outputVec(U,V,P,grid,i);
+    }
     return;
 }
