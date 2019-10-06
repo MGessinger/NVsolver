@@ -1,15 +1,5 @@
 #include "types.h"
 
-lattice *createLattice()
-{
-    lattice *grid = malloc(sizeof(lattice));
-    if (grid == NULL)
-        return NULL;
-    grid->imax = grid->jmax = 0;
-    grid->edges = 0;
-    return grid;
-}
-
 MPI_Comm createCommGrid(int *rank, int *dims)
 {
     MPI_Comm Region;
@@ -27,6 +17,7 @@ void splitRegion(MPI_Comm Region, int *dims, lattice *grid, char *problem, bound
 {
     if (!dims || !grid)
         return;
+    grid->edges = 0;
     int rank, size = dims[0]*dims[1];
     int coords[2];
     MPI_Comm_rank(Region,&rank);
@@ -57,7 +48,7 @@ int main (int argc, char **argv)
     {
         printf("Usage: simulator <scene>\n"
                "                 [-p\"parameter_file\"]\n"
-             /*"                 [-i\"image_file]\"\n"*/
+               "                 [-i\"image_file]\"\n"
                "                 [number_of_frames]\n");
         printf("When specifying both an image and a parameter file, "
                "the sizes specified from the image take precedence!\n");
@@ -73,7 +64,7 @@ int main (int argc, char **argv)
     int out = SILENT;
 
     boundaryCond *bCond = createBoundCond(NOSLIP,NOSLIP,NOSLIP,NOSLIP);
-    lattice *grid = createLattice();
+    lattice grid;
     fluidSim sim;
     char problem[128];
     strcpy(problem,argv[1]);
@@ -86,12 +77,11 @@ int main (int argc, char **argv)
         }
         if (argv[i][1] == 'p')
         {
-            /* Read prameters from a file */
-            if (readParameters(argv[i]+2,init,grid,&sim,bCond,&delt,&t_end) < 17)
+            /* Read parameters from a file */
+            if (readParameters(argv[i]+2,init,&grid,&sim,bCond,&delt,&t_end) < 17)
             {
                 printf("The parameter file appears to be incomplete.\n");
-                destroyBoundCond(bCond,grid->imax);
-                free(grid);
+                destroyBoundCond(bCond,grid.imax);
                 MPI_Abort(Region,0);
             }
         }
@@ -105,19 +95,15 @@ int main (int argc, char **argv)
         }*/
     }
     /* Slice Data to process */
-    splitRegion(Region, dims, grid, problem, bCond);
-    initUVP(&U,&V,&P,grid->deli,grid->delj,init);
-    int files = simulateFluid(U,V,P,bCond,grid,&sim,t_end,problem,out);
-    translateBinary(Region,grid,files,rank,dims);
+    splitRegion(Region, dims, &grid, problem, bCond);
+    initUVP(&U,&V,&P,grid.deli,grid.delj,init);
+    int files = simulateFluid(U,V,P,bCond,&grid,&sim,t_end,problem,out);
+    translateBinary(Region,&grid,files,rank,dims);
     /* Destroy simulated grids */
-    if (grid != NULL)
-    {
-        destroy2Dfield(U,grid->deli+2);
-        destroy2Dfield(V,grid->deli+2);
-        destroy2Dfield(P,grid->deli+2);
-        destroyBoundCond(bCond,grid->deli);
-        free(grid);
-    }
+    destroy2Dfield(U,grid.deli+2);
+    destroy2Dfield(V,grid.deli+2);
+    destroy2Dfield(P,grid.deli+2);
+    destroyBoundCond(bCond,grid.deli);
     MPI_Finalize();
     return 0;
 }
