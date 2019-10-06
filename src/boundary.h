@@ -26,7 +26,7 @@ void    setBCond (REAL **U, REAL **V, lattice *grid, boundaryCond *bCond);
 void    setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem);
 /* Set the boundary conditions for the given problem */
 
-void initFlags(const char* problem, short **FLAG, int imax, int jmax);
+void initFlags(const char* problem, short **FLAG, lattice *grid);
 /* Set flags for fluid and obstacle cells */
 
 #endif /* BOUNDARY_H_ */

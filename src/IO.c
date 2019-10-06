@@ -566,8 +566,6 @@ int readParameters(const char *inputFile, REAL *init,
         readVars++;
     }
     fclose(input);
-    grid->ir = grid->imax;
-    grid->jt = grid->jmax;
     grid->delx = xlength/grid->imax;
     grid->dely = ylength/grid->jmax;
     return readVars;

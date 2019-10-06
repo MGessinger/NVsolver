@@ -5,8 +5,8 @@ lattice *createLattice()
     lattice *grid = malloc(sizeof(lattice));
     if (grid == NULL)
         return NULL;
-    grid->imax = grid->il = 0;
-    grid->jmax = grid->jb = 0;
+    grid->imax = grid->jmax = 0;
+    grid->edges = 0;
     return grid;
 }
 
@@ -18,9 +18,34 @@ MPI_Comm createCommGrid(int *rank, int *dims)
     MPI_Comm_size(MPI_COMM_WORLD,&nproc);
     MPI_Dims_create(nproc,2,dims);
     printf("size: %i, dims: [%i,%i]\n",nproc,dims[0],dims[1]);
-    MPI_Cart_create(MPI_COMM_WORLD,nproc,dims,periods,1,&Region);
+    MPI_Cart_create(MPI_COMM_WORLD,2,dims,periods,1,&Region);
     MPI_Comm_rank(Region,rank);
     return Region;
+}
+
+void splitRegion(MPI_Comm Region, int *dims, lattice *grid)
+{
+    if (!dims || !grid)
+        return;
+    int rank, size = dims[0]*dims[1];
+    int coords[2];
+    MPI_Comm_rank(Region,&rank);
+    MPI_Cart_coords(Region,rank,size,coords);
+    int il = coords[0]*grid->imax/dims[0];
+    if (il == 0)
+        grid->edges |= LEFT;
+    int ir = (coords[0]+1)*grid->imax/dims[0];
+    if (ir == grid->imax)
+        grid->edges |= RIGHT;
+    grid->deli = ir - il;
+    int jb = coords[1]*grid->jmax/dims[1];
+    if (jb == 0)
+        grid->edges |= BOTTOM;
+    int jt = (coords[1]+1)*grid->jmax/dims[1];
+    if (jt == grid->jmax)
+        grid->edges |= TOP;
+    grid->delj = jt - jb;
+    printf("%i ]\t%i,%i|%i,%i\n",rank,il,ir,jb,jt);
 }
 
 int main (int argc, char **argv)
@@ -77,22 +102,22 @@ int main (int argc, char **argv)
         }*/
     }
     /* Slice Data to process */
-
-    initUVP(&U,&V,&P,grid->imax,grid->jmax,init);
+    splitRegion(Region, dims, grid);
+    initUVP(&U,&V,&P,grid->deli,grid->delj,init);
     if (bCond->FLAG == NULL)
     {
-        bCond->FLAG = create2DIntegerField(grid->imax,grid->jmax);
-        initFlags(problem,bCond->FLAG,grid->imax,grid->jmax);
+        bCond->FLAG = create2DIntegerField(grid->deli,grid->delj);
+        initFlags(problem,bCond->FLAG,grid);
     }
-    //simulateFluid(U,V,P,bCond,grid,&sim,delt,t_end,problem,out);
+    simulateFluid(U,V,P,bCond,grid,&sim,delt,t_end,problem,out);
     //outputVec(U,V,P,grid,0);
     /* Destroy simulated grids */
     if (grid != NULL)
     {
-        destroy2Dfield(U,grid->imax+2);
-        destroy2Dfield(V,grid->imax+2);
-        destroy2Dfield(P,grid->imax+2);
-        destroyBoundCond(bCond,grid->imax);
+        destroy2Dfield(U,grid->deli+2);
+        destroy2Dfield(V,grid->deli+2);
+        destroy2Dfield(P,grid->deli+2);
+        destroyBoundCond(bCond,grid->deli);
         free(grid);
     }
     MPI_Finalize();

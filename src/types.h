@@ -7,12 +7,17 @@
 
 #define REAL double
 
+#define TOP (0x1)
+#define BOTTOM (0x2)
+#define LEFT (0x4)
+#define RIGHT (0x8)
+
 typedef struct lattice {
-    int imax, jmax;
-    int il, ir;
-    int jb, jt;
     REAL delx;
     REAL dely;
+    int imax, jmax;     /* Max coords of the entire grid */
+    int deli, delj;     /* Max coords of the partial grid */
+    char edges;
 } lattice;
 
 typedef struct fluidSimulation {

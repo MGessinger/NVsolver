@@ -49,34 +49,34 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
         return;
     }
     /* Boundary conditions on the actual boundary of the region */
-    if (grid->jb == 0)
-        for (int i = grid->il+1; i <= grid->ir; i++)
+    if (grid->edges & BOTTOM)
+        for (int i = 1; i <= grid->deli; i++)
         {
             U[i][0] = (bCond->wb == NOSLIP) ? -U[i][1] : U[i][1];
             V[i][0] = (bCond->wb == OUTFLOW) ? V[i][1] : 0;
         }
-    if (grid->jt == grid->jmax)
-        for (int i = grid->il+1; i <= grid->ir; i++)
+    if (grid->edges & TOP)
+        for (int i = 1; i <= grid->deli; i++)
         {
-            U[i][grid->jt-grid->jb+1] = (bCond->wt == NOSLIP) ? -U[i][grid->jt-grid->jb] : U[i][grid->jt-grid->jb];
-            V[i][grid->jt-grid->jb] = (bCond->wt == OUTFLOW) ? V[i][grid->jt-grid->jb-1] : 0;
+            U[i][grid->delj+1] = (bCond->wt == NOSLIP) ? -U[i][grid->delj] : U[i][grid->delj];
+            V[i][grid->delj] = (bCond->wt == OUTFLOW) ? V[i][grid->delj-1] : 0;
         }
-    if (grid->il == 0)
-        for (int j = grid->jb+1; j <= grid->jt; j++)
+    if (grid->edges & LEFT)
+        for (int j = 1; j <= grid->delj; j++)
         {
             U[0][j] = (bCond->wl == OUTFLOW) ? U[1][j] : 0;
             V[0][j] = (bCond->wl == NOSLIP) ? -V[1][j] : V[1][j];
         }
-    if (grid->ir == grid->imax)
-        for (int j = grid->jb+1; j <= grid->jt; j++)
+    if (grid->edges & RIGHT)
+        for (int j = 1; j <= grid->delj; j++)
         {
-            U[grid->ir-grid->il][j] = (bCond->wr == OUTFLOW) ? U[grid->ir-grid->il-1][j] : 0;
-            V[grid->ir-grid->il+1][j] = (bCond->wr == NOSLIP) ? -V[grid->ir-grid->il][j] : V[grid->ir-grid->il][j];
+            U[grid->deli][j] = (bCond->wr == OUTFLOW) ? U[grid->deli-1][j] : 0;
+            V[grid->deli+1][j] = (bCond->wr == NOSLIP) ? -V[grid->deli][j] : V[grid->deli][j];
         }
     short flag;
     /* Boundary condtions on obstacles */
-    for (int i = grid->il+1; i <= grid->ir; i++)
-        for (int j = grid->jb+1; j <= grid->jt; j++)
+    for (int i = 1; i <= grid->deli; i++)
+        for (int j = 1; j <= grid->delj; j++)
         {
             flag = bCond->FLAG[i-1][j-1];
             if (flag == C_F)
@@ -145,17 +145,17 @@ void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
         return;
     if (strcmp(problem,"Driven Cavity") == 0)
     {
-        if (grid->jt != grid->jmax)
+        if (!(grid->edges & TOP))
             return;
-        for (int i = grid->il+1; i <= grid->ir; i++)
-            U[i][grid->jt-grid->jb+1] = 2-U[i][grid->jt-grid->jb];
+        for (int i = 1; i <= grid->deli; i++)
+            U[i][grid->delj+1] = 2-U[i][grid->delj];
         return;
     }
     if (strcmp(problem,"Step") == 0)
     {
-        if (grid->il != 0)
+        if (!(grid->edges & LEFT))
             return;
-        for (int j = grid->jb; j <= grid->jt; j++)
+        for (int j = 0; j <= grid->delj; j++)
         {
             if (j < grid->jmax/2)
                 continue;
@@ -166,9 +166,9 @@ void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
     }
     if (strcmp(problem,"Tunnel") == 0 || strcmp(problem,"Von Karman") == 0)
     {
-        if (grid->il != 0)
+        if (!(grid->edges & LEFT))
             return;
-        for (int j = grid->jb; j <= grid->jt; j++)
+        for (int j = 0; j <= grid->delj; j++)
         {
             U[0][j] = 1;
         }
@@ -177,40 +177,53 @@ void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
     return;
 }
 
-void initFlags(const char *problem, short **FLAG, int imax, int jmax)
+void initFlags(const char *problem, short **FLAG, lattice *grid)
 {
     /* Manually sets the flag field for arbitrary generalised geometries.
      * If the flags are read from a file, set problem to "Image"! */
-    if (FLAG == NULL)
+    if (!FLAG || !grid)
         return;
-    if (strcmp(problem,"Step") == 0)
+    /*if (strcmp(problem,"Step") == 0)
     {
-        for (int i = 0; i < jmax/2; i++)
-            for (int j = 0; j < jmax/2; j++)
+        for (int i = 0; i < grid->jmax/2; i++)
+            for (int j = 0; j < grid->jmax/2; j++)
                 FLAG[i][j] = C_B;
     }
-    else if (strcmp(problem,"Von Karman") == 0){
-        for (int i = jmax/3; i < 2*jmax/3; i++)
-            for (int j = -(jmax/4)/2; j <= (jmax/4)/2; j++)
+    else if (strcmp(problem,"Von Karman") == 0)
+    {
+        for (int i = grid->jmax/3; i < 2*grid->jmax/3; i++)
+        {
+            if (i < grid->il)
+                continue;
+            if (i >= grid->deli)
+                break;
+            for (int j = -(grid->jmax/4)/2; j <= (grid->jmax/4)/2; j++)
             {
-                if (i+j < jmax/3 || i+j >= 2*jmax/3)
+                if (j < grid->jb)
+                    continue;
+                if (j >= grid->jt)
+                    break;
+                if (i+j < grid->jmax/3 || i+j >= 2*grid->jmax/3)
                     continue;
                 FLAG[i+j][i] = C_B;
             }
-    }
-    for (int i = 0; i < imax; i++)
-        for (int j = 0; j < jmax; j++)
+        }
+    }*/
+    for (int i = 0; i < grid->deli; i++)
+    {
+        for (int j = 0; j < grid->delj; j++)
         {
             if (FLAG[i][j] == C_F)
                 continue;
-            if ((j+1) != jmax && FLAG[i][j+1] == C_F)
+            if ((j+1) != grid->delj && FLAG[i][j+1] == C_F)
                 FLAG[i][j] |= B_N;
             else if (j != 0 && FLAG[i][j-1] == C_F)
                 FLAG[i][j] |= B_S;
-            if ((i+1) != imax && FLAG[i+1][j] == C_F)
+            if ((i+1) != grid->delj && FLAG[i+1][j] == C_F)
                 FLAG[i][j] |= B_O;
             else if (i != 0 && FLAG[i-1][j] == C_F)
                 FLAG[i][j] |= B_W;
         }
+    }
     return;
 }

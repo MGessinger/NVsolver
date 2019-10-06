@@ -12,22 +12,22 @@ void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
         return;
     short flag = 0;
     /* First set values on the actual boundary of the region */
-    if (grid->il == 0)
-        for (int j = grid->jb; j <= grid->jt; j++)
+    if (grid->edges & LEFT)
+        for (int j = 0; j <= grid->delj; j++)
             P[0][j] = P[1][j];
-    if (grid->ir == grid->imax)
-        for (int j = grid->jb; j <= grid->jt; j++)
-            P[grid->ir-grid->il+1][j] = P[grid->ir-grid->il][j];
-    if (grid->jb == 0)
-        for (int i = grid->il; i <= grid->ir; i++)
+    if (grid->edges & RIGHT)
+        for (int j = 0; j <= grid->delj; j++)
+            P[grid->deli+1][j] = P[grid->deli][j];
+    if (grid->edges & BOTTOM)
+        for (int i = 0; i <= grid->deli; i++)
             P[i][0] = P[i][1];
-    if (grid->jt == grid->jmax)
-        for (int i = grid->il; i <= grid->ir; i++)
-            P[i][grid->jt-grid->jb+1] = P[i][grid->jt-grid->jb];
+    if (grid->edges & TOP)
+        for (int i = 0; i <= grid->deli; i++)
+            P[i][grid->delj+1] = P[i][grid->delj];
     REAL dxSqrd = sqr(grid->delx);
     REAL dySqrd = sqr(grid->dely);
-    for (int i = grid->il+1; i <= grid->ir; i++)
-        for (int j = grid->jb+1; j <= grid->jt; j++)
+    for (int i = 1; i <= grid->deli; i++)
+        for (int j = 1; j <= grid->delj; j++)
         {
             flag = FLAG[i-1][j-1];
             if (flag == C_F)
@@ -83,19 +83,21 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
     int i,j;
     /* Count the number of fluid cells */
     int numberOfCells = 0;
-    for (i = grid->il+1; i <= grid->ir; i++)
-        for (j = grid->jb+1; j <= grid->jt; j++)
+    for (i = 0; i < grid->deli; i++)
+        for (j = 0; j < grid->delj; j++)
         {
-            if (FLAG[i-1][j-1] == C_F)
+            if (FLAG[i][j] == C_F)
                 numberOfCells++;
+            if (rhs[i][j] == INFINITY)
+                return 0;
         }
     eps *= numberOfCells;
     do {
         /* Apply the boundary condition */
         applyPboundaryCond(p,grid,FLAG);
         /* Compute the new coefficients iteratively */
-        for (i = grid->il+1; i <= grid->ir; i++)
-            for (j = grid->jb+1; j <= grid->jt; j++)
+        for (i = 1; i <= grid->deli; i++)
+            for (j = 1; j <= grid->delj; j++)
             {
                 if (FLAG[i-1][j-1] != C_F)
                     continue;
@@ -104,8 +106,8 @@ int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
             }
         error = 0;
         /* Calculate the residue with respect to the rhs field */
-        for (i = grid->il+1; i <= grid->ir; i++)
-            for (j = grid->jb+1; j <= grid->jt; j++)
+        for (i = 1; i <= grid->deli; i++)
+            for (j = 1; j <= grid->delj; j++)
             {
                 if (FLAG[i-1][j-1] != C_F)
                     continue;
@@ -125,10 +127,10 @@ void compDelt(REAL *delt, lattice *grid, REAL **U, REAL **V, fluidSim *sim)
     if (sim->tau <= 0)
         return;
     REAL dt = sim->Re*(sqr(grid->delx) + sqr(grid->dely))/2;
-    for (int i = grid->il+1; i <= grid->ir; i++)
-        for (int j = grid->jb+1; j <= grid->jt; j++)
+    for (int i = 1; i <= grid->deli; i++)
+        for (int j = 1; j <= grid->delj; j++)
         {
-            /* Once again, one of the inequalities is trivial */
+            /* One of these inequalities will always be trivial */
             if (U[i][j] > 0 && grid->delx/U[i][j] < dt)
                 dt = grid->delx/U[i][j];
             else if (U[i][j] < 0 && grid->delx/U[i][j] > -dt)
@@ -151,13 +153,13 @@ void compRHS(REAL **F, REAL **G, REAL **RHS, short **FLAG, lattice *grid, REAL d
         fill2Dfield(INFINITY,RHS,grid->imax,grid->jmax);
         return;
     }
-    for (int i = grid->il+1; i <= grid->ir; i++)
-        for (int j = grid->jb+1; j <= grid->jt; j++)
+    for (int i = 0; i < grid->deli; i++)
+        for (int j = 0; j < grid->delj; j++)
         {
-            if (FLAG[i-1][j-1] != C_F)
+            if (FLAG[i][j] != C_F)
                 continue;
-            RHS[i-1][j-1] = (F[i][j] - F[i-1][j])/(delt*(grid->delx));
-            RHS[i-1][j-1] += (G[i][j] - G[i][j-1])/(delt*(grid->dely));
+            RHS[i][j] = (F[i+1][j+1] - F[i][j+1])/(delt*(grid->delx));
+            RHS[i][j] += (G[i+1][j+1] - G[i+1][j])/(delt*(grid->dely));
         }
     return;
 }
@@ -167,8 +169,8 @@ void adaptUV(REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
 {
     REAL facX = delt/grid->delx;
     REAL facY = delt/grid->dely;
-    for (int i = grid->il+1; i <= grid->ir; i++)
-        for (int j = grid->jb+1; j <= grid->jt; j++)
+    for (int i = 1; i <= grid->deli; i++)
+        for (int j = 1; j <= grid->deli; j++)
         {
             if (FLAG[i-1][j-1] != C_F)
                 continue;
@@ -230,9 +232,9 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
     REAL duvx, duvy;
     short flag;
     int i,j;
-    for (i = grid->il+1; i <= grid->ir; i++)
+    for (i = 1; i <= grid->deli; i++)
     {
-        for (j = grid->jb+1; j <= grid->jt; j++)
+        for (j = 1; j <= grid->delj; j++)
         {
             flag = FLAG[i-1][j-1];
             if (flag == C_B) /* Boundary cells with no neighboring fluid cells */
@@ -265,25 +267,25 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
             }
         }
     }
-    if (grid->il == 0)
+    if (grid->edges & LEFT)
     {
-        for (j = grid->jb+1; j<= grid->jt; j++)
+        for (j = 1; j<= grid->delj; j++)
             F[0][j] = U[0][j];
     }
-    if (grid->ir == grid->imax)
+    if (grid->edges & RIGHT)
     {
-        for (j = grid->jb+1; j<= grid->jt; j++)
-            F[grid->ir-grid->il][j] = U[grid->ir-grid->il][j];
+        for (j = 1; j<= grid->delj; j++)
+            F[grid->deli][j] = U[grid->deli][j];
     }
-    if (grid->jb == 0)
+    if (grid->edges & BOTTOM)
     {
-        for (i = grid->il+1; i <= grid->ir; i++)
+        for (i = 1; i <= grid->deli; i++)
             G[i][0] = V[i][0];
     }
-    if (grid->jt == grid->jmax)
+    if (grid->edges & TOP)
     {
-        for (i = grid->il+1; i <= grid->ir; i++)
-            G[i][grid->jt-grid->jb] = V[i][grid->jt-grid->jb];
+        for (i = 1; i <= grid->deli; i++)
+            G[i][grid->delj] = V[i][grid->delj];
     }
     return;
 }
@@ -296,11 +298,13 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
     /* Error checking */
     if (!U || !V|| !P)
         return 0;
+    if (!bCond || !grid || !sim)
+        return 0;
     /* Auxiliary Grids: */
-    REAL **F = create2Dfield(grid->imax+1,grid->jmax+1);
-    REAL **G = create2Dfield(grid->imax+1,grid->jmax+1);
+    REAL **F = create2Dfield(grid->deli+1,grid->delj+1);
+    REAL **G = create2Dfield(grid->deli+1,grid->delj+1);
     /* RHS is used for the Poisson-Solver so no ghost cells are neccessary */
-    REAL **RHS = create2Dfield(grid->imax,grid->jmax);
+    REAL **RHS = create2Dfield(grid->deli,grid->delj);
     if (!F || !G || !RHS)
         return 0;
     int partcount = 5000, n = 0;
@@ -337,20 +341,20 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 
         if (time > del_vec*n)
         {
-            outputVec(U,V,P,grid,++n);
-            WriteParticle(parts,partcount,n);
+            /*outputVec(U,V,P,grid,++n);
+            WriteParticle(parts,partcount,n);*/
             ParticleSeed(parts,0.1,0.9,0.1,0.9,partcount,50);
         }
-        ParticleVelocity(U,V,parts,grid,bCond->FLAG,partcount);
+        //ParticleVelocity(U,V,parts,grid,bCond->FLAG,partcount);
         ParticleTransport(parts,partcount,delt);
     }
     printf("[Simulation complete!]\n");
-    writeVTKfileFor2DintegerField("GeometryField.vtk","geometryfield",bCond->FLAG,grid);
+    //writeVTKfileFor2DintegerField("GeometryField.vtk","geometryfield",bCond->FLAG,grid);
 
     /* Destroy non-simulated grids */
-    destroy2Dfield(F,grid->imax+1);
-    destroy2Dfield(G,grid->imax+1);
-    destroy2Dfield(RHS,grid->imax);
+    destroy2Dfield(F,grid->deli+1);
+    destroy2Dfield(G,grid->deli+1);
+    destroy2Dfield(RHS,grid->deli);
     /* Destroy structures */
     destroyParticleArray(parts);
     return 1;
