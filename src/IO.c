@@ -593,11 +593,11 @@ void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
     return;
 }
 
-int dumpFields(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
+int dumpFields(MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, int n)
 {
     int rank, size, send = 1;
-    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-    MPI_Comm_size(MPI_COMM_WORLD,&size);
+    MPI_Comm_rank(Region,&rank);
+    MPI_Comm_size(Region,&size);
     MPI_Status st;
     char pFile[32], uFile[32], vFile[32];
     char *mode = (rank == 0 ? "wb" : "ab");
@@ -605,22 +605,22 @@ int dumpFields(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
     sprintf(uFile,"U%i",n);
     sprintf(vFile,"V%i",n);
     if (rank > 0)
-        MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 0, MPI_COMM_WORLD, &st);
+        MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 0, Region, &st);
     else
         printf("%s, %s, %s\n",pFile,uFile,vFile);
     write2Dfield(pFile,P,grid->deli+2,grid->delj+2,mode);
     if (rank+1 != size)
-        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 0, MPI_COMM_WORLD);
+        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 0, Region);
     if (rank > 0)
-        MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 1,MPI_COMM_WORLD,&st);
+        MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 1,Region,&st);
     write2Dfield(uFile,U,grid->deli+2,grid->delj+2,mode);
     if (rank+1 != size)
-        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 1, MPI_COMM_WORLD);
+        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 1, Region);
     if (rank > 0)
-        MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 2,MPI_COMM_WORLD,&st);
+        MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 2,Region,&st);
     write2Dfield(vFile,V,grid->deli+2,grid->delj+2,mode);
     if (rank+1 != size)
-        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 2,MPI_COMM_WORLD);
+        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 2,Region);
     return send;
 }
 

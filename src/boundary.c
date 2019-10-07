@@ -141,8 +141,6 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
 void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
 {
     /* Set special (e.g. inflow) conditions */
-    if (problem == NULL)
-        return;
     if (strcmp(problem,"Driven Cavity") == 0)
     {
         if (!(grid->edges & TOP))

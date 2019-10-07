@@ -31,7 +31,7 @@ void    WriteParticle (particle *parts, int partcount, int n);
 void    outputVec (REAL **U, REAL **V, REAL **P, lattice *grid, int n);
 /* Outputs the given fields as VTK file for visualisation with Paraview */
 
-int     dumpFields(REAL **U, REAL **V, REAL **P, lattice *grid, int n);
+int     dumpFields(MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, int n);
 void    translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *dims);
 /* Dump all matrices as binaries and translate them back to VTK */
 

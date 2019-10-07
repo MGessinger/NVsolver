@@ -67,7 +67,7 @@ void applyPboundaryCond(REAL **P, lattice *grid, char **FLAG)
 }
 
 int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
-                       fluidSim *sim, lattice *grid)
+                       fluidSim *sim, lattice *grid, MPI_Comm Region)
 {
     /* Use a SOR algorithm to solve the poisson equation */
     int it = 0;
@@ -76,6 +76,7 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
     REAL invYWidthSqrd = 1/sqr(grid->dely);
     REAL scale = sim->omega/(2*(invXWidthSqrd+invYWidthSqrd));
     REAL eps = sqr(sim->eps);
+    REAL buf[grid->deli + grid->delj + 4];
     int i,j;
     /* Count the number of fluid cells */
     int numberOfCells = 0;
@@ -87,10 +88,12 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
             if (rhs[i][j] == INFINITY)
                 return 0;
         }
-    eps *= numberOfCells;
+    temporary = eps*numberOfCells;
+    MPI_Allreduce(&temporary,&eps,1,MPI_DOUBLE,MPI_SUM,Region);
     do {
         /* Apply the boundary condition */
         applyPboundaryCond(p,grid,FLAG);
+        exchangeMat(p,1,1,buf,grid,Region);
         /* Compute the new coefficients iteratively */
         for (i = 1; i <= grid->deli; i++)
             for (j = 1; j <= grid->delj; j++)
@@ -116,6 +119,8 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
             }
         if (++it == sim->itmax)
             break;
+        temporary = error;
+        MPI_Allreduce(&temporary,&error,1,MPI_DOUBLE,MPI_SUM,Region);
     } while (error > eps);
     //printf("Remaining error after %i iterations: %e vs. %e\n",it,error,eps);
     return it;
@@ -232,7 +237,7 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
         for (j = 1; j <= grid->delj; j++)
         {
             flag = FLAG[i-1][j-1];
-            if (flag == C_B) /* Boundary cells with no neighboring fluid cells */
+            if (flag == C_B)    /* Boundary cells with no neighboring fluid cells */
                 continue;
             if (flag & B_N)     /* North */
                 G[i][j] = V[i][j];
@@ -286,8 +291,8 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 }
 
 int simulateFluid (REAL **U, REAL **V, REAL **P,
-                        boundaryCond* bCond, lattice *grid, fluidSim *sim,
-                        REAL t_end, const char *problem, int opt)
+                   boundaryCond* bCond, lattice *grid, fluidSim *sim, MPI_Comm Region,
+                   REAL t_end, const char *problem, int opt)
 {
     /* Simulate the fluid characterized by sim, grid and bCond */
     /* Error checking */
@@ -329,14 +334,14 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
         compRHS(F,G,RHS,bCond->FLAG,grid,delt);
 
         /* Solve the Poisson Equation */
-        solveSORforPoisson(P,RHS,bCond->FLAG,sim,grid);
+        solveSORforPoisson(P,RHS,bCond->FLAG,sim,grid, Region);
         /* Update U and V through F,G and P */
         adaptUV(U,V,P,F,G,delt,bCond->FLAG,grid);
         dt = compDelt(grid,U,V,sim);
 
         if (time > del_vec*n)
         {
-            dumpFields(U,V,P,grid,n++);
+            dumpFields(Region,U,V,P,grid,n++);
             /*WriteParticle(parts,partcount,n);
             ParticleSeed(parts,0.1,0.9,0.1,0.9,partcount,50);*/
         }
@@ -345,7 +350,6 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
         MPI_Allreduce(&dt,&delt,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
     }
     printf("[Simulation complete!]\n");
-    //writeVTKfileFor2DintegerField("GeometryField.vtk","geometryfield",bCond->FLAG,grid);
 
     /* Destroy non-simulated grids */
     destroy2Dfield(F,grid->deli+1);

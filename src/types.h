@@ -52,6 +52,7 @@ typedef struct particle {
 #include "IO.h"
 #include "particle.h"
 #include "poisson.h"
+#include "parallel.h"
 
 #define OUTPUT (0x10)
 #define PRINT  (0x01)

@@ -12,7 +12,7 @@ Compute the 2D-Laplacian in discrete form */
 
 void    applyPboundaryCond(REAL **P, lattice *grid, char **FLAG);
 int     solveSOR(REAL **A, REAL *x, REAL *b, int rows, int cols, REAL omega, REAL epsilon, int itermax);
-int     solveSORforPoisson (REAL **p, REAL **rhs, char **FLAG, fluidSim *sim, lattice *grid);
+int     solveSORforPoisson (REAL **p, REAL **rhs, char **FLAG, fluidSim *sim, lattice *grid, MPI_Comm Region);
 /* Solve Ax = b for x. solveSORforPoisson uses an optimised algorithm for this application. */
 
 REAL    compDelt(lattice *grid, REAL **U, REAL **V, fluidSim *sim);
@@ -29,7 +29,8 @@ REAL    delUVbyDelZ(REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL de
 REAL    delFSqrdByDelZ(REAL **F, int i, int j, int z, REAL alpha, REAL delz);
 /* Compute derivatives needed in compFG */
 
-int     simulateFluid(REAL **U, REAL **V, REAL **P, boundaryCond* bCond, lattice *grid, fluidSim *sim,
+int     simulateFluid(REAL **U, REAL **V, REAL **P,
+                      boundaryCond* bCond, lattice *grid, fluidSim *sim, MPI_Comm Region,
                       REAL t_end, const char *problem, int opt);
 /* Put all functions together and simulate the fluid */
 
