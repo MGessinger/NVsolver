@@ -5,12 +5,12 @@
 
 REAL*	create1Dfield (int size);
 REAL**	create2Dfield (int sizeX, int sizeY);
-short** create2DIntegerField(int imax, int jmax);
+char** create2DIntegerField(int imax, int jmax);
 /* Creates arrays of the given size */
 
 void 	destroy1Dfield (REAL *field);
 void 	destroy2Dfield (REAL **field, int sizeX);
-void    destroy2DIntegerField(short **field, int imax);
+void    destroy2DIntegerField(char **field, int imax);
 /* Clears the memory allocated for field */
 
 void	fill1Dfield (REAL value, REAL *field, int size);

@@ -5,7 +5,7 @@ static inline REAL sqr(REAL x)
     return x*x;
 }
 
-void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
+void applyPboundaryCond(REAL **P, lattice *grid, char **FLAG)
 {
     /* Apply boundary conditions for the pressure field */
     short flag = 0;
@@ -66,7 +66,7 @@ void applyPboundaryCond(REAL **P, lattice *grid, short **FLAG)
     return;
 }
 
-int solveSORforPoisson(REAL **p, REAL **rhs, short **FLAG,
+int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
                        fluidSim *sim, lattice *grid)
 {
     /* Use a SOR algorithm to solve the poisson equation */
@@ -146,7 +146,7 @@ REAL compDelt(lattice *grid, REAL **U, REAL **V, fluidSim *sim)
     return dt;
 }
 
-void compRHS(REAL **F, REAL **G, REAL **RHS, short **FLAG, lattice *grid, REAL delt)
+void compRHS(REAL **F, REAL **G, REAL **RHS, char **FLAG, lattice *grid, REAL delt)
 {
     for (int i = 0; i < grid->deli; i++)
         for (int j = 0; j < grid->delj; j++)
@@ -160,7 +160,7 @@ void compRHS(REAL **F, REAL **G, REAL **RHS, short **FLAG, lattice *grid, REAL d
 }
 
 void adaptUV(REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
-             REAL delt, short **FLAG, lattice *grid)
+             REAL delt, char **FLAG, lattice *grid)
 {
     REAL facX = delt/(grid->delx);
     REAL facY = delt/(grid->dely);
@@ -218,7 +218,7 @@ REAL delFSqrdByDelZ(REAL **F, int i, int j, int z, REAL alpha, REAL delz)
     return df2dz/delz;
 }
 
-void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, short **FLAG, REAL delt,
+void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
                 lattice *grid, fluidSim *simulation)
 {
     /* Compute the auxiliary arrays F and G */

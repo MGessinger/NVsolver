@@ -24,7 +24,7 @@ REAL**  read2Dfield (const char* fileName, int* sizeX, int* sizeY);
 /* Reads a field from fileName */
 
 void    writeVTKfileFor2DscalarField (const char* fileName, const char* description, REAL** field, lattice *grid);
-void    writeVTKfileFor2DintegerField(const char* fileName, const char* description, short** field, lattice *grid);
+void    writeVTKfileFor2DintegerField(const char* fileName, const char* description, char** field, lattice *grid);
 void    writeVTKfileFor2DvectorField (const char* fileName, const char* description,
                                       REAL** fieldU, REAL** fieldV, lattice *grid);
 void    WriteParticle (particle *parts, int partcount, int n);
@@ -37,11 +37,11 @@ void    translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, in
 
 int     check_if_png(const char *fileName, FILE **file);
 void    readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr);
-short** readGeometry(const char *flagFile, int *width, int *height);
+char**  readGeometry(const char *flagFile, int *width, int *height);
 /* Opens, confirms and reads a png-file into a flag array */
 
-short** adjustFlags(short **FLAG, int height, int width, int imax, int jmax);
-void    findOptimalFlags(short **FLAG, int height, int width, int *imax, int *jmax);
+char**  adjustFlags(char **FLAG, int height, int width, int imax, int jmax);
+void    findOptimalFlags(char **FLAG, int height, int width, int *imax, int *jmax);
 /* Changes the number of geomatry cells */
 
 int     readParameters(const char *inputFile, REAL *init,

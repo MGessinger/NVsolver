@@ -32,11 +32,11 @@ typedef struct fluidSimulation {
 } fluidSim;
 
 typedef struct boundaryCondition {
-    int wt : 3;
-    int wr : 3;
-    int wb : 3;
-    int wl : 3;
-    short **FLAG;
+    unsigned wt : 2;
+    unsigned wr : 2;
+    unsigned wb : 2;
+    unsigned wl : 2;
+    char **FLAG;
 } boundaryCond;
 
 typedef struct particle {
@@ -44,7 +44,7 @@ typedef struct particle {
     REAL y;
     REAL u;
     REAL v;
-    int onScreen : 2;
+    unsigned onScreen : 1;
 } particle;
 
 #include "boundary.h"

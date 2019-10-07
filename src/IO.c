@@ -151,7 +151,7 @@ REAL** read2Dfield(const char *fileName, int *sizeX, int *sizeY)
     return field;
 }
 
-void writeVTKfileFor2DintegerField(const char* fileName, const char* description, short** field, lattice *grid)
+void writeVTKfileFor2DintegerField(const char* fileName, const char* description, char **field, lattice *grid)
 {
     FILE* vtkFile = fopen(fileName, "w");
     if (vtkFile == NULL)
@@ -333,7 +333,7 @@ void readImageData (FILE *flagData, png_structpp png_ptr, png_infopp info_ptr)
     return;
 }
 
-short** readGeometry (const char *flagFile, int *height, int *width)
+char** readGeometry (const char *flagFile, int *height, int *width)
 {
     /* Variables */
     FILE *flagData;
@@ -354,7 +354,7 @@ short** readGeometry (const char *flagFile, int *height, int *width)
     png_bytepp rows;
     rows = png_get_rows(png_ptr,info_ptr);
 
-    short **FLAG = create2DIntegerField(*width,*height);
+    char **FLAG = create2DIntegerField(*width,*height);
     for (int i = 0; i < *height; i++)
     {
         for (int j = 0; j+2 < 3*(*width); j+=3)
@@ -370,12 +370,12 @@ short** readGeometry (const char *flagFile, int *height, int *width)
     return FLAG;
 }
 
-short** adjustFlags(short **FLAG, int height, int width, int imax, int jmax)
+char** adjustFlags(char **FLAG, int height, int width, int imax, int jmax)
 {
     /* Adjust the number of cells to a predefined number */
     if (FLAG == NULL)
         return FLAG;
-    short **newFLAG = create2DIntegerField(imax,jmax);
+    char **newFLAG = create2DIntegerField(imax,jmax);
     if (newFLAG == NULL)
         return FLAG;
     short average;
@@ -401,7 +401,7 @@ short** adjustFlags(short **FLAG, int height, int width, int imax, int jmax)
     return newFLAG;
 }
 
-void findOptimalFlags(short **FLAG, int height, int width, int *imax, int *jmax)
+void findOptimalFlags(char **FLAG, int height, int width, int *imax, int *jmax)
 {
     if (!FLAG || !imax || !jmax)
         return;
@@ -551,10 +551,10 @@ int readParameters(const char *inputFile, REAL *init,
             else sim->GY = value;
             break;
         case 'w':
-            if (variable[1] == 't') bCond->wt = value;
-            else if (variable[1] == 'b') bCond->wb = value;
-            else if (variable[1] == 'r') bCond->wr = value;
-            else if (variable[1] == 'l') bCond->wl = value;
+            if (variable[1] == 't') bCond->wt = (unsigned)value;
+            else if (variable[1] == 'b') bCond->wb = (unsigned)value;
+            else if (variable[1] == 'r') bCond->wr = (unsigned)value;
+            else if (variable[1] == 'l') bCond->wl = (unsigned)value;
             break;
         default:
             printf("Found unexpected Variable %s of value %lg.\n",variable,value);

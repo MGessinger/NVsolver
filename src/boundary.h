@@ -10,9 +10,9 @@
 #define B_S (8)
 #define B_W (16)
 
-#define NOSLIP (0)
-#define FREESLIP (1)
-#define OUTFLOW (2)
+#define NOSLIP (0u)
+#define FREESLIP (1u)
+#define OUTFLOW (2u)
 
 boundaryCond* createBoundCond(int wl, int wr, int wt, int wb);
 void    destroyBoundCond(boundaryCond *bCond, int imax);
@@ -26,7 +26,7 @@ void    setBCond (REAL **U, REAL **V, lattice *grid, boundaryCond *bCond);
 void    setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem);
 /* Set the boundary conditions for the given problem */
 
-void initFlags(const char* problem, short **FLAG, lattice *grid);
+void initFlags(const char* problem, char **FLAG, lattice *grid);
 /* Set flags for fluid and obstacle cells */
 
 #endif /* BOUNDARY_H_ */
