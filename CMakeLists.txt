@@ -15,6 +15,8 @@ set(FIELDLIB_SOURCES
 	src/particle.c
 	src/particle.h
 	src/types.h
+        src/parallel.c
+        src/parallel.h
 )
 
 set(OPTIONS

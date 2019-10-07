@@ -1,4 +1,5 @@
 data/
 extra/
 build/
+debug/
 CMakeLists.txt*
