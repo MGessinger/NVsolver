@@ -7,9 +7,10 @@ MPI_Comm createCommGrid(int *rank, int *dims)
     dims[0] = dims[1] = 0;
     MPI_Comm_size(MPI_COMM_WORLD,&nproc);
     MPI_Dims_create(nproc,2,dims);
-    printf("size: %i, dims: [%i,%i]\n",nproc,dims[0],dims[1]);
     MPI_Cart_create(MPI_COMM_WORLD,2,dims,periods,1,&Region);
     MPI_Comm_rank(Region,rank);
+    if (*rank == 0)
+        printf("size: %i, dims: [%i,%i]\n",nproc,dims[0],dims[1]);
     return Region;
 }
 

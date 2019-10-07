@@ -237,17 +237,17 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
         for (j = 1; j <= grid->delj; j++)
         {
             flag = FLAG[i-1][j-1];
-            if (flag == C_B)    /* Boundary cells with no neighboring fluid cells */
+            if (flag == C_B)      /* Boundary cells with no neighboring fluid cells */
                 continue;
-            if (flag & B_N)     /* North */
+            if (flag & B_N)       /* North */
                 G[i][j] = V[i][j];
-            if (flag & B_O)     /* East */
-                F[i][j] = U[i][j];
-            if (flag & B_S)     /* South */
+            else if (flag & B_S)  /* South */
                 G[i-1][j] = V[i-1][j];
-            if (flag & B_W)     /* West */
+            if (flag & B_O)       /* East */
+                F[i][j] = U[i][j];
+            else if (flag & B_W)  /* West */
                 F[i-1][j] = U[i-1][j];
-            if (flag == C_F)    /* Pure fluid cells */
+            else if (flag == C_F) /* Pure fluid cells */
             {
                 d2ux = (U[i+1][j] - 2*U[i][j] + U[i-1][j])/sqr(grid->delx);
                 d2uy = (U[i][j+1] - 2*U[i][j] + U[i][j-1])/sqr(grid->dely);
@@ -309,6 +309,7 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
         return 0;
     int partcount = 5000, n = 1;
     REAL del_vec, dt = 0, delt = sim->dt;
+    REAL buf[grid->deli+grid->delj];
     if (opt >= OUTPUT)
         del_vec = t_end/(opt/OUTPUT);
     else
@@ -337,6 +338,8 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
         solveSORforPoisson(P,RHS,bCond->FLAG,sim,grid, Region);
         /* Update U and V through F,G and P */
         adaptUV(U,V,P,F,G,delt,bCond->FLAG,grid);
+        exchangeMat(U,1,1,buf,grid,Region);
+        exchangeMat(V,1,1,buf,grid,Region);
         dt = compDelt(grid,U,V,sim);
 
         if (time > del_vec*n)
