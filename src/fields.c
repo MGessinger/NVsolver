@@ -68,15 +68,7 @@ void destroy2Dfield(REAL** field, int sizeX)
 
 void destroy2DIntegerField(char **field, int imax)
 {
-    if (field == NULL)
-        return;
-    for (int i = 0; i < imax; i++)
-    {
-        if (field[i] == NULL)
-            continue;
-        free(field[i]);
-    }
-    free(field);
+    destroy2Dfield((REAL**)field,imax);
     return;
 }
 
@@ -102,11 +94,13 @@ void fill2Dfield(REAL value, REAL** field, int sizeX, int sizeY)
 
 void initUVP(REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, REAL *init)
 {
-    if (U == NULL || V == NULL || P == NULL)
+    if (!U || !V || !P)
         return;
     *P = create2Dfield(imax+2,jmax+2);
-    *U = create2Dfield(imax+2,jmax+2);
-    *V = create2Dfield(imax+2,jmax+2);
+    *U = create2Dfield(imax+3,jmax+2);
+    *V = create2Dfield(imax+2,jmax+3);
+    if (init == NULL)
+        return;
     fill2Dfield(init[0],*U,imax+2,jmax+2);
     fill2Dfield(init[1],*V,imax+2,jmax+2);
     fill2Dfield(init[2],*P,imax+2,jmax+2);

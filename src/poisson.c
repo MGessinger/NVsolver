@@ -136,14 +136,14 @@ REAL compDelt(lattice *grid, REAL **U, REAL **V, fluidSim *sim)
         for (int j = 1; j <= grid->delj; j++)
         {
             /* One of these inequalities will always be trivial */
-            if (U[i][j] > 0 && grid->delx/U[i][j] < dt)
-                dt = grid->delx/U[i][j];
-            else if (U[i][j] < 0 && grid->delx/U[i][j] > -dt)
-                dt = -(grid->delx)/U[i][j];
-            if (V[i][j] > 0 && grid->dely/V[i][j] < dt)
+            if (U[i+1][j] > 0 && grid->delx/U[i+1][j] < dt)
+                dt = grid->delx/U[i+1][j];
+            else if (U[i+1][j] < 0 && grid->delx/U[i+1][j] > -dt)
+                dt = -(grid->delx)/U[i+1][j];
+            if (V[i][j+1] > 0 && grid->dely/V[i][j+1] < dt)
                 dt = (grid->dely)/V[i][j];
-            else if (V[i][j] < 0 && grid->dely/V[i][j] > -dt)
-                dt = -(grid->dely)/V[i][j];
+            else if (V[i][j+1] < 0 && grid->dely/V[i][j+1] > -dt)
+                dt = -(grid->dely)/V[i][j+1];
         }
     dt = sim->tau*dt;
     if (dt > sim->dt)
@@ -174,32 +174,32 @@ void adaptUV(REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
         {
             if (FLAG[i-1][j-1] != C_F)
                 continue;
-            U[i][j] = F[i][j] - facX*(P[i+1][j] - P[i][j]);
-            V[i][j] = G[i][j] - facY*(P[i][j+1] - P[i][j]);
+            U[i+1][j] = F[i][j] - facX*(P[i+1][j] - P[i][j]);
+            V[i][j+1] = G[i][j] - facY*(P[i][j+1] - P[i][j]);
         }
     return;
 }
 
 REAL delUVbyDelZ(REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL delz)
 {
-    REAL duvdz = (U[i][j] + U[i][j+1])*(V[i][j] + V[i+1][j]);
+    REAL duvdz = (U[i+1][j] + U[i+1][j+1])*(V[i][j+1] + V[i+1][j+1]);
     REAL correctionTerm = 0;
     delz *= 4;
     if (z == DERIVE_BY_X)
     {
-        duvdz -= (U[i-1][j] + U[i-1][j+1])*(V[i-1][j] + V[i][j]);
+        duvdz -= (U[i][j] + U[i][j+1])*(V[i-1][j+1] + V[i][j+1]);
         if (alpha == 0)
             return duvdz/delz;
-        correctionTerm = abs(U[i][j] + U[i][j+1]) * (V[i][j] - V[i+1][j]);
-        correctionTerm -= abs(U[i-1][j]+U[i-1][j+1]) * (V[i-1][j] - V[i][j]);
+        correctionTerm = abs(U[i+1][j] + U[i+1][j+1]) * (V[i][j+1] - V[i+1][j+1]);
+        correctionTerm -= abs(U[i][j]+U[i][j+1]) * (V[i-1][j+1] - V[i][j+1]);
     }
     else
     {
-        duvdz -= (U[i][j-1] + U[i][j])*(V[i][j-1] + V[i+1][j-1]);
+        duvdz -= (U[i+1][j-1] + U[i+1][j])*(V[i][j] + V[i+1][j]);
         if (alpha == 0)
             return duvdz/delz;
-        correctionTerm = abs(V[i][j] + V[i+1][j]) * (U[i][j] - U[i][j+1]);
-        correctionTerm -= abs(V[i][j-1] + V[i+1][j-1]) * (U[i][j-1] - U[i][j]);
+        correctionTerm = abs(V[i][j+1] + V[i+1][j+1]) * (U[i+1][j] - U[i+1][j+1]);
+        correctionTerm -= abs(V[i][j] + V[i+1][j]) * (U[i+1][j-1] - U[i+1][j]);
     }
     return (duvdz + alpha*correctionTerm)/delz;
 }
@@ -240,52 +240,52 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
             if (flag == C_B)      /* Boundary cells with no neighboring fluid cells */
                 continue;
             if (flag & B_N)       /* North */
-                G[i][j] = V[i][j];
+                G[i][j] = V[i][j+1];
             else if (flag & B_S)  /* South */
-                G[i-1][j] = V[i-1][j];
+                G[i-1][j] = V[i-1][j+1];
             if (flag & B_O)       /* East */
-                F[i][j] = U[i][j];
+                F[i][j] = U[i+1][j];
             else if (flag & B_W)  /* West */
-                F[i-1][j] = U[i-1][j];
+                F[i-1][j] = U[i][j];
             else if (flag == C_F) /* Pure fluid cells */
             {
-                d2ux = (U[i+1][j] - 2*U[i][j] + U[i-1][j])/sqr(grid->delx);
-                d2uy = (U[i][j+1] - 2*U[i][j] + U[i][j-1])/sqr(grid->dely);
+                d2ux = (U[i+2][j] - 2*U[i+1][j] + U[i][j])/sqr(grid->delx);
+                d2uy = (U[i+1][j+1] - 2*U[i+1][j] + U[i+1][j-1])/sqr(grid->dely);
 
                 duvy = delUVbyDelZ(U,V,i,j,DERIVE_BY_Y,simulation->alpha,grid->dely);
-                du2x = delFSqrdByDelZ(U,i,j,DERIVE_BY_X,simulation->alpha,grid->delx);
+                du2x = delFSqrdByDelZ(U,i+1,j,DERIVE_BY_X,simulation->alpha,grid->delx);
 
-                F[i][j] = U[i][j] + delt*((d2ux+d2uy)/simulation->Re - du2x - duvy + simulation->GX);
+                F[i][j] = U[i+1][j] + delt*((d2ux+d2uy)/simulation->Re - du2x - duvy + simulation->GX);
 
-                d2vx = (V[i+1][j] - 2*V[i][j] + V[i-1][j])/sqr(grid->delx);
-                d2vy = (V[i][j+1] - 2*V[i][j] + V[i][j-1])/sqr(grid->dely);
+                d2vx = (V[i+1][j+1] - 2*V[i][j+1] + V[i-1][j+1])/sqr(grid->delx);
+                d2vy = (V[i][j] - 2*V[i][j+1] + V[i][j])/sqr(grid->dely);
 
-                dv2y = delFSqrdByDelZ(V,i,j,DERIVE_BY_Y,simulation->alpha,grid->dely);
+                dv2y = delFSqrdByDelZ(V,i,j+1,DERIVE_BY_Y,simulation->alpha,grid->dely);
                 duvx = delUVbyDelZ(U,V,i,j,DERIVE_BY_X,simulation->alpha,grid->delx);
 
-                G[i][j] = V[i][j] + delt*((d2vx+d2vy)/simulation->Re - dv2y - duvx + simulation->GY);
+                G[i][j] = V[i][j+1] + delt*((d2vx+d2vy)/simulation->Re - dv2y - duvx + simulation->GY);
             }
         }
     }
     if (grid->edges & LEFT)
     {
         for (j = 1; j<= grid->delj; j++)
-            F[0][j] = U[0][j];
+            F[0][j] = U[1][j];
     }
     if (grid->edges & RIGHT)
     {
         for (j = 1; j<= grid->delj; j++)
-            F[grid->deli][j] = U[grid->deli][j];
+            F[grid->deli][j] = U[grid->deli+1][j];
     }
     if (grid->edges & BOTTOM)
     {
         for (i = 1; i <= grid->deli; i++)
-            G[i][0] = V[i][0];
+            G[i][0] = V[i][1];
     }
     if (grid->edges & TOP)
     {
         for (i = 1; i <= grid->deli; i++)
-            G[i][grid->delj] = V[i][grid->delj];
+            G[i][grid->delj] = V[i][grid->delj+1];
     }
     return;
 }
@@ -307,28 +307,29 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
     REAL **RHS = create2Dfield(grid->deli,grid->delj);
     if (!F || !G || !RHS)
         return 0;
-    int partcount = 5000, n = 1;
+    int partcount = 5000, n = 1, rank;
+    MPI_Comm_rank(Region,&rank);
     REAL del_vec, dt = 0, delt = sim->dt;
     REAL buf[grid->deli+grid->delj];
     if (opt >= OUTPUT)
         del_vec = t_end/(opt/OUTPUT);
     else
         del_vec = t_end*2;
-    /* Create Particles */
+    /* Create Particles
     particle *parts = createParticleArray(partcount);
     if (!parts)
     {
         printf("Creating particles failed. Proceed? (y/n)");
         if (getchar() == 'n')
             return 0;
-    }
+    } */
     /* Begin the simulation */
     printf("Computing Reynoldsnumber %lg.\n",sim->Re);
     for (REAL time = 0; time <= t_end; time += delt)
     {
-        /*if (opt & PRINT)
+        if ((rank == 0) && (opt & PRINT))
             printf("Time is at %lg seconds\n",time);
-        Update all parameters and fields for the iteration */
+        /* Update all parameters and fields for the iteration */
         setBCond(U,V,grid,bCond);
         setSpecBCond(U,V,grid,problem);
         compFG(U,V,F,G,bCond->FLAG,delt,grid,sim);
@@ -338,8 +339,8 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
         solveSORforPoisson(P,RHS,bCond->FLAG,sim,grid, Region);
         /* Update U and V through F,G and P */
         adaptUV(U,V,P,F,G,delt,bCond->FLAG,grid);
-        exchangeMat(U,1,1,buf,grid,Region);
-        exchangeMat(V,1,1,buf,grid,Region);
+        exchangeMat(U,2,1,buf,grid,Region);
+        exchangeMat(V,1,2,buf,grid,Region);
         dt = compDelt(grid,U,V,sim);
 
         if (time > del_vec*n)
@@ -358,7 +359,7 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
     destroy2Dfield(F,grid->deli+1);
     destroy2Dfield(G,grid->deli+1);
     destroy2Dfield(RHS,grid->deli);
-    /* Destroy structures */
-    destroyParticleArray(parts);
+    /* Destroy structures
+    destroyParticleArray(parts); */
     return n;
 }

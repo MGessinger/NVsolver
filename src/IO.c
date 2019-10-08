@@ -584,8 +584,8 @@ void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
     for (int i = 1;  i <= imax; i++)
         for (int j = 1; j <= jmax; j++)
         {
-            T[i-1][j-1] = (U[i][j] + U[i-1][j])/2;
-            S[i-1][j-1] = (V[i][j] + V[i][j-1])/2;
+            T[i-1][j-1] = (U[i+1][j] + U[i][j])/2;
+            S[i-1][j-1] = (V[i][j+1] + V[i][j])/2;
         }
     writeVTKfileFor2DvectorField(fileName,"momentumfield",T,S,grid);
     destroy2Dfield(T,imax);
@@ -613,12 +613,12 @@ int dumpFields(MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, int
         MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 0, Region);
     if (rank > 0)
         MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 1,Region,&st);
-    write2Dfield(uFile,U,grid->deli+2,grid->delj+2,mode);
+    write2Dfield(uFile,U,grid->deli+3,grid->delj+2,mode);
     if (rank+1 != size)
         MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 1, Region);
     if (rank > 0)
         MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 2,Region,&st);
-    write2Dfield(vFile,V,grid->deli+2,grid->delj+2,mode);
+    write2Dfield(vFile,V,grid->deli+2,grid->delj+3,mode);
     if (rank+1 != size)
         MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 2,Region);
     return send;
@@ -628,8 +628,8 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
 {
     char pFile[32], uFile[32], vFile[32];
     REAL **U, **V, **P;
-    REAL size[2], init[3] = {0,0,0};
-    initUVP(&U,&V,&P,grid->imax,grid->jmax,init);
+    int size[2];
+    initUVP(&U,&V,&P,grid->imax,grid->jmax,NULL);
     FILE *PF, *UF, *VF;
     int coords[2], nproc = dims[0]*dims[1];
     int il[nproc], jb[nproc];
@@ -651,8 +651,12 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
             continue;
         for (int k = 0; k < nproc; k++) /* Loop over matrices */
         {
-            if (fread(size,sizeof(REAL),2,PF) == 0)
+            if (fread(size,sizeof(int),2,PF) == 0)
+            {
+                printf("Could not read size. Skipping file...\n");
                 break;
+            }
+            printf("Reading %i lines of length %i...\n",size[0],size[1]);
             for (int j = 0; j < size[0]; j++) /* Loop over lines */
             {
                 if (fread(&(P[j+il[k]][jb[k]]),sizeof(REAL),size[1],PF) == 0)

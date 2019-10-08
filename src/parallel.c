@@ -46,54 +46,45 @@ void splitRegion(MPI_Comm Region, int *dims, lattice *grid, char *problem, bound
 
 void exchangeMat (REAL **mat, int offx, int offy, REAL *buf, lattice *grid, MPI_Comm Region)
 {
-    if (!buf || !grid)
-        return;
     int prev, next, size;
     MPI_Status st;
     /* Top and bottom */
-    MPI_Cart_shift(Region,1,1,&prev,&next);
-    MPI_Comm_size(Region,&size);
-    if (prev != -1)
-        MPI_Send(&(mat[offx][1]),grid->delj,MPI_DOUBLE,prev,101,Region);
-    if (next != -1)
-    {
-        MPI_Recv(&(mat[grid->deli+2*offx-1][1]),grid->delj,MPI_DOUBLE,next,101,Region,&st);
-        MPI_Send(&(mat[grid->deli+offx][1]),grid->delj,MPI_DOUBLE,next,102,Region);
-    }
-    if (prev != -1)
-        MPI_Recv(&(mat[0][1]),grid->delj,MPI_DOUBLE,prev,102,Region,&st);
-    /* Left and right */
     MPI_Cart_shift(Region,0,1,&prev,&next);
+    MPI_Comm_size(Region,&size);
+    int lx = grid->deli+2*offx - (offx==2);
+    int ly = grid->delj+2*offy - (offy==2);
+    if (prev != -1)
+        MPI_Send(mat[offx],ly,MPI_DOUBLE,prev,101,Region);
+    if (next != -1)
+    {
+        MPI_Recv(mat[lx-1],ly,MPI_DOUBLE,next,101,Region,&st);
+        MPI_Send(mat[lx-offx-1],ly,MPI_DOUBLE,next,102,Region);
+    }
+    if (prev != -1)
+        MPI_Recv(mat[0],ly,MPI_DOUBLE,prev,102,Region,&st);
+    /* Left and right */
+    MPI_Cart_shift(Region,1,1,&prev,&next);
     if (prev != -1)
     {
-        for (int i = 1; i <= grid->deli; i++)
-            buf[i-1] = mat[i][offy];
-        MPI_Send(buf,grid->deli,MPI_DOUBLE,prev,103,Region);
+        for (int i = 0; i < lx; i++)
+            buf[i] = mat[i][0];
+        MPI_Send(buf,lx,MPI_DOUBLE,prev,103,Region);
     }
     if (next != -1)
     {
-        MPI_Recv(buf,grid->deli,MPI_DOUBLE,next,103,Region,&st);
-        for (int i = 1; i <= grid->deli; i++)
+        MPI_Recv(buf,lx,MPI_DOUBLE,next,103,Region,&st);
+        for (int i = 0; i < lx; i++)
         {
-            mat[i][0] = buf[i-1];
-            buf[i-1] = mat[i][grid->delj+offy];
+            mat[i][0] = buf[i];
+            buf[i] = mat[i][ly-offx-1];
         }
-        MPI_Send(buf,grid->deli,MPI_DOUBLE,next,104,Region);
+        MPI_Send(buf,lx,MPI_DOUBLE,next,104,Region);
     }
     if (prev != -1)
     {
-        MPI_Recv(buf,grid->deli,MPI_DOUBLE,prev,104,Region,&st);
-        int y = grid->delj+2*offy-1;
-        for (int i = 1; i <= grid->deli; i++)
-            mat[i][y] = buf[i-1];
+        MPI_Recv(buf,lx,MPI_DOUBLE,prev,104,Region,&st);
+        for (int i = 0; i < lx; i++)
+            mat[i][ly-1] = buf[i];
     }
     return;
 }
-
-
-
-
-
-
-
-

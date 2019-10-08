@@ -29,11 +29,10 @@ int main (int argc, char **argv)
     for (int i = 1; i < argc; i++)
     {
         if (argv[i][0] != '-')
-        {
-            out = PRINT | atoi(argv[i])*OUTPUT;
-            continue;
-        }
-        if (argv[i][1] == 'p')
+            out = atoi(argv[i])*OUTPUT;
+        else if (argv[i][1] == 'v')
+            out |= PRINT;
+        else if (argv[i][1] == 'p')
         {
             /* Read parameters from a file */
             if (readParameters(argv[i]+2,init,&grid,&sim,bCond,&delt,&t_end) < 17)
@@ -56,9 +55,10 @@ int main (int argc, char **argv)
     splitRegion(Region, dims, &grid, problem, bCond);
     initUVP(&U,&V,&P,grid.deli,grid.delj,init);
     int files = simulateFluid(U,V,P,bCond,&grid,&sim,Region,t_end,problem,out);
-    translateBinary(Region,&grid,files,rank,dims);
+    if (out > OUTPUT)
+        translateBinary(Region,&grid,files,rank,dims);
     /* Destroy simulated grids */
-    destroy2Dfield(U,grid.deli+2);
+    destroy2Dfield(U,grid.deli+3);
     destroy2Dfield(V,grid.deli+2);
     destroy2Dfield(P,grid.deli+2);
     destroyBoundCond(bCond,grid.deli);

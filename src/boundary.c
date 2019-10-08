@@ -53,24 +53,24 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
         for (int i = 1; i <= grid->deli; i++)
         {
             U[i][0] = (bCond->wb == NOSLIP) ? -U[i][1] : U[i][1];
-            V[i][0] = (bCond->wb == OUTFLOW) ? V[i][1] : 0;
+            V[i][1] = (bCond->wb == OUTFLOW) ? V[i][2] : 0;
         }
     if (grid->edges & TOP)
         for (int i = 1; i <= grid->deli; i++)
         {
             U[i][grid->delj+1] = (bCond->wt == NOSLIP) ? -U[i][grid->delj] : U[i][grid->delj];
-            V[i][grid->delj] = (bCond->wt == OUTFLOW) ? V[i][grid->delj-1] : 0;
+            V[i][grid->delj+1] = (bCond->wt == OUTFLOW) ? V[i][grid->delj] : 0;
         }
     if (grid->edges & LEFT)
         for (int j = 1; j <= grid->delj; j++)
         {
-            U[0][j] = (bCond->wl == OUTFLOW) ? U[1][j] : 0;
+            U[1][j] = (bCond->wl == OUTFLOW) ? U[2][j] : 0;
             V[0][j] = (bCond->wl == NOSLIP) ? -V[1][j] : V[1][j];
         }
     if (grid->edges & RIGHT)
         for (int j = 1; j <= grid->delj; j++)
         {
-            U[grid->deli][j] = (bCond->wr == OUTFLOW) ? U[grid->deli-1][j] : 0;
+            U[grid->deli+1][j] = (bCond->wr == OUTFLOW) ? U[grid->deli][j] : 0;
             V[grid->deli+1][j] = (bCond->wr == NOSLIP) ? -V[grid->deli][j] : V[grid->deli][j];
         }
     short flag;
@@ -84,54 +84,54 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
             /* Deep inside an obstacle */
             if (flag == C_B)
             {
-                U[i][j] = V[i][j] = 0;
+                U[i+1][j] = V[i][j+1] = 0;
                 continue;
             }
             /* Set boundary conditions */
             switch (flag^C_B)
             {
             case B_N:
-                V[i][j] = 0;
+                V[i][j+1] = 0;
+                U[i+1][j] = -U[i+1][j+1];
                 U[i][j] = -U[i][j+1];
-                U[i-1][j] = -U[i-1][j+1];
                 break;
             case B_O:
-                U[i][j] = 0;
+                U[i+1][j] = 0;
+                V[i][j+1] = V[i+1][j+1];
                 V[i][j] = V[i+1][j];
-                V[i][j-1] = V[i+1][j-1];
                 break;
             case B_S:
-                V[i][j-1] = 0;
+                V[i][j] = 0;
+                U[i+1][j] = -U[i][j-1];
                 U[i][j] = -U[i][j-1];
-                U[i-1][j] = -U[i-1][j-1];
                 break;
             case B_W:
-                U[i-1][j] = 0;
+                U[i][j] = 0;
+                V[i][j+1] = V[i-1][j+1];
                 V[i][j] = V[i-1][j];
-                V[i][j-1] = V[i-1][j-1];
                 break;
             case B_N | B_O:
-                U[i][j] = V[i][j] = 0;
-                U[i-1][j] = -U[i-1][j+1];
-                V[i][j-1] = -V[i+1][j-1];
+                U[i+1][j] = V[i][j+1] = 0;
+                U[i][j] = -U[i][j+1];
+                V[i][j] = -V[i+1][j];
                 break;
             case B_N | B_W:
-                U[i-1][j] = V[i][j] = 0;
-                U[i-1][j] = -U[i-1][j+1];
-                V[i][j-1] = V[i-1][j-1];
+                U[i+1][j] = V[i][j+1] = 0;
+                U[i][j] = -U[i-1][j+1];
+                V[i][j] = V[i-1][j];
                 break;
             case B_S | B_O:
-                U[i][j] = V[i][j-1] = 0;
-                U[i-1][j] = -U[i-1][j-1];
-                V[i][j-1] = V[i+1][j-1];
+                U[i+1][j] = V[i][j] = 0;
+                U[i][j] = -U[i][j-1];
+                V[i][j] = V[i+1][j];
                 break;
             case B_S | B_W:
-                U[i-1][j] = V[i][j-1] = 0;
-                U[i-1][j] = -U[i-1][j-1];
-                V[i][j-1] = V[i-1][j-1];
+                U[i][j] = V[i][j] = 0;
+                U[i][j] = -U[i][j-1];
+                V[i][j] = V[i-1][j];
                 break;
             default:
-                U[i][j] = V[i][j] = 0;
+                U[i+1][j] = V[i][j+1] = 0;
                 break;
             }
         }
@@ -145,7 +145,7 @@ void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
     {
         if (!(grid->edges & TOP))
             return;
-        for (int i = 1; i <= grid->deli; i++)
+        for (int i = 2; i <= grid->deli+1; i++)
             U[i][grid->delj+1] = 2-U[i][grid->delj];
         return;
     }
@@ -153,12 +153,12 @@ void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
     {
         if (!(grid->edges & LEFT))
             return;
-        for (int j = 0; j <= grid->delj; j++)
+        for (int j = 1; j <= grid->delj; j++)
         {
             if (j + grid->jb < grid->jmax/2)
                 continue;
-            U[0][j] = 1;
-            V[0][j] = V[1][j];
+            U[1][j] = 1;
+            V[0][j+1] = V[1][j];
         }
         return;
     }
@@ -166,9 +166,9 @@ void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
     {
         if (!(grid->edges & LEFT))
             return;
-        for (int j = 0; j <= grid->delj; j++)
+        for (int j = 1; j <= grid->delj; j++)
         {
-            U[0][j] = 1;
+            U[1][j] = 1;
         }
         return;
     }
