@@ -601,8 +601,8 @@ int dumpFields(MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, int
     MPI_Status st;
     char pFile[32], uFile[32], vFile[32];
     char *mode = (rank == 0 ? "wb" : "ab");
-    sprintf(pFile,"P%i",n);
-    sprintf(uFile,"U%i",n);
+    sprintf(pFile,"PressureField_%i.vtk",n);
+    sprintf(uFile,"MomentumField_%i.vtk",n);
     sprintf(vFile,"V%i",n);
     if (rank > 0)
         MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 0, Region, &st);
@@ -610,17 +610,17 @@ int dumpFields(MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, int
         printf("%s, %s, %s\n",pFile,uFile,vFile);
     write2Dfield(pFile,P,grid->deli+2,grid->delj+2,mode);
     if (rank+1 != size)
-        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 0, Region);
+        MPI_Send(&send,0,MPI_INT,rank+1,WRITE + 0, Region);
     if (rank > 0)
-        MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 1,Region,&st);
+        MPI_Recv(&send,0,MPI_INT,rank-1,WRITE + 1,Region,&st);
     write2Dfield(uFile,U,grid->deli+3,grid->delj+2,mode);
     if (rank+1 != size)
-        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 1, Region);
+        MPI_Send(&send,0,MPI_INT,rank+1,WRITE + 1, Region);
     if (rank > 0)
-        MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 2,Region,&st);
+        MPI_Recv(&send,0,MPI_INT,rank-1,WRITE + 2,Region,&st);
     write2Dfield(vFile,V,grid->deli+2,grid->delj+3,mode);
     if (rank+1 != size)
-        MPI_Send(&send,1,MPI_INT,rank+1,WRITE + 2,Region);
+        MPI_Send(&send,0,MPI_INT,rank+1,WRITE + 2,Region);
     return send;
 }
 
@@ -641,8 +641,8 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
     }
     for (int i = rank; i < files; i += nproc) /* Loop over files */
     {
-        sprintf(pFile,"P%i",i);
-        sprintf(uFile,"U%i",i);
+        sprintf(pFile,"PressureField_%i.vtk",i);
+        sprintf(uFile,"MomentumField_%i.vtk",i);
         sprintf(vFile,"V%i",i);
         PF = fopen(pFile,"rb");
         UF = fopen(uFile,"rb");
@@ -651,12 +651,11 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
             continue;
         for (int k = 0; k < nproc; k++) /* Loop over matrices */
         {
-            if (fread(size,sizeof(int),2,PF) == 0)
+            if (fread(size,sizeof(int),2,PF) < 2)
             {
                 printf("Could not read size. Skipping file...\n");
                 break;
             }
-            printf("Reading %i lines of length %i...\n",size[0],size[1]);
             for (int j = 0; j < size[0]; j++) /* Loop over lines */
             {
                 if (fread(&(P[j+il[k]][jb[k]]),sizeof(REAL),size[1],PF) == 0)

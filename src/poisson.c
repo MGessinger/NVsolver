@@ -85,8 +85,6 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
         {
             if (FLAG[i][j] == C_F)
                 numberOfCells++;
-            if (rhs[i][j] == INFINITY)
-                return 0;
         }
     temporary = eps*numberOfCells;
     MPI_Allreduce(&temporary,&eps,1,MPI_DOUBLE,MPI_SUM,Region);
@@ -122,7 +120,6 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
         temporary = error;
         MPI_Allreduce(&temporary,&error,1,MPI_DOUBLE,MPI_SUM,Region);
     } while (error > eps);
-    //printf("Remaining error after %i iterations: %e vs. %e\n",it,error,eps);
     return it;
 }
 
