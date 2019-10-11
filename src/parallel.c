@@ -14,7 +14,7 @@ MPI_Comm createCommGrid(int *rank, int *dims)
     return Region;
 }
 
-void splitRegion(MPI_Comm Region, int *dims, lattice *grid, char *problem, boundaryCond *bCond)
+void splitRegion(MPI_Comm Region, int *dims, lattice *grid)
 {
     if (!dims || !grid)
         return;
@@ -39,9 +39,7 @@ void splitRegion(MPI_Comm Region, int *dims, lattice *grid, char *problem, bound
     if (jt == grid->jmax)
         grid->edges |= TOP;
     grid->delj = jt - grid->jb;
-    if (bCond->FLAG == NULL)
-        bCond->FLAG = create2DIntegerField(grid->deli,grid->delj);
-    initFlags(problem,bCond->FLAG,grid);
+    return;
 }
 
 void exchangeMat (REAL **mat, int offx, int offy, REAL *buf, lattice *grid, MPI_Comm Region)
@@ -51,6 +49,8 @@ void exchangeMat (REAL **mat, int offx, int offy, REAL *buf, lattice *grid, MPI_
     /* Top and bottom */
     MPI_Cart_shift(Region,0,1,&next,&prev);
     MPI_Comm_size(Region,&size);
+    if (size == 0)
+        return;
     int lx = grid->deli+2*offx - (offx==2);
     int ly = grid->delj+2*offy - (offy==2);
     if (prev != -1)
@@ -72,6 +72,42 @@ void exchangeMat (REAL **mat, int offx, int offy, REAL *buf, lattice *grid, MPI_
         for (int i = 0; i < lx; i++)
             buf[i] = mat[i][ly-offx-1];
         MPI_Sendrecv(buf,lx,MPI_DOUBLE,next,104,buf,lx,MPI_DOUBLE,next,103,Region,&st);
+        for (int i = 0; i < lx; i++)
+            mat[i][0] = buf[i];
+    }
+    return;
+}
+
+void exchangeIntMat (char **mat, char *buf, lattice *grid, MPI_Comm Region)
+{
+    int prev, next, size;
+    MPI_Status st;
+    /* Top and bottom */
+    MPI_Cart_shift(Region,0,1,&next,&prev);
+    MPI_Comm_size(Region,&size);
+    if (size == 0)
+        return;
+    int lx = grid->deli+2;
+    int ly = grid->delj+2;
+    if (prev != -1)
+        MPI_Sendrecv(mat[1],ly,MPI_CHAR,prev,101,mat[0],ly,MPI_CHAR,prev,102,Region,&st);
+    if (next != -1)
+        MPI_Sendrecv(mat[grid->deli],ly,MPI_CHAR,next,102,mat[lx-1],ly,MPI_CHAR,next,101,Region,&st);
+    /* Left and right */
+    MPI_Cart_shift(Region,1,1,&prev,&next);
+    if (prev != -1)
+    {
+        for (int i = 0; i < lx; i++)
+            buf[i] = mat[i][0];
+        MPI_Sendrecv(buf,lx,MPI_CHAR,prev,103,buf,lx,MPI_CHAR,prev,104,Region,&st);
+        for (int i = 0; i < lx; i++)
+            mat[i][ly-1] = buf[i];
+    }
+    if (next != -1)
+    {
+        for (int i = 0; i < lx; i++)
+            buf[i] = mat[i][grid->delj];
+        MPI_Sendrecv(buf,lx,MPI_CHAR,next,104,buf,lx,MPI_CHAR,next,103,Region,&st);
         for (int i = 0; i < lx; i++)
             mat[i][0] = buf[i];
     }

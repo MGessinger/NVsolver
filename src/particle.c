@@ -55,7 +55,7 @@ void ParticleVelocity (REAL **U, REAL **V, particle *parts, lattice *grid, short
             parts[p].onScreen = 0;
             continue;
         }
-        if (FLAG[i-1][j-1] != C_F)
+        if (FLAG[i][j] != C_F)
         {
             parts[p].onScreen = 0;
             continue;
@@ -75,7 +75,7 @@ void ParticleVelocity (REAL **U, REAL **V, particle *parts, lattice *grid, short
             parts[p].onScreen = 0;
             continue;
         }
-        if (FLAG[i-1][j-1] != C_F)
+        if (FLAG[i][j] != C_F)
         {
             parts[p].onScreen = 0;
             continue;

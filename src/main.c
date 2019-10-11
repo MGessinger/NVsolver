@@ -13,32 +13,29 @@ int main (int argc, char **argv)
         printf("Type simulator -h for extended help.\n");
         return 0;
     }
+    boundaryCond bCond = createBoundCond(NOSLIP,NOSLIP,NOSLIP,NOSLIP);
+    lattice grid;
+    fluidSim sim;
     int rank, dims[2];
-    MPI_Init(&argc,&argv);
-    MPI_Comm Region = createCommGrid(&rank,dims);
     REAL **U = NULL, **V = NULL, **P = NULL;
     REAL init[3];
     REAL delt, t_end;
     int out = SILENT;
 
-    boundaryCond *bCond = createBoundCond(NOSLIP,NOSLIP,NOSLIP,NOSLIP);
-    lattice grid;
-    fluidSim sim;
-    char problem[128];
-    strcpy(problem,argv[1]);
-    for (int i = 1; i < argc; i++)
+    MPI_Init(&argc,&argv);
+    MPI_Comm Region = createCommGrid(&rank,dims);
+    for (int i = 2; i < argc; i++)
     {
         if (argv[i][0] != '-')
-            out = atoi(argv[i])*OUTPUT;
+            out |= atoi(argv[i])*OUTPUT;
         else if (argv[i][1] == 'v')
             out |= PRINT;
         else if (argv[i][1] == 'p')
         {
             /* Read parameters from a file */
-            if (readParameters(argv[i]+2,init,&grid,&sim,bCond,&delt,&t_end) < 17)
+            if (readParameters(argv[i]+2,init,&grid,&sim,&bCond,&delt,&t_end) < 17)
             {
                 printf("The parameter file appears to be incomplete.\n");
-                destroyBoundCond(bCond,grid.imax);
                 MPI_Abort(Region,0);
             }
         }
@@ -52,16 +49,36 @@ int main (int argc, char **argv)
         }*/
     }
     /* Slice Data to process */
-    splitRegion(Region, dims, &grid, problem, bCond);
+    splitRegion(Region, dims, &grid);
     initUVP(&U,&V,&P,grid.deli,grid.delj,init);
-    int files = simulateFluid(U,V,P,bCond,&grid,&sim,Region,t_end,problem,out);
+    if (bCond.FLAG == NULL)
+        bCond.FLAG = create2DIntegerField(grid.deli+2,grid.delj+2);
+    initFlags(argv[1],bCond.FLAG,&grid,Region);
+    int files = simulateFluid(U,V,P,&bCond,&grid,&sim,Region,t_end,argv[1],out);
     if (out > OUTPUT)
         translateBinary(Region,&grid,files,rank,dims);
     /* Destroy simulated grids */
     destroy2Dfield(U,grid.deli+3);
     destroy2Dfield(V,grid.deli+2);
     destroy2Dfield(P,grid.deli+2);
-    destroyBoundCond(bCond,grid.deli);
+    destroy2DIntegerField(bCond.FLAG,grid.deli+2);
     MPI_Finalize();
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -626,6 +626,8 @@ int dumpFields(MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, int
 
 void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *dims)
 {
+    if (!files)
+        return;
     char pFile[32], uFile[32], vFile[32];
     REAL **U, **V, **P;
     int size[2];

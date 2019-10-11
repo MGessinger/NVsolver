@@ -99,10 +99,10 @@ void initUVP(REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, REAL *init)
     *P = create2Dfield(imax+2,jmax+2);
     *U = create2Dfield(imax+3,jmax+2);
     *V = create2Dfield(imax+2,jmax+3);
-    if (init == NULL)
+    if (!init)
         return;
-    fill2Dfield(init[0],*U,imax+2,jmax+2);
-    fill2Dfield(init[1],*V,imax+2,jmax+2);
     fill2Dfield(init[2],*P,imax+2,jmax+2);
+    fill2Dfield(init[0],*U,imax+3,jmax+2);
+    fill2Dfield(init[1],*V,imax+2,jmax+3);
     return;
 }

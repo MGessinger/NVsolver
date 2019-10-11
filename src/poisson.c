@@ -27,7 +27,7 @@ void applyPboundaryCond(REAL **P, lattice *grid, char **FLAG)
     for (int i = 1; i <= grid->deli; i++)
         for (int j = 1; j <= grid->delj; j++)
         {
-            flag = FLAG[i-1][j-1];
+            flag = FLAG[i][j];
             if (flag == C_F)
                 continue;
             else if (flag == C_B)
@@ -70,18 +70,16 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
                        fluidSim *sim, lattice *grid, MPI_Comm Region)
 {
     /* Use a SOR algorithm to solve the poisson equation */
-    int it = 0;
-    REAL temporary, error;
+    int  i, j, it = 0;
+    REAL temporary, error, eps = sqr(sim->eps);
     REAL invXWidthSqrd = 1/sqr(grid->delx);
     REAL invYWidthSqrd = 1/sqr(grid->dely);
     REAL scale = sim->omega/(2*(invXWidthSqrd+invYWidthSqrd));
-    REAL eps = sqr(sim->eps);
-    REAL buf[grid->deli + grid->delj + 4];
-    int i,j;
+    REAL buf[grid->deli + grid->delj + 2];
     /* Count the number of fluid cells */
     int numberOfCells = 0;
-    for (i = 0; i < grid->deli; i++)
-        for (j = 0; j < grid->delj; j++)
+    for (i = 1; i <= grid->deli; i++)
+        for (j = 1; j <= grid->delj; j++)
         {
             if (FLAG[i][j] == C_F)
                 numberOfCells++;
@@ -96,7 +94,7 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
         for (i = 1; i <= grid->deli; i++)
             for (j = 1; j <= grid->delj; j++)
             {
-                if (FLAG[i-1][j-1] != C_F)
+                if (FLAG[i][j] != C_F)
                     continue;
                 temporary = invXWidthSqrd*(p[i+1][j] + p[i-1][j])
                           + invYWidthSqrd*(p[i][j+1] + p[i][j-1])
@@ -108,7 +106,7 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
         for (i = 1; i <= grid->deli; i++)
             for (j = 1; j <= grid->delj; j++)
             {
-                if (FLAG[i-1][j-1] != C_F)
+                if (FLAG[i][j] != C_F)
                     continue;
                 temporary = invXWidthSqrd*(p[i+1][j] - 2*p[i][j] + p[i-1][j])
                           + invYWidthSqrd*(p[i][j+1] - 2*p[i][j] + p[i][j-1])
@@ -129,18 +127,21 @@ REAL compDelt(lattice *grid, REAL **U, REAL **V, fluidSim *sim)
     if (sim->tau <= 0)
         return sim->dt;
     REAL dt = sim->Re*(sqr(grid->delx) + sqr(grid->dely))/2;
+    REAL utime, vtime;
     for (int i = 1; i <= grid->deli; i++)
         for (int j = 1; j <= grid->delj; j++)
         {
+            utime = grid->delx/U[i+1][j];
+            if (utime < 0)
+                utime = -utime;
             /* One of these inequalities will always be trivial */
-            if (U[i+1][j] > 0 && grid->delx/U[i+1][j] < dt)
-                dt = grid->delx/U[i+1][j];
-            else if (U[i+1][j] < 0 && grid->delx/U[i+1][j] > -dt)
-                dt = -(grid->delx)/U[i+1][j];
-            if (V[i][j+1] > 0 && grid->dely/V[i][j+1] < dt)
-                dt = (grid->dely)/V[i][j];
-            else if (V[i][j+1] < 0 && grid->dely/V[i][j+1] > -dt)
-                dt = -(grid->dely)/V[i][j+1];
+            if (utime < dt)
+                dt = utime;
+            vtime = (grid->dely)/V[i][j+1];
+            if (vtime < 0)
+                vtime = -vtime;
+            if (vtime < dt)
+                dt = vtime;
         }
     dt = sim->tau*dt;
     if (dt > sim->dt)
@@ -169,7 +170,7 @@ void adaptUV(REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
     for (int i = 1; i <= grid->deli; i++)
         for (int j = 1; j <= grid->delj; j++)
         {
-            if (FLAG[i-1][j-1] != C_F)
+            if (FLAG[i][j] != C_F)
                 continue;
             U[i+1][j] = F[i][j] - facX*(P[i+1][j] - P[i][j]);
             V[i][j+1] = G[i][j] - facY*(P[i][j+1] - P[i][j]);
@@ -233,17 +234,9 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
     {
         for (j = 1; j <= grid->delj; j++)
         {
-            flag = FLAG[i-1][j-1];
+            flag = FLAG[i][j];
             if (flag == C_B)      /* Boundary cells with no neighboring fluid cells */
                 continue;
-            if (flag & B_N)       /* North */
-                G[i][j] = V[i][j+1];
-            else if (flag & B_S)  /* South */
-                G[i-1][j] = V[i-1][j+1];
-            if (flag & B_O)       /* East */
-                F[i][j] = U[i+1][j];
-            else if (flag & B_W)  /* West */
-                F[i-1][j] = U[i][j];
             else if (flag == C_F) /* Pure fluid cells */
             {
                 d2ux = (U[i+2][j] - 2*U[i+1][j] + U[i][j])/sqr(grid->delx);
@@ -262,6 +255,14 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 
                 G[i][j] = V[i][j+1] + delt*((d2vx+d2vy)/simulation->Re - dv2y - duvx + simulation->GY);
             }
+            if (flag & B_N)       /* North */
+                G[i][j] = V[i][j+1];
+            else if (flag & B_S)  /* South */
+                G[i-1][j] = V[i-1][j+1];
+            if (flag & B_O)       /* East */
+                F[i][j] = U[i+1][j];
+            else if (flag & B_W)  /* West */
+                F[i-1][j] = U[i][j];
         }
     }
     if (grid->edges & LEFT)
@@ -321,7 +322,8 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
             return 0;
     } */
     /* Begin the simulation */
-    printf("Computing Reynoldsnumber %lg.\n",sim->Re);
+    if (rank == 0)
+        printf("Computing Reynoldsnumber %lg.\n",sim->Re);
     for (REAL time = 0; time <= t_end; time += delt)
     {
         if ((rank == 0) && (opt & PRINT))
@@ -348,9 +350,10 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
         }
         /*ParticleVelocity(U,V,parts,grid,bCond->FLAG,partcount);
         ParticleTransport(parts,partcount,delt);*/
-        MPI_Allreduce(&dt,&delt,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
+        MPI_Allreduce(&dt,&delt,1,MPI_DOUBLE,MPI_MIN,Region);
     }
-    printf("[Simulation complete!]\n");
+    if (rank == 0)
+        printf("[Simulation complete!]\n");
 
     /* Destroy non-simulated grids */
     destroy2Dfield(F,grid->deli+1);

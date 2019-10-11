@@ -14,8 +14,7 @@
 #define FREESLIP (1u)
 #define OUTFLOW (2u)
 
-boundaryCond* createBoundCond(int wl, int wr, int wt, int wb);
-void    destroyBoundCond(boundaryCond *bCond, int imax);
+boundaryCond createBoundCond(int wl, int wr, int wt, int wb);
 /* Create and destroy a boundaryCond structure */
 
 void    applyHomogeneousNeumannBC (REAL **p, int imax, int jmax);
@@ -26,7 +25,7 @@ void    setBCond (REAL **U, REAL **V, lattice *grid, boundaryCond *bCond);
 void    setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem);
 /* Set the boundary conditions for the given problem */
 
-void initFlags(const char* problem, char **FLAG, lattice *grid);
+void initFlags(const char *problem, char **FLAG, lattice *grid, MPI_Comm Region);
 /* Set flags for fluid and obstacle cells */
 
 #endif /* BOUNDARY_H_ */

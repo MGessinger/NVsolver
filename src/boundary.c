@@ -1,25 +1,14 @@
 #include "boundary.h"
 
-boundaryCond* createBoundCond(int wl, int wr, int wt, int wb)
+boundaryCond createBoundCond(int wl, int wr, int wt, int wb)
 {
-    boundaryCond *bCond = malloc(sizeof(boundaryCond));
-    if (bCond == NULL)
-        return NULL;
-    bCond->wl = wl;
-    bCond->wr = wr;
-    bCond->wt = wt;
-    bCond->wb = wb;
-    bCond->FLAG = NULL;
+    boundaryCond bCond;
+    bCond.wl = wl;
+    bCond.wr = wr;
+    bCond.wt = wt;
+    bCond.wb = wb;
+    bCond.FLAG = NULL;
     return bCond;
-}
-
-void destroyBoundCond(boundaryCond *bCond, int imax)
-{
-    if (bCond == NULL)
-        return;
-    destroy2DIntegerField(bCond->FLAG,imax);
-    free(bCond);
-    return;
 }
 
 void applyHomogeneousNeumannBC(REAL **p, int imax, int jmax)
@@ -52,33 +41,33 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
     if (grid->edges & BOTTOM)
         for (int i = 1; i <= grid->deli; i++)
         {
-            U[i][0] = (bCond->wb == NOSLIP) ? -U[i][1] : U[i][1];
+            U[i+1][0] = (bCond->wb == NOSLIP) ? -U[i+1][1] : U[i+1][1];
             V[i][1] = (bCond->wb == OUTFLOW) ? V[i][2] : 0;
         }
     if (grid->edges & TOP)
         for (int i = 1; i <= grid->deli; i++)
         {
-            U[i][grid->delj+1] = (bCond->wt == NOSLIP) ? -U[i][grid->delj] : U[i][grid->delj];
+            U[i+1][grid->delj+1] = (bCond->wt == NOSLIP) ? -U[i+1][grid->delj] : U[i+1][grid->delj];
             V[i][grid->delj+1] = (bCond->wt == OUTFLOW) ? V[i][grid->delj] : 0;
         }
     if (grid->edges & LEFT)
         for (int j = 1; j <= grid->delj; j++)
         {
             U[1][j] = (bCond->wl == OUTFLOW) ? U[2][j] : 0;
-            V[0][j] = (bCond->wl == NOSLIP) ? -V[1][j] : V[1][j];
+            V[0][j+1] = (bCond->wl == NOSLIP) ? -V[1][j+1] : V[1][j+1];
         }
     if (grid->edges & RIGHT)
         for (int j = 1; j <= grid->delj; j++)
         {
             U[grid->deli+1][j] = (bCond->wr == OUTFLOW) ? U[grid->deli][j] : 0;
-            V[grid->deli+1][j] = (bCond->wr == NOSLIP) ? -V[grid->deli][j] : V[grid->deli][j];
+            V[grid->deli+1][j+1] = (bCond->wr == NOSLIP) ? -V[grid->deli][j+1] : V[grid->deli][j+1];
         }
     short flag;
     /* Boundary condtions on obstacles */
     for (int i = 1; i <= grid->deli; i++)
         for (int j = 1; j <= grid->delj; j++)
         {
-            flag = bCond->FLAG[i-1][j-1];
+            flag = bCond->FLAG[i][j];
             if (flag == C_F)
                 continue;
             /* Deep inside an obstacle */
@@ -146,7 +135,10 @@ void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
         if (!(grid->edges & TOP))
             return;
         for (int i = 2; i <= grid->deli+1; i++)
+        {
             U[i][grid->delj+1] = 2-U[i][grid->delj];
+            V[i-1][grid->delj+2] = 0;
+        }
         return;
     }
     if (strcmp(problem,"Step") == 0)
@@ -169,23 +161,24 @@ void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
         for (int j = 1; j <= grid->delj; j++)
         {
             U[1][j] = 1;
+            V[0][j+1] = 0;
         }
         return;
     }
     return;
 }
 
-void initFlags(const char *problem, char **FLAG, lattice *grid)
+void initFlags(const char *problem, char **FLAG, lattice *grid, MPI_Comm Region)
 {
     /* Manually sets the flag field for arbitrary generalised geometries.
      * If the flags are read from a file, set problem to "Image"! */
     if (strcmp(problem,"Step") == 0)
     {
-        for (int i = 0; i < grid->deli; i++)
+        for (int i = 1; i < grid->deli+1; i++)
         {
             if (i + grid->il >= grid->jmax/2)
                 break;
-            for (int j = 0; j < grid->delj; j++)
+            for (int j = 1; j < grid->delj+2; j++)
             {
                 if (j + grid->jb >= grid->jmax/2)
                     break;
@@ -195,11 +188,11 @@ void initFlags(const char *problem, char **FLAG, lattice *grid)
     }
     else if (strcmp(problem,"Von Karman") == 0)
     {
-        for (int i = 0; i < grid->delj; i++)
+        for (int i = 1; i < grid->delj+1; i++)
         {
             if (i + grid->il < grid->jmax/3)
                 continue;
-            if (i +grid->il >= 2*grid->jmax/3)
+            if (i + grid->il >= 2*grid->jmax/3)
                 break;
             for (int j = -(grid->jmax/4)/2; j <= (grid->jmax/4)/2; j++)
             {
@@ -212,19 +205,22 @@ void initFlags(const char *problem, char **FLAG, lattice *grid)
             }
         }
     }
-    for (int i = 0; i < grid->deli; i++)
+    char buf[grid->deli+grid->delj+4];
+    exchangeIntMat(FLAG,buf,grid,Region);
+    /* TODO: Check for *actual* boundary of the region */
+    for (int i = 1; i < grid->deli+1; i++)
     {
-        for (int j = 0; j < grid->delj; j++)
+        for (int j = 1; j < grid->delj+1; j++)
         {
             if (FLAG[i][j] == C_F)
                 continue;
             if ((j+1) != grid->delj && FLAG[i][j+1] == C_F)
                 FLAG[i][j] |= B_N;
-            else if (j != 0 && FLAG[i][j-1] == C_F)
+            else if (FLAG[i][j-1] == C_F)
                 FLAG[i][j] |= B_S;
             if ((i+1) != grid->delj && FLAG[i+1][j] == C_F)
                 FLAG[i][j] |= B_O;
-            else if (i != 0 && FLAG[i-1][j] == C_F)
+            else if (FLAG[i-1][j] == C_F)
                 FLAG[i][j] |= B_W;
         }
     }
