@@ -160,7 +160,7 @@ void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
             return;
         for (int j = 1; j <= grid->delj; j++)
         {
-            U[1][j] = 1;
+            U[1][j] = U[0][j] = 1;
             V[0][j+1] = 0;
         }
         return;
@@ -207,18 +207,19 @@ void initFlags(const char *problem, char **FLAG, lattice *grid, MPI_Comm Region)
     }
     char buf[grid->deli+grid->delj+4];
     exchangeIntMat(FLAG,buf,grid,Region);
-    /* TODO: Check for *actual* boundary of the region */
     for (int i = 1; i < grid->deli+1; i++)
     {
         for (int j = 1; j < grid->delj+1; j++)
         {
             if (FLAG[i][j] == C_F)
                 continue;
-            if ((j+1) != grid->delj && FLAG[i][j+1] == C_F)
+            int acti = i + grid->il;
+            int actj = j + grid->jb;
+            if ((actj+1) != grid->delj && FLAG[i][j+1] == C_F)
                 FLAG[i][j] |= B_N;
             else if (FLAG[i][j-1] == C_F)
                 FLAG[i][j] |= B_S;
-            if ((i+1) != grid->delj && FLAG[i+1][j] == C_F)
+            if ((acti+1) != grid->delj && FLAG[i+1][j] == C_F)
                 FLAG[i][j] |= B_O;
             else if (FLAG[i-1][j] == C_F)
                 FLAG[i][j] |= B_W;

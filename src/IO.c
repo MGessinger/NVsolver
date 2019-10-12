@@ -606,8 +606,6 @@ int dumpFields(MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, int
     sprintf(vFile,"V%i",n);
     if (rank > 0)
         MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 0, Region, &st);
-    else
-        printf("%s, %s, %s\n",pFile,uFile,vFile);
     write2Dfield(pFile,P,grid->deli+2,grid->delj+2,mode);
     if (rank+1 != size)
         MPI_Send(&send,0,MPI_INT,rank+1,WRITE + 0, Region);

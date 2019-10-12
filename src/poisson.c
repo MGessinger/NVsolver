@@ -89,7 +89,6 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
     do {
         /* Apply the boundary condition */
         applyPboundaryCond(p,grid,FLAG);
-        exchangeMat(p,1,1,buf,grid,Region);
         /* Compute the new coefficients iteratively */
         for (i = 1; i <= grid->deli; i++)
             for (j = 1; j <= grid->delj; j++)
@@ -101,6 +100,7 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
                           - rhs[i-1][j-1];
                 p[i][j] = scale*temporary + (1-sim->omega)*p[i][j];
             }
+        exchangeMat(p,1,1,buf,grid,Region);
         error = 0;
         /* Calculate the residue with respect to the rhs field */
         for (i = 1; i <= grid->deli; i++)
@@ -151,13 +151,15 @@ REAL compDelt(lattice *grid, REAL **U, REAL **V, fluidSim *sim)
 
 void compRHS(REAL **F, REAL **G, REAL **RHS, char **FLAG, lattice *grid, REAL delt)
 {
-    for (int i = 0; i < grid->deli; i++)
-        for (int j = 0; j < grid->delj; j++)
+    REAL facX = delt*(grid->delx);
+    REAL facY = delt*(grid->dely);
+    for (int i = 1; i <= grid->deli; i++)
+        for (int j = 1; j <= grid->delj; j++)
         {
             if (FLAG[i][j] != C_F)
                 continue;
-            RHS[i][j] = (F[i+1][j+1] - F[i][j+1])/(delt*(grid->delx));
-            RHS[i][j] += (G[i+1][j+1] - G[i+1][j])/(delt*(grid->dely));
+            RHS[i-1][j-1] = (F[i][j] - F[i-1][j])/facX;
+            RHS[i-1][j-1] += (G[i][j] - G[i][j-1])/facY;
         }
     return;
 }
@@ -248,7 +250,7 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
                 F[i][j] = U[i+1][j] + delt*((d2ux+d2uy)/simulation->Re - du2x - duvy + simulation->GX);
 
                 d2vx = (V[i+1][j+1] - 2*V[i][j+1] + V[i-1][j+1])/sqr(grid->delx);
-                d2vy = (V[i][j] - 2*V[i][j+1] + V[i][j])/sqr(grid->dely);
+                d2vy = (V[i][j+2] - 2*V[i][j+1] + V[i][j])/sqr(grid->dely);
 
                 dv2y = delFSqrdByDelZ(V,i,j+1,DERIVE_BY_Y,simulation->alpha,grid->dely);
                 duvx = delUVbyDelZ(U,V,i,j,DERIVE_BY_X,simulation->alpha,grid->delx);
@@ -305,7 +307,7 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
     REAL **RHS = create2Dfield(grid->deli,grid->delj);
     if (!F || !G || !RHS)
         return 0;
-    int partcount = 5000, n = 1, rank;
+    int /*partcount = 5000, */n = 1, rank;
     MPI_Comm_rank(Region,&rank);
     REAL del_vec, dt = 0, delt = sim->dt;
     REAL buf[grid->deli+grid->delj];
@@ -352,6 +354,7 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
         ParticleTransport(parts,partcount,delt);*/
         MPI_Allreduce(&dt,&delt,1,MPI_DOUBLE,MPI_MIN,Region);
     }
+    dumpFields(Region,U,V,P,grid,n++);
     if (rank == 0)
         printf("[Simulation complete!]\n");
 
