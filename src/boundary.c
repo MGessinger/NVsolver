@@ -11,32 +11,8 @@ boundaryCond createBoundCond(int wl, int wr, int wt, int wb)
     return bCond;
 }
 
-void applyHomogeneousNeumannBC(REAL **p, int imax, int jmax)
-{
-    if (p == NULL)
-        return;
-    /* Ghost cells just copy the value next to them */
-    for (int i = 1; i <= imax; i++)
-    {
-        p[i][0] = p[i][1];
-        p[i][jmax+1] = p[i][jmax];
-    }
-    for (int j = 1; j <= jmax; j++)
-    {
-        p[0][j] = p[1][j];
-        p[imax+1][j] = p[imax][j];
-    }
-    return;
-}
-
 void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
 {
-    if (bCond == NULL) /* OUTFLOW on all four edges and trivial geometry is the default. */
-    {
-        applyHomogeneousNeumannBC(U,grid->imax-1,grid->jmax);
-        applyHomogeneousNeumannBC(V,grid->imax,grid->jmax-1);
-        return;
-    }
     /* Boundary conditions on the actual boundary of the region */
     if (grid->edges & BOTTOM)
         for (int i = 1; i <= grid->deli; i++)
@@ -77,7 +53,7 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
                 continue;
             }
             /* Set boundary conditions */
-            switch (flag^C_B)
+            switch (flag-C_B)
             {
             case B_N:
                 V[i][j+1] = 0;
@@ -130,6 +106,8 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
 void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
 {
     /* Set special (e.g. inflow) conditions */
+    if (problem[0] == '\0')
+        return;
     if (strcmp(problem,"Driven Cavity") == 0)
     {
         if (!(grid->edges & TOP))

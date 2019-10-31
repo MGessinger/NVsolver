@@ -17,10 +17,6 @@
 boundaryCond createBoundCond(int wl, int wr, int wt, int wb);
 /* Create and destroy a boundaryCond structure */
 
-void    applyHomogeneousNeumannBC (REAL **p, int imax, int jmax);
-void    applyHomogeneousDirichletBC (REAL **p, int imax, int jmax);
-/* Apply homogeneous boundary conditions to the lattice */
-
 void    setBCond (REAL **U, REAL **V, lattice *grid, boundaryCond *bCond);
 void    setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem);
 /* Set the boundary conditions for the given problem */
