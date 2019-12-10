@@ -61,7 +61,6 @@ void applyPboundaryCond(REAL **P, lattice *grid, char **FLAG)
             default:
                 P[i][j] = 0;
             }
-
         }
     return;
 }
@@ -131,15 +130,10 @@ REAL compDelt(lattice *grid, REAL **U, REAL **V, fluidSim *sim)
     for (int i = 1; i <= grid->deli; i++)
         for (int j = 1; j <= grid->delj; j++)
         {
-            utime = grid->delx/U[i+1][j];
-            if (utime < 0)
-                utime = -utime;
-            /* One of these inequalities will always be trivial */
+            utime = grid->delx/abs(U[i+1][j]);
             if (utime < dt)
                 dt = utime;
-            vtime = (grid->dely)/V[i][j+1];
-            if (vtime < 0)
-                vtime = -vtime;
+            vtime = (grid->dely)/abs(V[i][j+1]);
             if (vtime < dt)
                 dt = vtime;
         }
@@ -256,6 +250,7 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
                 duvx = delUVbyDelZ(U,V,i,j,DERIVE_BY_X,simulation->alpha,grid->delx);
 
                 G[i][j] = V[i][j+1] + delt*((d2vx+d2vy)/simulation->Re - dv2y - duvx + simulation->GY);
+                continue;
             }
             if (flag & B_N)       /* North */
                 G[i][j] = V[i][j+1];

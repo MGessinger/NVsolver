@@ -16,9 +16,6 @@ include(AddGoogleTest)
 
 # list any further test sources here
 set(TESTSOURCES
-    blatt2_tests.cpp
-    blatt3_tests.cpp
-    blatt4_tests.cpp
 )
 
 # this is our executable for the unit tests

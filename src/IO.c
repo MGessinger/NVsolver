@@ -653,7 +653,7 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
         {
             if (fread(size,sizeof(int),2,PF) < 2)
             {
-                printf("Could not read size. Skipping file...\n");
+                printf("Could not read size. Skipping file %i...\n",i);
                 break;
             }
             for (int j = 0; j < size[0]; j++) /* Loop over lines */
