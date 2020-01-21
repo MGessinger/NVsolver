@@ -8,9 +8,8 @@ REAL**	create2Dfield (int sizeX, int sizeY);
 char** create2DIntegerField(int imax, int jmax);
 /* Creates arrays of the given size */
 
-void 	destroy1Dfield (REAL *field);
-void 	destroy2Dfield (REAL **field, int sizeX);
-void    destroy2DIntegerField(char **field, int imax);
+void 	destroy1Dfield (void *field);
+void 	destroy2Dfield (void **field, int sizeX);
 /* Clears the memory allocated for field */
 
 void	fill1Dfield (REAL value, REAL *field, int size);

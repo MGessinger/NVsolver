@@ -44,9 +44,9 @@ int main (int argc, char **argv)
 	}
 	lattice grid = runSimulation(&U,&V,&P,argv[1],paramFile,output);
 	/* Destroy simulated grids */
-	destroy2Dfield(U,grid.deli+3);
-	destroy2Dfield(V,grid.deli+2);
-	destroy2Dfield(P,grid.deli+2);
+	destroy2Dfield((void**)U,grid.deli+3);
+	destroy2Dfield((void**)V,grid.deli+2);
+	destroy2Dfield((void**)P,grid.deli+2);
 	MPI_Finalize();
 	return 0;
 }

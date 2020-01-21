@@ -19,7 +19,7 @@ REAL** create2Dfield(int sizeX, int sizeY)
 		matrix[i] = create1Dfield(sizeY);
 		if (matrix[i] == NULL)
 		{
-			destroy2Dfield(matrix,i);
+			destroy2Dfield((void**)matrix,i);
 			return NULL;
 		}
 	}
@@ -37,7 +37,7 @@ char **create2DIntegerField(int imax, int jmax)
 		matrix[i] = malloc(jmax*sizeof(short));
 		if (matrix[i] == NULL)
 		{
-			destroy2DIntegerField(matrix,i);
+			destroy2Dfield((void**)matrix,i);
 			return NULL;
 		}
 		for (int j = 0; j < jmax; j++)
@@ -46,7 +46,7 @@ char **create2DIntegerField(int imax, int jmax)
 	return matrix;
 }
 
-void destroy1Dfield(REAL* field)
+void destroy1Dfield(void* field)
 {
 	if (field == NULL)
 		return;
@@ -54,21 +54,15 @@ void destroy1Dfield(REAL* field)
 	return;
 }
 
-void destroy2Dfield(REAL** field, int sizeX)
+void destroy2Dfield(void** field, int sizeX)
 {
 	if (field == NULL)
 		return;
 	for (int i = 0; i < sizeX; i++)
 	{
-		destroy1Dfield(field[i]);
+		destroy1Dfield((void*)field[i]);
 	}
 	free(field);
-	return;
-}
-
-void destroy2DIntegerField(char **field, int imax)
-{
-	destroy2Dfield((REAL**)field,imax);
 	return;
 }
 

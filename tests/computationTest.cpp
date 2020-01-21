@@ -53,7 +53,7 @@ TEST(Computation, PoissonSolver)
 		for (int j = 1; j <= grid.delj+1; j++)
 			err += sqr(P[i][j] - fex((i-0.5)*grid.delx,(j-0.5)*grid.dely));
 	EXPECT_LE(err/sqr(sz),1e-5);
-	destroy2Dfield(rhs,grid.deli);
-	destroy2Dfield(P,grid.deli+1);
-	destroy2DIntegerField(FLAG,grid.deli+1);
+	destroy2Dfield((void**)rhs,grid.deli);
+	destroy2Dfield((void**)P,grid.deli+2);
+	destroy2Dfield((void**)FLAG,grid.deli+1);
 }

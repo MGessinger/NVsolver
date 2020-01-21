@@ -13,17 +13,18 @@ TEST(Simulation, Trivial)
 {
 	REAL **U = nullptr, **V = nullptr, **P = nullptr;
 	lattice grid = runSimulation(&U, &V, &P, (char*)"Tunnel",
-				     (char*)"/home/matthias/Dokumente/Programming/Simulator/data/tunnel",
-				     SILENT);
+				     (char*)"/home/matthias/Dokumente/Programming/Simulator/data/tunnel", SILENT);
+	REAL err = 0;
 	for (int i = 1; i <= grid.deli; i++)
 		for (int j = 1; j <= grid.delj; j++)
 		{
-			EXPECT_LE(U[i+1][j]-1,1e-10);
-			EXPECT_LE(V[i][j+1],1e-10);
-			EXPECT_LE(P[i][j],1e-10);
+			err += U[i+1][j]-1;
+			err += V[i][j+1];
+			err += P[i][j];
 		}
-	destroy2Dfield(U,grid.deli+3);
-	destroy2Dfield(V,grid.deli+2);
-	destroy2Dfield(P,grid.deli+2);
+	EXPECT_LE(err,1e-10);
+	destroy2Dfield((void**)U,grid.deli+3);
+	destroy2Dfield((void**)V,grid.deli+2);
+	destroy2Dfield((void**)P,grid.deli+2);
 	MPI_Finalize();
 }

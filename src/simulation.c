@@ -20,7 +20,7 @@ lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *param
 	MPI_Comm Region = createCommGrid(&rank,dims);
 	if (readParameters(paramFile,init,&grid,&sim,&bCond,&delt,&t_end) < 17)
 	{
-		printf("The parameter paramFile appears to be incomplete.\n");
+		printf("The parameter file appears to be incomplete.\n");
 		MPI_Abort(Region,0);
 	}
 
@@ -37,7 +37,8 @@ lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *param
 	int files = simulateFluid(*U,*V,*P,&bCond,&grid,&sim,Region,t_end,scene,output);
 	if (output > OUTPUT)
 		translateBinary(Region,&grid,files,rank,dims);
-	destroy2DIntegerField(bCond.FLAG,grid.deli+2);
+	MPI_Comm_free(&Region);
+	destroy2Dfield((void**)bCond.FLAG,grid.deli+2);
 	return grid;
 }
 
@@ -99,8 +100,8 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 		printf("[Simulation complete!]\n");
 
 	/* Destroy non-simulated grids */
-	destroy2Dfield(F,grid->deli+1);
-	destroy2Dfield(G,grid->deli+1);
-	destroy2Dfield(RHS,grid->deli);
+	destroy2Dfield((void**)F,grid->deli+1);
+	destroy2Dfield((void**)G,grid->deli+1);
+	destroy2Dfield((void**)RHS,grid->deli);
 	return n;
 }

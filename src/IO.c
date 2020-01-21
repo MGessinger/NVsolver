@@ -328,7 +328,7 @@ char** adjustFlags(char **FLAG, int height, int width, int imax, int jmax)
 				newFLAG[i][j] = C_F;
 		}
 	}
-	destroy2DIntegerField(FLAG,width);
+	destroy2Dfield((void**)FLAG,width);
 	return newFLAG;
 }
 
@@ -519,8 +519,8 @@ void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
 			S[i-1][j-1] = (V[i][j+1] + V[i][j])/2;
 		}
 	writeVTKfileFor2DvectorField(fileName,"momentumfield",T,S,grid);
-	destroy2Dfield(T,imax);
-	destroy2Dfield(S,imax);
+	destroy2Dfield((void**)T,imax);
+	destroy2Dfield((void**)S,imax);
 	return;
 }
 
