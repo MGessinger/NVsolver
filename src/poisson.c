@@ -130,10 +130,10 @@ REAL compDelt(lattice *grid, REAL **U, REAL **V, fluidSim *sim)
     for (int i = 1; i <= grid->deli; i++)
         for (int j = 1; j <= grid->delj; j++)
         {
-            utime = grid->delx/abs(U[i+1][j]);
+            utime = grid->delx/fabs(U[i+1][j]);
             if (utime < dt)
                 dt = utime;
-            vtime = (grid->dely)/abs(V[i][j+1]);
+            vtime = (grid->dely)/fabs(V[i][j+1]);
             if (vtime < dt)
                 dt = vtime;
         }
@@ -184,16 +184,16 @@ REAL delUVbyDelZ(REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL delz)
         duvdz -= (U[i][j] + U[i][j+1])*(V[i-1][j+1] + V[i][j+1]);
         if (alpha == 0)
             return duvdz/delz;
-        correctionTerm = abs(U[i+1][j] + U[i+1][j+1]) * (V[i][j+1] - V[i+1][j+1]);
-        correctionTerm -= abs(U[i][j]+U[i][j+1]) * (V[i-1][j+1] - V[i][j+1]);
+        correctionTerm = fabs(U[i+1][j] + U[i+1][j+1]) * (V[i][j+1] - V[i+1][j+1]);
+        correctionTerm -= fabs(U[i][j]+U[i][j+1]) * (V[i-1][j+1] - V[i][j+1]);
     }
     else
     {
         duvdz -= (U[i+1][j-1] + U[i+1][j])*(V[i][j] + V[i+1][j]);
         if (alpha == 0)
             return duvdz/delz;
-        correctionTerm = abs(V[i][j+1] + V[i+1][j+1]) * (U[i+1][j] - U[i+1][j+1]);
-        correctionTerm -= abs(V[i][j] + V[i+1][j]) * (U[i+1][j-1] - U[i+1][j]);
+        correctionTerm = fabs(V[i][j+1] + V[i+1][j+1]) * (U[i+1][j] - U[i+1][j+1]);
+        correctionTerm -= fabs(V[i][j] + V[i+1][j]) * (U[i+1][j-1] - U[i+1][j]);
     }
     return (duvdz + alpha*correctionTerm)/delz;
 }

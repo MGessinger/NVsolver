@@ -1,9 +1,9 @@
 #include "FlagCreator.h"
 
-void WriteFlag(const char* fileName, short** flag, int sizeX, int sizeY)
+void WriteFlag(const char* fileName, char** flag, int sizeX, int sizeY)
 {
     FILE *datei;
-    datei=fopen(fileName,"wb");
+    datei = fopen(fileName,"wb");
     if (datei == NULL)
     {
         printf("Can't open the file.\n");
@@ -11,26 +11,26 @@ void WriteFlag(const char* fileName, short** flag, int sizeX, int sizeY)
     if(datei != NULL){
         fwrite(&sizeX,sizeof(int),1,datei);
         fwrite(&sizeY,sizeof(int),1,datei);
-        for(int i=0;i<sizeX;i++){
+        for(int i = 0;i<sizeX;i++){
                 fwrite(flag[i],sizeof(short),sizeY,datei);
             }
     }
     fclose (datei);
 }
 
-short** ReadFlag(const char* fileName, int* sizeX, int* sizeY)
+char** ReadFlag(const char* fileName, int* sizeX, int* sizeY)
 {
     FILE* datei;
-    datei=fopen(fileName,"rb");
-    short **field=NULL;
+    datei = fopen(fileName,"rb");
+    char **field = NULL;
     if(datei == NULL){
         printf("Can't open the file.\n");
     }
     if (datei != NULL){
         fread(sizeX,sizeof(int),1,datei);
         fread(sizeY,sizeof(int),1,datei);
-        field=mallocFlag(*sizeX,*sizeY);
-        for(int i=0;i<*sizeX;i++){
+        field = mallocFlag(*sizeX,*sizeY);
+        for(int i = 0;i<*sizeX;i++){
             fread(field[i],sizeof(short),*sizeY,datei);
         }
     }
@@ -38,12 +38,11 @@ short** ReadFlag(const char* fileName, int* sizeX, int* sizeY)
     return field;
 }
 
-short** mallocFlag(int sizeX, int sizeY)
+char** mallocFlag(int sizeX, int sizeY)
 {
-    short** field;
-    field=malloc((sizeX)*(sizeof(short*)+2));
-    for (int i=0; i<sizeX;i++){
-        field[i]=malloc(sizeY*(sizeof(short)+2));
+    char** field = malloc((sizeX)*(sizeof(char*)+2));
+    for (int i = 0; i<sizeX;i++){
+        field[i]=malloc(sizeY*(sizeof(char)+2));
     }
     return field;
 }
@@ -64,9 +63,9 @@ int CreateFlag()
         printf("sizeY is too small. Pick a greater number: ");
         do {scanf("%d",&sizeY);} while ( getchar() != '\n' );
     }
-    short** field=mallocFlag(sizeX,sizeY);
-    for(int i=0; i<sizeX;i++){
-        for(int j=0;j<sizeX;j++){
+    char** field = mallocFlag(sizeX,sizeY);
+    for(int i = 0; i<sizeX;i++){
+        for(int j = 0;j<sizeX;j++){
             field[i][j]=C_F;
         }
     }
@@ -76,7 +75,7 @@ int CreateFlag()
     int jsize;
     int ipos;
     int jpos;
-    short correct=0;
+    short correct = 0;
     char filepath[100];
     double xlength;
     double ylength;
@@ -90,8 +89,8 @@ int CreateFlag()
     do {scanf("%lf",&xlength);} while ( getchar() != '\n' );
     printf("And now ylength: ");
     do {scanf("%lf",&ylength);} while ( getchar() != '\n' );
-    double delx=xlength/(double)sizeX;
-    double dely=ylength/(double)sizeY;
+    double delx = xlength/(double)sizeX;
+    double dely = ylength/(double)sizeY;
     while((run == 'Y') || (run == 'y')){
 
         printf("What type of obstacle do you want to add? Press h for help: ");
@@ -147,11 +146,11 @@ int CreateFlag()
         if(answer == 'Y' || answer == 'y'){
             printf("Enter a filepath to save the file:");
             do {scanf("%s",filepath);} while ( getchar() != '\n' );
-            lattice *grid=malloc(sizeof(struct lattice));
-            grid->delx=delx;
-            grid->dely=dely;
-            grid->imax=sizeX;
-            grid->jmax=sizeY;
+            lattice *grid = malloc(sizeof(struct lattice));
+            grid->delx = delx;
+            grid->dely = dely;
+            grid->imax = sizeX;
+            grid->jmax = sizeY;
             writeVTKfileFor2DintegerField(filepath,"shows_obstacles",field,grid);
             free(grid);
         }
@@ -161,12 +160,12 @@ int CreateFlag()
     printf("You have created a field with obstacles. Do you wanna check if it's correct? Enter Y or N: ");
     do {scanf("%c",&answer);} while ( getchar() != '\n' );
     if((answer == 'Y') || (answer == 'y')){
-            correct=CorrectnessCheck(field,sizeX,sizeY);
+            correct = CorrectnessCheck(field,sizeX,sizeY);
     }
     while(correct > 0){
         printf("Your field is not correct. Check the error(s) above and edit it.\n");
         EditFlag(field,sizeX,sizeY,delx,dely);
-        correct=CorrectnessCheck(field,sizeX,sizeY);
+        correct = CorrectnessCheck(field,sizeX,sizeY);
     }
     if((correct == 0 && answer == 'Y')||(correct == 0 && answer == 'y')){
         printf("Your field is correct!\n");
@@ -183,11 +182,11 @@ int CreateFlag()
     if((answer == 'Y') || (answer == 'y')){
         printf("Enter a filepath to save the file:");
         do {scanf("%s",filepath);} while ( getchar() != '\n' );
-        lattice *grid=malloc(sizeof(struct lattice));
-        grid->delx=delx;
-        grid->dely=dely;
-        grid->imax=sizeX;
-        grid->jmax=sizeY;
+        lattice *grid = malloc(sizeof(struct lattice));
+        grid->delx = delx;
+        grid->dely = dely;
+        grid->imax = sizeX;
+        grid->jmax = sizeY;
         writeVTKfileFor2DintegerField(filepath,"shows_obstacles",field,grid);
         free(grid);
     }
@@ -195,10 +194,10 @@ int CreateFlag()
     return 0;
 }
 
-short CorrectnessCheck(short **flag, int sizeX, int sizeY)
+char CorrectnessCheck(char**flag, int sizeX, int sizeY)
 {
-    for(int i=2;i<sizeX-1;i++){
-        for(int j=2;j<sizeY-1;j++){
+    for(int i = 2;i<sizeX-1;i++){
+        for(int j = 2;j<sizeY-1;j++){
             if(flag[i][j]==C_B){
                 if(flag[i+1][j]==C_F && flag[i-1][j]==C_F){
                     printf("\nError: (%d,%d) has fluid to the east and west.\n",i+1,j+1);
@@ -214,7 +213,7 @@ short CorrectnessCheck(short **flag, int sizeX, int sizeY)
     return 0;
 }
 
-void EditFlag(short **flag, int sizeX, int sizeY, double dx, double dy)
+void EditFlag(char **flag, int sizeX, int sizeY, double dx, double dy)
 {
     char run='Y';
     char answer='Y';
@@ -231,11 +230,11 @@ void EditFlag(short **flag, int sizeX, int sizeY, double dx, double dy)
         if((answer == 'Y') || (answer == 'y')){
             printf("Enter a filepath to save the file:");
             do {scanf("%s",filepath);} while ( getchar() != '\n' );
-            lattice *grid=malloc(sizeof(struct lattice));
-            grid->delx=dx;
-            grid->dely=dy;
-            grid->imax=sizeX;
-            grid->jmax=sizeY;
+            lattice *grid = malloc(sizeof(struct lattice));
+            grid->delx = dx;
+            grid->dely = dy;
+            grid->imax = sizeX;
+            grid->jmax = sizeY;
             writeVTKfileFor2DintegerField(filepath,"shows_obstacles",flag,grid);
             free(grid);
         }
@@ -364,32 +363,32 @@ void EditFlagFromFile()
     do {scanf("%lf",&ylength);} while ( getchar() != '\n' );
     int sizeX;
     int sizeY;
-    short** flag=ReadFlag(fileName,&sizeX,&sizeY);
-    double delx=xlength/(double)sizeX;
-    double dely=ylength/(double)sizeY;
+    char** flag = ReadFlag(fileName,&sizeX,&sizeY);
+    double delx = xlength/(double)sizeX;
+    double dely = ylength/(double)sizeY;
     EditFlag(flag,sizeX,sizeY,delx,dely);
 }
 
-void AddRectangle(short **flag, int isize, int jsize, int ipos, int jpos, short BorF)
+void AddRectangle(char **flag, int isize, int jsize, int ipos, int jpos, short BorF)
 {
-    for(int i=ipos;i<ipos+isize;i++){
-        for(int j=jpos;j<jpos+jsize;j++){
+    for(int i = ipos;i<ipos+isize;i++){
+        for(int j = jpos;j<jpos+jsize;j++){
             flag[i-1][j-1]=BorF;
         }
     }
 }
 
-void CreativeMode(short **flag, int sizeX, int sizeY, int ipos, int jpos)
+void CreativeMode(char**flag, int sizeX, int sizeY, int ipos, int jpos)
 {
     char input[101];
     const char trenn[]=".\n";
     char borf;
     int num;
-    int jh=jpos;
-    int ih=ipos;
+    int jh = jpos;
+    int ih = ipos;
     printf("CreativeMode is very dangerous. Please read readme.txt first. Enter your code now:\n");
     do {scanf("%s",input);} while ( getchar() != '\n' );
-    char* todo=strtok(input,trenn);
+    char* todo = strtok(input,trenn);
     while(todo != NULL){
         borf = *todo;
         todo = strtok(NULL, trenn);
@@ -401,20 +400,20 @@ void CreativeMode(short **flag, int sizeX, int sizeY, int ipos, int jpos)
             switch(borf)
             {
             case 'b': case 'B':
-                for(int i=ih;i<ih+num;i++){
+                for(int i = ih;i<ih+num;i++){
                     flag[i-1][jh-1]=C_B;
                 }
-                ih=ih+num;
+                ih = ih+num;
                 break;
             case 'f': case 'F':
-                for (int i=ih;i<ih+num;i++){
+                for (int i = ih;i<ih+num;i++){
                     flag[i-1][jh-1]=C_F;
                 }
-                ih=ih+num;
+                ih = ih+num;
                 break;
             case 'n': case 'N':
                 jh++;
-                ih=ipos;
+                ih = ipos;
                 break;
             }
         }

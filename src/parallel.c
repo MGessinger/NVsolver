@@ -44,7 +44,7 @@ void splitRegion(MPI_Comm Region, int *dims, lattice *grid)
 
 void exchangeMat (REAL **mat, int offx, int offy, REAL *buf, lattice *grid, MPI_Comm Region)
 {
-    if (!Region)
+    if (Region == MPI_COMM_WORLD)
         return;
     int prev, next, rank;
     int coords[2];
@@ -87,6 +87,8 @@ void exchangeMat (REAL **mat, int offx, int offy, REAL *buf, lattice *grid, MPI_
 
 void exchangeIntMat (char **mat, char *buf, lattice *grid, MPI_Comm Region)
 {
+    if (Region == MPI_COMM_WORLD)
+        return;
     int prev, next, size;
     MPI_Status st;
     /* Top and bottom */
