@@ -26,7 +26,7 @@ REAL**  read2Dfield (const char* fileName, int* sizeX, int* sizeY);
 void    writeVTKfileFor2DscalarField (const char* fileName, const char* description, REAL** field, lattice *grid);
 void    writeVTKfileFor2DintegerField(const char* fileName, const char* description, char** field, lattice *grid);
 void    writeVTKfileFor2DvectorField (const char* fileName, const char* description,
-                                      REAL** fieldU, REAL** fieldV, lattice *grid);
+		REAL** fieldU, REAL** fieldV, lattice *grid);
 void    WriteParticle (particle *parts, int partcount, int n);
 void    outputVec (REAL **U, REAL **V, REAL **P, lattice *grid, int n);
 /* Outputs the given fields as VTK file for visualisation with Paraview */
@@ -45,8 +45,8 @@ void    findOptimalFlags(char **FLAG, int height, int width, int *imax, int *jma
 /* Changes the number of geomatry cells */
 
 int     readParameters(const char *inputFile, REAL *init,
-                       lattice *grid, fluidSim *sim, boundaryCond *bCond,
-                       REAL *delt, REAL *t_end);
+		lattice *grid, fluidSim *sim, boundaryCond *bCond,
+		REAL *delt, REAL *t_end);
 /* Read parameters for a simulation from inputFile */
 
 #endif /* IO_H_ */

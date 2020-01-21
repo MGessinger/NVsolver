@@ -7,11 +7,11 @@ int main (int argc, char **argv)
 	if (argc < 3 || argv[1][0] == '-')
 	{
 		printf("Usage: simulator <scene>\n"
-			"                 [-p\"parameter_file\"]\n"
-			"                 [-i\"image_file]\"\n"
-			"                 [number_of_frames]\n");
+				"                 [-p\"parameter_file\"]\n"
+				"                 [-i\"image_file]\"\n"
+				"                 [number_of_frames]\n");
 		printf("When specifying both an image and a parameter file, "
-			"the sizes specified from the image take precedence!\n");
+				"the sizes specified from the image take precedence!\n");
 		printf("Type simulator -h for extended help.\n");
 		return 0;
 	}

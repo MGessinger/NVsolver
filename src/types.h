@@ -13,38 +13,38 @@
 #define RIGHT (0x8)
 
 typedef struct lattice {
-    REAL delx;
-    REAL dely;
-    int imax, jmax;     /* Max coords of the entire grid */
-    int il, jb;         /* Bottom left of the partial grid */
-    int deli, delj;     /* Max coords of the partial grid */
-    char edges;
+	REAL delx;
+	REAL dely;
+	int imax, jmax;     /* Max coords of the entire grid */
+	int il, jb;         /* Bottom left of the partial grid */
+	int deli, delj;     /* Max coords of the partial grid */
+	char edges;
 } lattice;
 
 typedef struct fluidSimulation {
-    REAL Re;
-    REAL tau, dt;
-    REAL GX, GY;
-    REAL eps;
-    REAL omega;
-    REAL alpha;
-    int itmax;
+	REAL Re;
+	REAL tau, dt;
+	REAL GX, GY;
+	REAL eps;
+	REAL omega;
+	REAL alpha;
+	int itmax;
 } fluidSim;
 
 typedef struct boundaryCondition {
-    unsigned wt : 2;
-    unsigned wr : 2;
-    unsigned wb : 2;
-    unsigned wl : 2;
-    char **FLAG;
+	unsigned wt : 2;
+	unsigned wr : 2;
+	unsigned wb : 2;
+	unsigned wl : 2;
+	char **FLAG;
 } boundaryCond;
 
 typedef struct particle {
-    REAL x;
-    REAL y;
-    REAL u;
-    REAL v;
-    unsigned onScreen : 1;
+	REAL x;
+	REAL y;
+	REAL u;
+	REAL v;
+	unsigned onScreen : 1;
 } particle;
 
 #include "boundary.h"
