@@ -1,11 +1,11 @@
 #include "simulation.h"
 
-lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *paramFile, int output)
+lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *paramFile, char *imageFile, int output)
 {
 	/* Set-Up all memory required to simulate `scene` and then call the simulator */
 	lattice grid;
 	grid.deli = grid.delj = 0;
-	if (!scene || !paramFile)
+	if (!scene || !paramFile || !imageFile)
 		return grid;
 	if (!U || !V || !P)
 		return grid;

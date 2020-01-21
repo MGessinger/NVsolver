@@ -44,7 +44,7 @@ void write2Dfield(const char* fileName, REAL** field, int sizeX, int sizeY, cons
 
 REAL** read2Dfield(const char *fileName, int *sizeX, int *sizeY)
 {
-	if (sizeX == 0 || sizeY == NULL)
+	if (sizeX == NULL || sizeY == NULL)
 	{
 		printf("Cannot save the size of the array. Please check the pointers.\n");
 		return NULL;
@@ -66,6 +66,7 @@ REAL** read2Dfield(const char *fileName, int *sizeX, int *sizeY)
 	if (field == NULL)
 	{
 		printf("Could not allocate memory. Please try again.\n");
+		*sizeX = *sizeY = 0;
 		fclose(in);
 		return NULL;
 	}
@@ -108,16 +109,16 @@ void writeVTKfileFor2DintegerField(const char* fileName, const char* description
 	fprintf(vtkFile, "POINT_DATA %d\n", grid->imax * grid->jmax);
 	fprintf(vtkFile, "SCALARS %s double 1\n", description);
 	fprintf(vtkFile, "LOOKUP_TABLE default \n");
-	for(int j=0;j<grid->delj;j++)
+	for(int j = 0; j < grid->delj; j++)
 	{
-		for(int i=0;i<grid->deli;i++)
+		for(int i = 0; i < grid->deli; i++)
 		{
 			fprintf(vtkFile, "%i\n", (field[i][j]!=C_F));
 		}
 	}
 	fprintf(vtkFile,"\n");
-
 	fclose(vtkFile);
+	return;
 }
 
 void writeVTKfileFor2DscalarField(const char* fileName, const char* description, REAL** field, lattice *grid)
@@ -154,8 +155,8 @@ void writeVTKfileFor2DscalarField(const char* fileName, const char* description,
 		}
 	}
 	fprintf(vtkFile,"\n");
-
 	fclose(vtkFile);
+	return;
 }
 
 void writeVTKfileFor2DvectorField(const char* fileName, const char* description,
@@ -193,6 +194,7 @@ void writeVTKfileFor2DvectorField(const char* fileName, const char* description,
 	}
 	fprintf(vtkFile,"\n");
 	fclose(vtkFile);
+	return;
 }
 
 void WriteParticle (particle *parts, int partcount, int n)

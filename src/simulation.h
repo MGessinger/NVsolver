@@ -3,7 +3,8 @@
 
 #include "types.h"
 
-lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *paramFile, int output);
+lattice runSimulation (REAL ***U, REAL ***V, REAL ***P,
+			char *scene, char *paramFile, char *imageFile, int output);
 
 int     simulateFluid(REAL **U, REAL **V, REAL **P,
 		boundaryCond* bCond, lattice *grid, fluidSim *sim, MPI_Comm Region,

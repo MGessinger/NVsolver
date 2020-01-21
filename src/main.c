@@ -42,7 +42,7 @@ int main (int argc, char **argv)
 				break;
 		}
 	}
-	lattice grid = runSimulation(&U,&V,&P,argv[1],paramFile,output);
+	lattice grid = runSimulation(&U,&V,&P,argv[1],paramFile,imageFile,output);
 	/* Destroy simulated grids */
 	destroy2Dfield((void**)U,grid.deli+3);
 	destroy2Dfield((void**)V,grid.deli+2);
