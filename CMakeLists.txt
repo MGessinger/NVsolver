@@ -3,20 +3,25 @@ project(Simulator)
 
 # just lists the sources that we need to build our lib
 # note that "main" is exluded here
-set(FIELDLIB_SOURCES
-	src/fields.c
+set(FIELDLIB_HEADERS
 	src/fields.h
-	src/poisson.c
 	src/poisson.h
-	src/boundary.c
 	src/boundary.h
-	src/IO.c
 	src/IO.h
-	src/particle.c
 	src/particle.h
 	src/types.h
-        src/parallel.c
         src/parallel.h
+	src/simulation.h
+)
+
+set(FIELDLIB_SOURCES
+	src/fields.c
+	src/poisson.c
+	src/boundary.c
+	src/IO.c
+	src/particle.c
+        src/parallel.c
+	src/simulation.c
 )
 
 set(OPTIONS

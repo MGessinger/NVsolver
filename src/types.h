@@ -53,6 +53,7 @@ typedef struct particle {
 #include "particle.h"
 #include "poisson.h"
 #include "parallel.h"
+#include "simulation.h"
 
 #define OUTPUT (0x10)
 #define PRINT  (0x01)

@@ -41,7 +41,7 @@ char **create2DIntegerField(int imax, int jmax)
             return NULL;
         }
         for (int j = 0; j < jmax; j++)
-            matrix[i][j] = 0;
+            matrix[i][j] = C_F;
     }
     return matrix;
 }
