@@ -16,7 +16,8 @@ include(AddGoogleTest)
 
 # list any further test sources here
 set(TESTSOURCES
-	simTest.cpp
+	computationTest.cpp
+	simulationTest.cpp
 )
 
 # this is our executable for the unit tests

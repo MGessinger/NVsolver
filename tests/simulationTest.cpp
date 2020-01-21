@@ -11,7 +11,6 @@ extern "C" {
 
 TEST(Simulation, Trivial)
 {
-	MPI_Init(nullptr,nullptr);
 	boundaryCond bCond = createBoundCond(NOSLIP,NOSLIP,NOSLIP,NOSLIP);
 	fluidSim sim;
 	lattice grid;
