@@ -1,19 +1,5 @@
 #include "IO.h"
 
-void print1Dfield(REAL* field, int size)
-{
-	if (field == NULL)
-	{
-		printf("The field is invalid. Please check your input!\n");
-		return;
-	}
-	for (int i = 0; i < size; i++)
-	{
-		printf("%g\n",field[i]);
-	}
-	return;
-}
-
 void print2Dfield(REAL** field, int sizeX, int sizeY)
 {
 	if (field == NULL)
@@ -30,25 +16,6 @@ void print2Dfield(REAL** field, int sizeX, int sizeY)
 		printf("\n");
 	}
 	printf("\n"); /* Add another empty line for better readability in the output */
-	return;
-}
-
-void write1Dfield(const char *fileName, REAL* field, int size)
-{
-	if (field == NULL)
-	{
-		printf("The field is invalid.\n");
-		return;
-	}
-	FILE *out = fopen(fileName,"wb");
-	if (out == NULL)
-	{
-		printf("The file %s could not be opened.\n",fileName);
-		return;
-	}
-	fwrite(&size,sizeof(int),1,out);
-	fwrite(field,sizeof(REAL),size,out);
-	fclose(out);
 	return;
 }
 
@@ -73,42 +40,6 @@ void write2Dfield(const char* fileName, REAL** field, int sizeX, int sizeY, cons
 	}
 	fclose(out);
 	return;
-}
-
-REAL* read1Dfield(const char* fileName, int* size)
-{
-	if (size == NULL)
-	{
-		printf("There is no way to save the size. Please provide a pointer.\n");
-		return NULL;
-	}
-	FILE *in = fopen(fileName,"rb");
-	if (in == NULL)
-	{
-		printf("The file %s could not be read.\n",fileName);
-		return NULL;
-	}
-	/* The file has been opened successfully so data can be stored */
-	if (fread(size,sizeof(int),1,in) != 1)
-	{
-		printf("The file has incorrect format.\n");
-		fclose(in);
-		return NULL;
-	}
-	REAL *field = create1Dfield(*size);
-	if (field == NULL)
-	{
-		printf("Could not allocate memory. Please try again.\n");
-		fclose(in);
-		return NULL;
-	}
-	int read = fread(field,sizeof(REAL),*size,in);
-	if (read != *size)
-	{
-		printf("[WARNING] Only %i out of %i values were read correctly.\n",read,*size);
-	}
-	fclose(in);
-	return field;
 }
 
 REAL** read2Dfield(const char *fileName, int *sizeX, int *sizeY)

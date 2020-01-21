@@ -9,17 +9,10 @@
 #define WRITE   (0x100)
 #define WRITTEN (0x200)
 
-void    print1Dfield (REAL* field, int size);
 void    print2Dfield (REAL** field, int sizeX, int sizeY);
-void    printVector (REAL* vector, int len);
-void    printMatrix (REAL** matrix, int rows, int cols);
-/* Prints a field to stdio */
-
-void    write1Dfield (const char* fileName, REAL* field, int size);
 void    write2Dfield (const char* fileName, REAL** field, int sizeX, int sizeY, const char *mode);
-/* Writes a field to fileName as a binary file */
+/* Output a matrix, either to stdout or to a file */
 
-REAL*   read1Dfield (const char* fileName, int* size);
 REAL**  read2Dfield (const char* fileName, int* sizeX, int* sizeY);
 /* Reads a field from fileName */
 

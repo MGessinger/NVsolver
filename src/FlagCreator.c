@@ -349,7 +349,6 @@ void EditFlag(char **flag, int sizeX, int sizeY, double dx, double dy)
 	printf("\nYou're finished with editing!\n");
 }
 
-
 void EditFlagFromFile()
 {
 	char fileName[100];
