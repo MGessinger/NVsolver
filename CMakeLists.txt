@@ -39,5 +39,4 @@ target_link_libraries(simulator PUBLIC fieldlib png)
 find_package(MPI REQUIRED)
 target_link_libraries(simulator PUBLIC MPI::MPI_C)
 
-#add_subdirectory(tests)
-
+add_subdirectory(tests)
