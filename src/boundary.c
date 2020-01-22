@@ -36,8 +36,6 @@ void applyPbndCond (REAL **P, lattice *grid, char **FLAG)
 			flag = FLAG[i][j];
 			if (flag == C_F)
 				continue;
-			else if (flag == C_B)
-				continue;
 			switch (flag ^ C_B)
 			{
 				case B_N:
@@ -75,25 +73,25 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 {
 	/* Boundary conditions on the actual boundary of the region */
 	if (grid->edges & BOTTOM)
-		for (int i = 1; i <= grid->deli; i++)
+		for (int i = 0; i <= grid->deli; i++)
 		{
 			U[i+1][0] = (bCond->wb == NOSLIP) ? -U[i+1][1] : U[i+1][1];
 			V[i][1] = (bCond->wb == OUTFLOW) ? V[i][2] : 0;
 		}
 	if (grid->edges & TOP)
-		for (int i = 1; i <= grid->deli; i++)
+		for (int i = 0; i <= grid->deli; i++)
 		{
 			U[i+1][grid->delj+1] = (bCond->wt == NOSLIP) ? -U[i+1][grid->delj] : U[i+1][grid->delj];
 			V[i][grid->delj+1] = (bCond->wt == OUTFLOW) ? V[i][grid->delj] : 0;
 		}
 	if (grid->edges & LEFT)
-		for (int j = 1; j <= grid->delj; j++)
+		for (int j = 0; j <= grid->delj; j++)
 		{
 			U[1][j] = (bCond->wl == OUTFLOW) ? U[2][j] : 0;
 			V[0][j+1] = (bCond->wl == NOSLIP) ? -V[1][j+1] : V[1][j+1];
 		}
 	if (grid->edges & RIGHT)
-		for (int j = 1; j <= grid->delj; j++)
+		for (int j = 0; j <= grid->delj; j++)
 		{
 			U[grid->deli+1][j] = (bCond->wr == OUTFLOW) ? U[grid->deli][j] : 0;
 			V[grid->deli+1][j+1] = (bCond->wr == NOSLIP) ? -V[grid->deli][j+1] : V[grid->deli][j+1];
@@ -106,14 +104,8 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 			flag = bCond->FLAG[i][j];
 			if (flag == C_F)
 				continue;
-			/* Deep inside an obstacle */
-			if (flag == C_B)
-			{
-				U[i+1][j] = V[i][j+1] = 0;
-				continue;
-			}
 			/* Set boundary conditions */
-			switch (flag-C_B)
+			switch (flag ^ C_B)
 			{
 				case B_N:
 					V[i][j+1] = 0;
@@ -122,18 +114,18 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 					break;
 				case B_O:
 					U[i+1][j] = 0;
-					V[i][j+1] = V[i+1][j+1];
-					V[i][j] = V[i+1][j];
+					V[i][j+1] = -V[i+1][j+1];
+					V[i][j] = -V[i+1][j];
 					break;
 				case B_S:
 					V[i][j] = 0;
-					U[i+1][j] = -U[i][j-1];
+					U[i+1][j] = -U[i+1][j-1];
 					U[i][j] = -U[i][j-1];
 					break;
 				case B_W:
 					U[i][j] = 0;
-					V[i][j+1] = V[i-1][j+1];
-					V[i][j] = V[i-1][j];
+					V[i][j+1] = -V[i-1][j+1];
+					V[i][j] = -V[i-1][j];
 					break;
 				case B_N | B_O:
 					U[i+1][j] = V[i][j+1] = 0;
@@ -141,19 +133,19 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 					V[i][j] = -V[i+1][j];
 					break;
 				case B_N | B_W:
-					U[i+1][j] = V[i][j+1] = 0;
-					U[i][j] = -U[i-1][j+1];
-					V[i][j] = V[i-1][j];
+					U[i][j] = V[i][j+1] = 0;
+					U[i+1][j] = -U[i+1][j+1];
+					V[i][j] = -V[i-1][j];
 					break;
 				case B_S | B_O:
 					U[i+1][j] = V[i][j] = 0;
 					U[i][j] = -U[i][j-1];
-					V[i][j] = V[i+1][j];
+					V[i][j+1] = -V[i+1][j+1];
 					break;
 				case B_S | B_W:
 					U[i][j] = V[i][j] = 0;
-					U[i][j] = -U[i][j-1];
-					V[i][j] = V[i-1][j];
+					U[i+1][j] = -U[i+1][j-1];
+					V[i][j+1] = -V[i-1][j+1];
 					break;
 				default:
 					U[i+1][j] = V[i][j+1] = 0;
@@ -188,7 +180,7 @@ void setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem)
 			if (j + grid->jb < grid->jmax/2)
 				continue;
 			U[1][j] = 1;
-			V[0][j+1] = V[1][j];
+			V[0][j+1] = -V[1][j+1];
 		}
 		return;
 	}
@@ -199,7 +191,7 @@ void setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem)
 		for (int j = 1; j <= grid->delj; j++)
 		{
 			U[1][j] = U[0][j] = 1;
-			V[0][j+1] = 0;
+			V[0][j+1] = -V[1][j+1];
 		}
 		return;
 	}
@@ -212,13 +204,17 @@ void initFlags (const char *problem, char **FLAG, lattice *grid, MPI_Comm Region
 	 * If the flags are read from a file, set problem to "Image"! */
 	if (strcmp(problem,"Step") == 0)
 	{
+		int max = grid->jmax;
+		if (grid->imax > max)
+			max = grid->imax;
+		max = (max+2)/2;
 		for (int i = 0; i < grid->deli+1; i++)
 		{
-			if (i + grid->il >= grid->jmax/2)
+			if (i + grid->il >= max)
 				break;
 			for (int j = 0; j < grid->delj+2; j++)
 			{
-				if (j + grid->jb >= grid->jmax/2)
+				if (j + grid->jb >= max)
 					break;
 				FLAG[i][j] = C_B;
 			}

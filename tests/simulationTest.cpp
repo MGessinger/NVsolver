@@ -7,32 +7,6 @@ extern "C" {
 	#include "types.h"
 }
 
-TEST(Setup, Boundary)
-{
-	lattice grid;
-	grid.deli = grid.delj = grid.imax = grid.jmax = 10;
-	grid.il = grid.jb = 0;
-	grid.edges = LEFT | RIGHT | TOP | BOTTOM;
-	grid.delx = grid.dely = 0.1;
-	char **FLAG = create2DIntegerField(grid.deli,grid.delj);
-	if (FLAG == NULL)
-		return;
-
-	initFlags("Step",FLAG,&grid,MPI_COMM_WORLD);
-	for (int j = 0; j < grid.jmax+2; j++)
-	{
-		for (int i = 0; i < grid.imax+2; i++)
-			printf("%x,",FLAG[i][j]);
-		printf("\n");
-	}
-	for (int j = 1; j < 4; j++)
-		EXPECT_EQ(FLAG[4][j], C_B | B_O);
-	for (int i = 1; i < 4; i++)
-		EXPECT_EQ(FLAG[i][4], C_B | B_N);
-	EXPECT_EQ(FLAG[4][4], C_B | B_N | B_O);
-	destroy2Dfield((void**)FLAG,grid.deli+2);
-}
-
 TEST(Simulation, Trivial)
 {
 	REAL **U = nullptr, **V = nullptr, **P = nullptr;

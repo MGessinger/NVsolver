@@ -43,7 +43,6 @@ TEST(Computation, PoissonSolver)
 	sim.itmax = 5000;
 
 	printf("Performed %i iterations!\n",solveSORforPoisson(P,rhs,FLAG,&sim,&grid,MPI_COMM_WORLD));
-	//print2Dfield(P,grid.deli,grid.delj);
 	for (int i = 1; i < grid.deli+1; i++)
 		for (int j = 1; j <= grid.delj+1; j++)
 			err += sqr(P[i][j] - fex((i-0.5)*grid.delx,(j-0.5)*grid.dely));

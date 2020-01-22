@@ -17,6 +17,7 @@ include(AddGoogleTest)
 # list any further test sources here
 set(TESTSOURCES
 	computationTest.cpp
+	setupTest.cpp
 	simulationTest.cpp
 )
 
