@@ -1,6 +1,6 @@
-#include "IO.h"
+#include "types.h"
 
-void print2Dfield(REAL** field, int sizeX, int sizeY)
+void print2Dfield (REAL** field, int sizeX, int sizeY)
 {
 	if (field == NULL)
 	{
@@ -19,7 +19,7 @@ void print2Dfield(REAL** field, int sizeX, int sizeY)
 	return;
 }
 
-void write2Dfield(const char* fileName, REAL** field, int sizeX, int sizeY, const char *mode)
+void write2Dfield (const char* fileName, REAL** field, int sizeX, int sizeY, const char *mode)
 {
 	if (field == NULL)
 	{
@@ -42,7 +42,7 @@ void write2Dfield(const char* fileName, REAL** field, int sizeX, int sizeY, cons
 	return;
 }
 
-void writeVTKfileFor2DintegerField(const char* fileName, const char* description, char **field, lattice *grid)
+void writeVTKfileFor2DintegerField (const char* fileName, const char* description, char **field, lattice *grid)
 {
 	FILE* vtkFile = fopen(fileName, "w");
 	if (vtkFile == NULL)
@@ -80,7 +80,7 @@ void writeVTKfileFor2DintegerField(const char* fileName, const char* description
 	return;
 }
 
-void writeVTKfileFor2DscalarField(const char* fileName, const char* description, REAL** field, lattice *grid)
+void writeVTKfileFor2DscalarField (const char* fileName, const char* description, REAL** field, lattice *grid)
 {
 	FILE* vtkFile = fopen(fileName, "w");
 	if (vtkFile == NULL)
@@ -118,7 +118,7 @@ void writeVTKfileFor2DscalarField(const char* fileName, const char* description,
 	return;
 }
 
-void writeVTKfileFor2DvectorField(const char* fileName, const char* description,
+void writeVTKfileFor2DvectorField (const char* fileName, const char* description,
 		REAL** fieldU, REAL** fieldV, lattice *grid)
 {
 	FILE* vtkFile = fopen(fileName, "w");
@@ -181,7 +181,7 @@ void WriteParticle (particle *parts, int partcount, int n)
 	fclose(out);
 }
 
-int check_if_png(const char *fileName, FILE **file)
+int check_if_png (const char *fileName, FILE **file)
 {
 	unsigned char buf[8];
 	/* Open the alleged PNG file. */
@@ -262,7 +262,7 @@ char** readGeometry (const char *flagFile, int *height, int *width)
 	return FLAG;
 }
 
-char** adjustFlags(char **FLAG, int height, int width, int imax, int jmax)
+char** adjustFlags (char **FLAG, int height, int width, int imax, int jmax)
 {
 	/* Adjust the number of cells to a predefined number */
 	if (FLAG == NULL)
@@ -293,7 +293,7 @@ char** adjustFlags(char **FLAG, int height, int width, int imax, int jmax)
 	return newFLAG;
 }
 
-void findOptimalFlags(char **FLAG, int height, int width, int *imax, int *jmax)
+void findOptimalFlags (char **FLAG, int height, int width, int *imax, int *jmax)
 {
 	if (!FLAG || !imax || !jmax)
 		return;
@@ -376,8 +376,8 @@ void findOptimalFlags(char **FLAG, int height, int width, int *imax, int *jmax)
 	return;
 }
 
-int readParameters(const char *inputFile, REAL *init,
-		lattice *grid, fluidSim *sim, boundaryCond *bCond,
+int readParameters (const char *inputFile, REAL *init,
+		lattice *grid, fluidSim *sim, bndCond *bCond,
 		REAL *delt, REAL *t_end)
 {
 	FILE *input = fopen(inputFile,"r");
@@ -460,7 +460,7 @@ int readParameters(const char *inputFile, REAL *init,
 	return readVars;
 }
 
-void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
+void outputVec (REAL **U, REAL **V, REAL **P, lattice *grid, int n)
 {
 	int imax = grid->imax;
 	int jmax = grid->jmax;
@@ -485,7 +485,7 @@ void outputVec(REAL **U, REAL **V, REAL **P, lattice *grid, int n)
 	return;
 }
 
-int dumpFields(MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, int n)
+int dumpFields (MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, int n)
 {
 	int rank, size, send = 1;
 	MPI_Comm_rank(Region,&rank);

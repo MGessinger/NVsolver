@@ -1,6 +1,6 @@
-#include "particle.h"
+#include "types.h"
 
-particle* createParticleArray(int partcount)
+particle* createParticleArray (int partcount)
 {
 	particle *parts = malloc(partcount*sizeof(particle));
 	if (parts == NULL)
@@ -12,7 +12,7 @@ particle* createParticleArray(int partcount)
 	return parts;
 }
 
-void destroyParticleArray(particle *parts)
+void destroyParticleArray (particle *parts)
 {
 	free(parts);
 	return;

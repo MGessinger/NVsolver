@@ -1,8 +1,8 @@
-#include "boundary.h"
+#include "types.h"
 
-boundaryCond createBoundCond(int wl, int wr, int wt, int wb)
+bndCond createBoundCond (int wl, int wr, int wt, int wb)
 {
-	boundaryCond bCond;
+	bndCond bCond;
 	bCond.wl = wl;
 	bCond.wr = wr;
 	bCond.wt = wt;
@@ -11,7 +11,7 @@ boundaryCond createBoundCond(int wl, int wr, int wt, int wb)
 	return bCond;
 }
 
-void applyPboundaryCond(REAL **P, lattice *grid, char **FLAG)
+void applyPbndCond (REAL **P, lattice *grid, char **FLAG)
 {
 	/* Apply boundary conditions for the pressure field */
 	short flag = 0;
@@ -71,7 +71,7 @@ void applyPboundaryCond(REAL **P, lattice *grid, char **FLAG)
 	return;
 }
 
-void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
+void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 {
 	/* Boundary conditions on the actual boundary of the region */
 	if (grid->edges & BOTTOM)
@@ -163,7 +163,7 @@ void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
 	return;
 }
 
-void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
+void setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem)
 {
 	/* Set special (e.g. inflow) conditions */
 	if (problem[0] == '\0')
@@ -206,7 +206,7 @@ void setSpecBCond(REAL **U, REAL **V, lattice *grid, const char *problem)
 	return;
 }
 
-void initFlags(const char *problem, char **FLAG, lattice *grid, MPI_Comm Region)
+void initFlags (const char *problem, char **FLAG, lattice *grid, MPI_Comm Region)
 {
 	/* Manually sets the flag field for arbitrary generalised geometries.
 	 * If the flags are read from a file, set problem to "Image"! */

@@ -31,13 +31,13 @@ typedef struct fluidSimulation {
 	int itmax;
 } fluidSim;
 
-typedef struct boundaryCondition {
+typedef struct bndCondition {
 	unsigned wt : 2;
 	unsigned wr : 2;
 	unsigned wb : 2;
 	unsigned wl : 2;
 	char **FLAG;
-} boundaryCond;
+} bndCond;
 
 typedef struct particle {
 	REAL x;
@@ -47,7 +47,7 @@ typedef struct particle {
 	unsigned onScreen : 1;
 } particle;
 
-static inline REAL sqr(REAL x)
+static inline REAL sqr (REAL x)
 {
 	return x*x;
 }

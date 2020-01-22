@@ -1,6 +1,6 @@
 #include "FlagCreator.h"
 
-void WriteFlag(const char* fileName, char** flag, int sizeX, int sizeY)
+void WriteFlag (const char* fileName, char** flag, int sizeX, int sizeY)
 {
 	FILE *datei;
 	datei = fopen(fileName,"wb");
@@ -18,7 +18,7 @@ void WriteFlag(const char* fileName, char** flag, int sizeX, int sizeY)
 	fclose (datei);
 }
 
-char** ReadFlag(const char* fileName, int* sizeX, int* sizeY)
+char** ReadFlag (const char* fileName, int* sizeX, int* sizeY)
 {
 	FILE* datei;
 	datei = fopen(fileName,"rb");
@@ -38,7 +38,7 @@ char** ReadFlag(const char* fileName, int* sizeX, int* sizeY)
 	return field;
 }
 
-char** mallocFlag(int sizeX, int sizeY)
+char** mallocFlag (int sizeX, int sizeY)
 {
 	char** field = malloc((sizeX)*(sizeof(char*)+2));
 	for (int i = 0; i<sizeX;i++){
@@ -47,7 +47,7 @@ char** mallocFlag(int sizeX, int sizeY)
 	return field;
 }
 
-int CreateFlag()
+int CreateFlag ()
 {
 	int sizeX;
 	int sizeY;
@@ -194,7 +194,7 @@ int CreateFlag()
 	return 0;
 }
 
-char CorrectnessCheck(char**flag, int sizeX, int sizeY)
+char CorrectnessCheck (char**flag, int sizeX, int sizeY)
 {
 	for(int i = 2;i<sizeX-1;i++){
 		for(int j = 2;j<sizeY-1;j++){
@@ -213,7 +213,7 @@ char CorrectnessCheck(char**flag, int sizeX, int sizeY)
 	return 0;
 }
 
-void EditFlag(char **flag, int sizeX, int sizeY, double dx, double dy)
+void EditFlag (char **flag, int sizeX, int sizeY, double dx, double dy)
 {
 	char run='Y';
 	char answer='Y';
@@ -349,7 +349,7 @@ void EditFlag(char **flag, int sizeX, int sizeY, double dx, double dy)
 	printf("\nYou're finished with editing!\n");
 }
 
-void EditFlagFromFile()
+void EditFlagFromFile ()
 {
 	char fileName[100];
 	double xlength;
@@ -368,7 +368,7 @@ void EditFlagFromFile()
 	EditFlag(flag,sizeX,sizeY,delx,dely);
 }
 
-void AddRectangle(char **flag, int isize, int jsize, int ipos, int jpos, short BorF)
+void AddRectangle (char **flag, int isize, int jsize, int ipos, int jpos, short BorF)
 {
 	for(int i = ipos;i<ipos+isize;i++){
 		for(int j = jpos;j<jpos+jsize;j++){
@@ -377,7 +377,7 @@ void AddRectangle(char **flag, int isize, int jsize, int ipos, int jpos, short B
 	}
 }
 
-void CreativeMode(char**flag, int sizeX, int sizeY, int ipos, int jpos)
+void CreativeMode (char**flag, int sizeX, int sizeY, int ipos, int jpos)
 {
 	char input[101];
 	const char trenn[]=".\n";

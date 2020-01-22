@@ -1,6 +1,6 @@
-#include "fields.h"
+#include "types.h"
 
-REAL* create1Dfield(int size)
+REAL* create1Dfield (int size)
 {
 	if (size <= 0)
 		return NULL;
@@ -9,7 +9,7 @@ REAL* create1Dfield(int size)
 	return array; /* Checking for NULL is done elsewhere */
 }
 
-REAL** create2Dfield(int sizeX, int sizeY)
+REAL** create2Dfield (int sizeX, int sizeY)
 {
 	if (sizeX <= 0 || sizeY <= 0)
 		return NULL;
@@ -27,7 +27,7 @@ REAL** create2Dfield(int sizeX, int sizeY)
 	return matrix;
 }
 
-char **create2DIntegerField(int imax, int jmax)
+char **create2DIntegerField (int imax, int jmax)
 {
 	/* Automatically add ghost cells (For exchange with other processes) */
 	imax += 2;
@@ -49,7 +49,7 @@ char **create2DIntegerField(int imax, int jmax)
 	return matrix;
 }
 
-void destroy1Dfield(void* field)
+void destroy1Dfield (void* field)
 {
 	if (field == NULL)
 		return;
@@ -57,7 +57,7 @@ void destroy1Dfield(void* field)
 	return;
 }
 
-void destroy2Dfield(void** field, int sizeX)
+void destroy2Dfield (void** field, int sizeX)
 {
 	if (field == NULL)
 		return;
@@ -69,7 +69,7 @@ void destroy2Dfield(void** field, int sizeX)
 	return;
 }
 
-void fill1Dfield(REAL value, REAL* field, int size)
+void fill1Dfield (REAL value, REAL* field, int size)
 {
 	if (field == NULL)
 		return;
@@ -80,7 +80,7 @@ void fill1Dfield(REAL value, REAL* field, int size)
 	return;
 }
 
-void fill2Dfield(REAL value, REAL** field, int sizeX, int sizeY)
+void fill2Dfield (REAL value, REAL** field, int sizeX, int sizeY)
 {
 	if (field == NULL)
 		return;
@@ -89,7 +89,7 @@ void fill2Dfield(REAL value, REAL** field, int sizeX, int sizeY)
 	return;
 }
 
-void initUVP(REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, REAL *init)
+void initUVP (REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, REAL *init)
 {
 	if (!U || !V || !P)
 		return;

@@ -1,6 +1,6 @@
-#include "poisson.h"
+#include "types.h"
 
-int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
+int solveSORforPoisson (REAL **p, REAL **rhs, char **FLAG,
 		fluidSim *sim, lattice *grid, MPI_Comm Region)
 {
 	/* Use a SOR algorithm to solve the poisson equation */
@@ -22,7 +22,7 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
 	MPI_Allreduce(&temporary,&eps,1,MPI_DOUBLE,MPI_SUM,Region);
 	do {
 		/* Apply the boundary condition */
-		applyPboundaryCond(p,grid,FLAG);
+		applyPbndCond(p,grid,FLAG);
 		/* Compute the new coefficients iteratively */
 		for (i = 1; i <= grid->deli; i++)
 			for (j = 1; j <= grid->delj; j++)
@@ -55,7 +55,7 @@ int solveSORforPoisson(REAL **p, REAL **rhs, char **FLAG,
 	return it;
 }
 
-REAL compDelt(lattice *grid, REAL **U, REAL **V, fluidSim *sim)
+REAL compDelt (lattice *grid, REAL **U, REAL **V, fluidSim *sim)
 {
 	/* Find the optimal step width in time */
 	if (sim->tau <= 0)
@@ -78,7 +78,7 @@ REAL compDelt(lattice *grid, REAL **U, REAL **V, fluidSim *sim)
 	return dt;
 }
 
-void compRHS(REAL **F, REAL **G, REAL **RHS, char **FLAG, lattice *grid, REAL delt)
+void compRHS (REAL **F, REAL **G, REAL **RHS, char **FLAG, lattice *grid, REAL delt)
 {
 	REAL facX = delt*(grid->delx);
 	REAL facY = delt*(grid->dely);
@@ -93,7 +93,7 @@ void compRHS(REAL **F, REAL **G, REAL **RHS, char **FLAG, lattice *grid, REAL de
 	return;
 }
 
-void adaptUV(REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
+void adaptUV (REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
 		REAL delt, char **FLAG, lattice *grid)
 {
 	REAL facX = delt/(grid->delx);
@@ -109,7 +109,7 @@ void adaptUV(REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
 	return;
 }
 
-REAL delUVbyDelZ(REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL delz)
+REAL delUVbyDelZ (REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL delz)
 {
 	REAL duvdz = (U[i+1][j] + U[i+1][j+1])*(V[i][j+1] + V[i+1][j+1]);
 	REAL correctionTerm = 0;
@@ -133,7 +133,7 @@ REAL delUVbyDelZ(REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL delz)
 	return (duvdz + alpha*correctionTerm)/delz;
 }
 
-REAL delFSqrdByDelZ(REAL **F, int i, int j, int z, REAL alpha, REAL delz)
+REAL delFSqrdByDelZ (REAL **F, int i, int j, int z, REAL alpha, REAL delz)
 {
 	int dx = (z == DERIVE_BY_X) ? 1 : 0;
 	int dy = (z == DERIVE_BY_Y) ? 1 : 0;

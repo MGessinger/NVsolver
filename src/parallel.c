@@ -1,6 +1,6 @@
-#include "parallel.h"
+#include "types.h"
 
-MPI_Comm createCommGrid(int *rank, int *dims)
+MPI_Comm createCommGrid (int *rank, int *dims)
 {
 	MPI_Comm Region;
 	int  nproc, periods[2] = {0,0};
@@ -14,7 +14,7 @@ MPI_Comm createCommGrid(int *rank, int *dims)
 	return Region;
 }
 
-void splitRegion(MPI_Comm Region, int *dims, lattice *grid)
+void splitRegion (MPI_Comm Region, int *dims, lattice *grid)
 {
 	if (!dims || !grid)
 		return;

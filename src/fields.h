@@ -5,7 +5,7 @@
 
 REAL*	create1Dfield (int size);
 REAL**	create2Dfield (int sizeX, int sizeY);
-char** create2DIntegerField(int imax, int jmax);
+char** create2DIntegerField (int imax, int jmax);
 /* Creates arrays of the given size */
 
 void 	destroy1Dfield (void *field);
@@ -16,7 +16,7 @@ void	fill1Dfield (REAL value, REAL *field, int size);
 void	fill2Dfield (REAL value, REAL **field, int sizeX, int sizeY);
 /* Sets every entry in field to value */
 
-void    initUVP(REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, double *init);
+void    initUVP (REAL ***U, REAL ***V, REAL ***P, int imax, int jmax, double *init);
 /* Initialise the fields U, V and P to UI, VI and PI respectively */
 
 #endif /* FIELDS_H_ */

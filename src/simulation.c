@@ -1,4 +1,4 @@
-#include "simulation.h"
+#include "types.h"
 
 lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *paramFile, char *imageFile, int output)
 {
@@ -10,7 +10,7 @@ lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *param
 	if (!U || !V || !P)
 		return grid;
 	/* Local variables */
-	boundaryCond bCond = createBoundCond(NOSLIP,NOSLIP,NOSLIP,NOSLIP);
+	bndCond bCond = createBoundCond(NOSLIP,NOSLIP,NOSLIP,NOSLIP);
 	fluidSim sim;
 	REAL init[3];
 	REAL delt, t_end;
@@ -43,7 +43,7 @@ lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *param
 }
 
 int simulateFluid (REAL **U, REAL **V, REAL **P,
-		boundaryCond* bCond, lattice *grid, fluidSim *sim, MPI_Comm Region,
+		bndCond* bCond, lattice *grid, fluidSim *sim, MPI_Comm Region,
 		REAL t_end, const char *problem, int opt)
 {
 	/* Simulate the fluid characterized by sim, grid and bCond */
