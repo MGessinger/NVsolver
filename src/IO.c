@@ -42,47 +42,6 @@ void write2Dfield(const char* fileName, REAL** field, int sizeX, int sizeY, cons
 	return;
 }
 
-REAL** read2Dfield(const char *fileName, int *sizeX, int *sizeY)
-{
-	if (sizeX == NULL || sizeY == NULL)
-	{
-		printf("Cannot save the size of the array. Please check the pointers.\n");
-		return NULL;
-	}
-	FILE *in = fopen(fileName,"rb");
-	if (in == NULL)
-	{
-		printf("The file %s could not be read.\n",fileName);
-		return NULL;
-	}
-	/* The file has been opened successfully so data can be stored */
-	if (fread(sizeX,sizeof(int),1,in) == 0 || fread(sizeY,sizeof(int),1,in) == 0)
-	{
-		printf("The file has incorrect format.\n");
-		fclose(in);
-		return NULL;
-	}
-	REAL **field = create2Dfield(*sizeX,*sizeY);
-	if (field == NULL)
-	{
-		printf("Could not allocate memory. Please try again.\n");
-		*sizeX = *sizeY = 0;
-		fclose(in);
-		return NULL;
-	}
-	int read = 0;
-	for (int i = 0; i < *sizeY; i++)
-	{
-		read += fread(field[i],sizeof(REAL),*sizeY,in);
-	}
-	if (read != (*sizeX)*(*sizeY))
-	{
-		printf("Only %i out of %i variables were read correctly.\n",read,(*sizeX)*(*sizeY));
-	}
-	fclose(in);
-	return field;
-}
-
 void writeVTKfileFor2DintegerField(const char* fileName, const char* description, char **field, lattice *grid)
 {
 	FILE* vtkFile = fopen(fileName, "w");

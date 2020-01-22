@@ -4,7 +4,7 @@
 #include <mpi/mpi.h>
 
 extern "C" {
-#include "types.h"
+	#include "types.h"
 }
 
 static inline REAL sqr(REAL x)
@@ -37,7 +37,7 @@ TEST(Computation, PoissonSolver)
 	REAL err = 0;
 	REAL **P = create2Dfield(grid.deli+2,grid.delj+2);
 	REAL **rhs = create2Dfield(grid.deli,grid.delj);
-	char **FLAG = create2DIntegerField(grid.deli+1,grid.delj+1);
+	char **FLAG = create2DIntegerField(grid.deli,grid.delj);
 	for (int i = 0; i < grid.deli; i++)
 		for (int j = 0; j < grid.delj; j++)
 			rhs[i][j] = -frhs((i+0.5)*grid.delx,(j+0.5)*grid.dely);
@@ -52,8 +52,9 @@ TEST(Computation, PoissonSolver)
 	for (int i = 1; i < grid.deli+1; i++)
 		for (int j = 1; j <= grid.delj+1; j++)
 			err += sqr(P[i][j] - fex((i-0.5)*grid.delx,(j-0.5)*grid.dely));
-	EXPECT_LE(err/sqr(sz),1e-5);
+	EXPECT_LE(err/sqr(sz),sim.eps);
+	printf("The remaining error in L2 was %g.\n",err/sqr(sz));
 	destroy2Dfield((void**)rhs,grid.deli);
 	destroy2Dfield((void**)P,grid.deli+2);
-	destroy2Dfield((void**)FLAG,grid.deli+1);
+	destroy2Dfield((void**)FLAG,grid.deli+2);
 }

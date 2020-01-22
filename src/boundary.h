@@ -3,16 +3,16 @@
 
 #include "types.h"
 
-#define C_F (0)
-#define C_B (1)
-#define B_N (2)
-#define B_O (4)
-#define B_S (8)
-#define B_W (16)
+#define C_F (0x00)
+#define C_B (0x01)
+#define B_N (0x02)
+#define B_O (0x04)
+#define B_S (0x08)
+#define B_W (0x10)
 
-#define NOSLIP (0u)
+#define NOSLIP   (0u)
 #define FREESLIP (1u)
-#define OUTFLOW (2u)
+#define OUTFLOW  (2u)
 
 boundaryCond createBoundCond(int wl, int wr, int wt, int wb);
 /* Create and destroy a boundaryCond structure */

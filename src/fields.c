@@ -29,6 +29,9 @@ REAL** create2Dfield(int sizeX, int sizeY)
 
 char **create2DIntegerField(int imax, int jmax)
 {
+	/* Automatically add ghost cells (For exchange with other processes) */
+	imax += 2;
+	jmax += 2;
 	if (imax <= 0 || jmax <= 0)
 		return NULL;
 	char **matrix = malloc(imax*sizeof(short*));

@@ -152,11 +152,11 @@ void initFlags(const char *problem, char **FLAG, lattice *grid, MPI_Comm Region)
 	 * If the flags are read from a file, set problem to "Image"! */
 	if (strcmp(problem,"Step") == 0)
 	{
-		for (int i = 1; i < grid->deli+1; i++)
+		for (int i = 0; i < grid->deli+1; i++)
 		{
 			if (i + grid->il >= grid->jmax/2)
 				break;
-			for (int j = 1; j < grid->delj+2; j++)
+			for (int j = 0; j < grid->delj+2; j++)
 			{
 				if (j + grid->jb >= grid->jmax/2)
 					break;
@@ -185,9 +185,9 @@ void initFlags(const char *problem, char **FLAG, lattice *grid, MPI_Comm Region)
 	}
 	char buf[grid->deli+grid->delj+4];
 	exchangeIntMat(FLAG,buf,grid,Region);
-	for (int i = 1; i < grid->deli+1; i++)
+	for (int i = 0; i < grid->deli+1; i++)
 	{
-		for (int j = 1; j < grid->delj+1; j++)
+		for (int j = 0; j < grid->delj+1; j++)
 		{
 			if (FLAG[i][j] == C_F)
 				continue;
@@ -195,11 +195,11 @@ void initFlags(const char *problem, char **FLAG, lattice *grid, MPI_Comm Region)
 			int actj = j + grid->jb;
 			if ((actj+1) != grid->delj && FLAG[i][j+1] == C_F)
 				FLAG[i][j] |= B_N;
-			else if (FLAG[i][j-1] == C_F)
+			else if (actj != 0 && FLAG[i][j-1] == C_F)
 				FLAG[i][j] |= B_S;
 			if ((acti+1) != grid->delj && FLAG[i+1][j] == C_F)
 				FLAG[i][j] |= B_O;
-			else if (FLAG[i-1][j] == C_F)
+			else if (acti != 0 && FLAG[i-1][j] == C_F)
 				FLAG[i][j] |= B_W;
 		}
 	}

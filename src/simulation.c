@@ -5,7 +5,7 @@ lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *param
 	/* Set-Up all memory required to simulate `scene` and then call the simulator */
 	lattice grid;
 	grid.deli = grid.delj = 0;
-	if (!scene || !paramFile || !imageFile)
+	if (!scene || !paramFile)
 		return grid;
 	if (!U || !V || !P)
 		return grid;
@@ -30,7 +30,7 @@ lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *param
 	/* Data initialization */
 	initUVP(U,V,P,grid.deli,grid.delj,init);
 	if (bCond.FLAG == NULL)
-		bCond.FLAG = create2DIntegerField(grid.deli+2,grid.delj+2);
+		bCond.FLAG = create2DIntegerField(grid.deli,grid.delj);
 	initFlags(scene,bCond.FLAG,&grid,Region);
 
 	/* Run the simulation! */
