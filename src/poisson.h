@@ -7,7 +7,6 @@
 #define DERIVE_BY_X (1)
 #define DERIVE_BY_Y (2)
 
-void    applyPboundaryCond(REAL **P, lattice *grid, char **FLAG);
 int     solveSORforPoisson (REAL **p, REAL **rhs, char **FLAG, fluidSim *sim, lattice *grid, MPI_Comm Region);
 /* Solve the Poisson equation with an SOR algorithm, optimized for this use case */
 

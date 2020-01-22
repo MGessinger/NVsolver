@@ -47,6 +47,11 @@ typedef struct particle {
 	unsigned onScreen : 1;
 } particle;
 
+static inline REAL sqr(REAL x)
+{
+	return x*x;
+}
+
 #include "boundary.h"
 #include "fields.h"
 #include "IO.h"

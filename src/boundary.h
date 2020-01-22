@@ -17,11 +17,12 @@
 boundaryCond createBoundCond(int wl, int wr, int wt, int wb);
 /* Create and destroy a boundaryCond structure */
 
+void    applyPboundaryCond(REAL **P, lattice *grid, char **FLAG);
 void    setBCond (REAL **U, REAL **V, lattice *grid, boundaryCond *bCond);
 void    setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem);
 /* Set the boundary conditions for the given problem */
 
-void initFlags(const char *problem, char **FLAG, lattice *grid, MPI_Comm Region);
+void    initFlags(const char *problem, char **FLAG, lattice *grid, MPI_Comm Region);
 /* Set flags for fluid and obstacle cells */
 
 #endif /* BOUNDARY_H_ */

@@ -7,11 +7,6 @@ extern "C" {
 	#include "types.h"
 }
 
-static inline REAL sqr(REAL x)
-{
-	return x*x;
-}
-
 static REAL frhs (REAL x, REAL y)
 {
 	return 2*sqr(2*M_PI)*cos(2*M_PI*x)*cos(2*M_PI*y);

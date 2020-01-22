@@ -11,6 +11,66 @@ boundaryCond createBoundCond(int wl, int wr, int wt, int wb)
 	return bCond;
 }
 
+void applyPboundaryCond(REAL **P, lattice *grid, char **FLAG)
+{
+	/* Apply boundary conditions for the pressure field */
+	short flag = 0;
+	/* First set values on the actual boundary of the region */
+	if (grid->edges & LEFT)
+		for (int j = 0; j <= grid->delj; j++)
+			P[0][j] = P[1][j];
+	if (grid->edges & RIGHT)
+		for (int j = 0; j <= grid->delj; j++)
+			P[grid->deli+1][j] = P[grid->deli][j];
+	if (grid->edges & BOTTOM)
+		for (int i = 0; i <= grid->deli; i++)
+			P[i][0] = P[i][1];
+	if (grid->edges & TOP)
+		for (int i = 0; i <= grid->deli; i++)
+			P[i][grid->delj+1] = P[i][grid->delj];
+	REAL dxSqrd = sqr(grid->delx);
+	REAL dySqrd = sqr(grid->dely);
+	for (int i = 1; i <= grid->deli; i++)
+		for (int j = 1; j <= grid->delj; j++)
+		{
+			flag = FLAG[i][j];
+			if (flag == C_F)
+				continue;
+			else if (flag == C_B)
+				continue;
+			switch (flag ^ C_B)
+			{
+				case B_N:
+					P[i][j] = P[i][j+1];
+					break;
+				case B_O:
+					P[i][j] = P[i+1][j];
+					break;
+				case B_S:
+					P[i][j] = P[i][j-1];
+					break;
+				case B_W:
+					P[i][j] = P[i-1][j];
+					break;
+				case (B_N | B_O):
+					P[i][j] = (dxSqrd*P[i][j+1] + dySqrd*P[i+1][j])/(dxSqrd + dySqrd);
+					break;
+				case (B_N | B_W):
+					P[i][j] = (dxSqrd*P[i][j+1] + dySqrd*P[i-1][j])/(dxSqrd + dySqrd);
+					break;
+				case (B_S | B_O):
+					P[i][j] = (dxSqrd*P[i][j-1] + dySqrd*P[i+1][j])/(dxSqrd + dySqrd);
+					break;
+				case (B_S | B_W):
+					P[i][j] = (dxSqrd*P[i][j-1] + dySqrd*P[i-1][j])/(dxSqrd + dySqrd);
+					break;
+				default:
+					P[i][j] = 0;
+			}
+		}
+	return;
+}
+
 void setBCond(REAL **U, REAL **V, lattice *grid, boundaryCond *bCond)
 {
 	/* Boundary conditions on the actual boundary of the region */
