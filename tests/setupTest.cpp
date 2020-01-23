@@ -82,3 +82,23 @@ TEST_F(Setup, Boundary)
 	destroy2Dfield((void**)V,grid.deli+2);
 	destroy2Dfield((void**)P,grid.deli+2);
 }
+
+#define OUT_FILE "/home/matthias/Dokumente/Programming/Simulator/data/MomentumField.vtk"
+TEST_F(Setup, IO)
+{
+	int dims[2] = {1,1};
+	REAL **U = nullptr, **V = nullptr, **P = nullptr;
+	REAL init[3] = {1.7,2.0,0.773};
+	initUVP(&U,&V,&P,grid.imax,grid.jmax,init);
+
+	dumpFields(MPI_COMM_WORLD,U,V,P,&grid,0);
+	translateBinary(MPI_COMM_WORLD,&grid,1,0,dims);
+
+	writeVTKfileFor2DvectorField(OUT_FILE,"momentumfield",U,V,&grid);
+
+	EXPECT_EQ(system("diff -q MomentumField_0.vtk " OUT_FILE),0);
+
+	destroy2Dfield((void**)U,grid.deli+3);
+	destroy2Dfield((void**)V,grid.deli+2);
+	destroy2Dfield((void**)P,grid.deli+2);
+}

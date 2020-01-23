@@ -52,8 +52,8 @@ void writeVTKfileFor2DintegerField (const char* fileName, const char* descriptio
 	fprintf(vtkFile, "Scalar Field\n");
 	fprintf(vtkFile, "ASCII\n");
 
-	fprintf(vtkFile, "DATASET RECTILINEAR_GRID \n");
-	fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", grid->imax, grid->jmax);
+	fprintf(vtkFile, "DATASET RECTILINEAR_GRID\n");
+	fprintf(vtkFile, "DIMENSIONS %d %d 1\n", grid->imax, grid->jmax);
 	fprintf(vtkFile, "X_COORDINATES %d double\n", grid->imax);
 	for (REAL i = 0; i < grid->imax; i++)
 		fprintf(vtkFile, "%lf ", grid->delx*i);
@@ -67,7 +67,7 @@ void writeVTKfileFor2DintegerField (const char* fileName, const char* descriptio
 
 	fprintf(vtkFile, "POINT_DATA %d\n", grid->imax * grid->jmax);
 	fprintf(vtkFile, "SCALARS %s double 1\n", description);
-	fprintf(vtkFile, "LOOKUP_TABLE default \n");
+	fprintf(vtkFile, "LOOKUP_TABLE default\n");
 	for(int j = 0; j < grid->delj; j++)
 	{
 		for(int i = 0; i < grid->deli; i++)
@@ -90,8 +90,8 @@ void writeVTKfileFor2DscalarField (const char* fileName, const char* description
 	fprintf(vtkFile, "Scalar Field\n");
 	fprintf(vtkFile, "ASCII\n");
 
-	fprintf(vtkFile, "DATASET RECTILINEAR_GRID \n");
-	fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", grid->imax, grid->jmax);
+	fprintf(vtkFile, "DATASET RECTILINEAR_GRID\n");
+	fprintf(vtkFile, "DIMENSIONS %d %d 1\n", grid->imax, grid->jmax);
 	fprintf(vtkFile, "X_COORDINATES %d double\n", grid->imax);
 	for (REAL i = 0; i < grid->imax; i++)
 		fprintf(vtkFile, "%lf ", grid->delx*i);
@@ -105,7 +105,7 @@ void writeVTKfileFor2DscalarField (const char* fileName, const char* description
 
 	fprintf(vtkFile, "POINT_DATA %d\n", grid->imax * grid->jmax);
 	fprintf(vtkFile, "SCALARS %s double 1\n", description);
-	fprintf(vtkFile, "LOOKUP_TABLE default \n");
+	fprintf(vtkFile, "LOOKUP_TABLE default\n");
 	for(int j = 0; j < grid->jmax; j++)
 	{
 		for(int i = 0; i < grid->imax; i++)
@@ -129,8 +129,8 @@ void writeVTKfileFor2DvectorField (const char* fileName, const char* description
 	fprintf(vtkFile, "Vector Field\n");
 	fprintf(vtkFile, "ASCII\n");
 
-	fprintf(vtkFile, "DATASET RECTILINEAR_GRID \n");
-	fprintf(vtkFile, "DIMENSIONS %d %d 1 \n", grid->imax, grid->jmax);
+	fprintf(vtkFile, "DATASET RECTILINEAR_GRID\n");
+	fprintf(vtkFile, "DIMENSIONS %d %d 1\n", grid->imax, grid->jmax);
 	fprintf(vtkFile, "X_COORDINATES %d double\n", grid->imax);
 	for (REAL i = 0; i < grid->imax; i++)
 		fprintf(vtkFile, "%lf ", grid->delx*i);
@@ -143,7 +143,7 @@ void writeVTKfileFor2DvectorField (const char* fileName, const char* description
 	fprintf(vtkFile, "0.0\n");
 
 	fprintf(vtkFile, "POINT_DATA %d\n", grid->imax * grid->jmax);
-	fprintf(vtkFile, "VECTORS %s double \n", description);
+	fprintf(vtkFile, "VECTORS %s double\n", description);
 	for(int j = 0; j < grid->jmax; j++)
 	{
 		for(int i = 0; i < grid->imax; i++)
@@ -525,11 +525,19 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
 	FILE *PF, *UF, *VF;
 	int coords[2], nproc = dims[0]*dims[1];
 	int il[nproc], jb[nproc];
-	for (int k = 0; k < nproc; k++)
+	if (Region == MPI_COMM_WORLD)
 	{
-		MPI_Cart_coords(Region,k,2,coords);
-		il[k] = coords[0]*grid->imax/dims[0];
-		jb[k] = coords[1]*grid->jmax/dims[1];
+		il[0] = 0;
+		jb[0] = 0;
+	}
+	else
+	{
+		for (int k = 0; k < nproc; k++)
+		{
+			MPI_Cart_coords(Region,k,2,coords);
+			il[k] = coords[0]*grid->imax/dims[0];
+			jb[k] = coords[1]*grid->jmax/dims[1];
+		}
 	}
 	for (int i = rank; i < files; i += nproc) /* Loop over files */
 	{
@@ -548,13 +556,13 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
 				printf("Could not read size. Skipping file %i...\n",i);
 				break;
 			}
-			for (int j = 0; j < size[0]; j++) /* Loop over lines */
+			for (int i = 0; i < size[0]; i++) /* Loop over lines */
 			{
-				if (fread(&(P[j+il[k]][jb[k]]),sizeof(REAL),size[1],PF) == 0)
+				if (fread(&(P[i+il[k]][jb[k]]),sizeof(REAL),size[1],PF) == 0)
 					break;
-				if (fread(&(U[j+il[k]][jb[k]]),sizeof(REAL),size[1],UF) == 0)
+				if (fread(&(U[i+il[k]][jb[k]]),sizeof(REAL),size[1],UF) == 0)
 					break;
-				if (fread(&(V[j+il[k]][jb[k]]),sizeof(REAL),size[1],VF) == 0)
+				if (fread(&(V[i+il[k]][jb[k]]),sizeof(REAL),size[1],VF) == 0)
 					break;
 			}
 		}
