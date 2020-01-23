@@ -14,20 +14,22 @@ enable_testing()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(AddGoogleTest)
 
-# list any further test sources here
+# list any test sources here
 set(TESTSOURCES
-	computationTest.cpp
 	setupTest.cpp
+	computationTest.cpp
 	simulationTest.cpp
+	cleanupTest.cpp
 )
 
-# this is our executable for the unit tests
+# This is our executable for the unit tests
 add_executable(runUnitTests ${TESTSOURCES})
 ## links exectuable with fieldlib and google test
 target_link_libraries(runUnitTests PRIVATE fieldlib gtest_main png)
 
+#Find MPI
 find_package(MPI REQUIRED)
-target_link_libraries(runUnitTests PUBLIC MPI::MPI_C)
+target_link_libraries(runUnitTests PUBLIC MPI::MPI_CXX)
 
 # add_gtest is just a macro that adds gtest, gmock, and gtest_main, and then runs add_test to create a test with the same name:
 # target_link_libraries(runUnitTests gtest gmock gtest_main)

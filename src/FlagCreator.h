@@ -9,7 +9,7 @@
 #define C_F (0)
 #define C_B (1)
 
-void WriteFlag (const char* fileName, char** flag, int sizeX, int sizeY); //writes Flag in file (binary)
+void writeFlag (const char* fileName, char** flag, int sizeX, int sizeY); //writes Flag in file (binary)
 char** ReadFlag (const char* fileName, int* sizeX, int* sizeY); //reads Flag from file (binary)
 char **mallocFlag (int sizeX, int sizeY); //allocates memory for flag field
 int CreateFlag (); // allows user to set blocks freely

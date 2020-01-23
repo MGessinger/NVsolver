@@ -25,7 +25,7 @@ lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *param
 	}
 
 	/* Slice Data to process */
-	splitRegion(Region, dims, &grid);
+	splitRegion(Region, rank, dims, &grid);
 
 	/* Data initialization */
 	initUVP(U,V,P,grid.deli,grid.delj,init);

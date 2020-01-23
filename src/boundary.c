@@ -205,7 +205,7 @@ void initFlags (const char *problem, char **FLAG, lattice *grid, MPI_Comm Region
 	if (strcmp(problem,"Step") == 0)
 	{
 		int max = grid->jmax;
-		if (grid->imax > max)
+		if (grid->imax < max)
 			max = grid->imax;
 		max = (max+2)/2;
 		for (int i = 0; i < grid->deli+1; i++)
@@ -239,7 +239,10 @@ void initFlags (const char *problem, char **FLAG, lattice *grid, MPI_Comm Region
 			}
 		}
 	}
-	char buf[grid->deli+grid->delj+4];
+	int size = grid->deli+2;
+	if (grid->delj+2 > size)
+		size = grid->delj+2;
+	char buf[size];
 	exchangeIntMat(FLAG,buf,grid,Region);
 	for (int i = 0; i < grid->deli+1; i++)
 	{

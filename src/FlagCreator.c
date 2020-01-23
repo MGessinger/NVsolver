@@ -1,6 +1,6 @@
 #include "FlagCreator.h"
 
-void WriteFlag (const char* fileName, char** flag, int sizeX, int sizeY)
+void writeFlag (const char* fileName, char** flag, int sizeX, int sizeY)
 {
 	FILE *datei;
 	datei = fopen(fileName,"wb");
@@ -175,7 +175,7 @@ int CreateFlag ()
 	if((answer == 'Y') || (answer == 'y')){
 		printf("Enter a filepath to save the file:");
 		do {scanf("%s",filepath);} while ( getchar() != '\n' );
-		WriteFlag(filepath,field,sizeX,sizeY);
+		writeFlag(filepath,field,sizeX,sizeY);
 	}
 	printf("Do you want to save your field as .vtk File?Enter Y or N: ");
 	do {scanf("%c",&answer);} while ( getchar() != '\n' );

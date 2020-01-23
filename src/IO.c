@@ -19,7 +19,7 @@ void print2Dfield (REAL** field, int sizeX, int sizeY)
 	return;
 }
 
-void write2Dfield (const char* fileName, REAL** field, int sizeX, int sizeY, const char *mode)
+void write2Dfield (const char* fileName, REAL** field, size_t sizeX, size_t sizeY, const char *mode)
 {
 	if (field == NULL)
 	{
@@ -32,9 +32,9 @@ void write2Dfield (const char* fileName, REAL** field, int sizeX, int sizeY, con
 		printf("The file %s could not be opened.\n",fileName);
 		return;
 	}
-	fwrite(&sizeX,sizeof(int),1,out);
-	fwrite(&sizeY,sizeof(int),1,out);
-	for (int i = 0; i < sizeX; i++)
+	fwrite(&sizeX,sizeof(size_t),1,out);
+	fwrite(&sizeY,sizeof(size_t),1,out);
+	for (size_t i = 0; i < sizeX; i++)
 	{
 		fwrite(field[i],sizeof(REAL),sizeY,out);
 	}
@@ -156,7 +156,7 @@ void writeVTKfileFor2DvectorField (const char* fileName, const char* description
 	return;
 }
 
-void WriteParticle (particle *parts, int partcount, int n)
+void writeParticle (particle *parts, int partcount, int n)
 {
 	if (!parts|| !partcount)
 		return;
@@ -516,29 +516,24 @@ int dumpFields (MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, in
 
 void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *dims)
 {
-	if (!files)
+	if (files <= rank)
 		return;
 	char pFile[32], uFile[32], vFile[32];
-	REAL **U, **V, **P;
-	int size[2];
-	initUVP(&U,&V,&P,grid->imax,grid->jmax,NULL);
+	size_t size[2];
 	FILE *PF, *UF, *VF;
+	REAL **U, **V, **P;
+	initUVP(&U,&V,&P,grid->imax,grid->jmax,NULL);
 	int coords[2], nproc = dims[0]*dims[1];
 	int il[nproc], jb[nproc];
 	if (Region == MPI_COMM_WORLD)
-	{
-		il[0] = 0;
-		jb[0] = 0;
-	}
+		il[0] = jb[0] = 0;
 	else
-	{
 		for (int k = 0; k < nproc; k++)
 		{
 			MPI_Cart_coords(Region,k,2,coords);
 			il[k] = coords[0]*grid->imax/dims[0];
 			jb[k] = coords[1]*grid->jmax/dims[1];
 		}
-	}
 	for (int i = rank; i < files; i += nproc) /* Loop over files */
 	{
 		sprintf(pFile,"PressureField_%i.vtk",i);
@@ -549,22 +544,24 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
 		VF = fopen(vFile,"rb");
 		if (!PF || !UF || !VF)
 			continue;
-		for (int k = 0; k < nproc; k++) /* Loop over matrices */
+		for (int j = 0; j < nproc; j++) /* Loop over matrices */
 		{
-			if (fread(size,sizeof(int),2,PF) < 2)
+			if (fread(size,sizeof(size_t),2,PF) < 2)
 			{
 				printf("Could not read size. Skipping file %i...\n",i);
 				break;
 			}
-			for (int i = 0; i < size[0]; i++) /* Loop over lines */
+			for (size_t k = 0; k < size[0]; k++) /* Loop over lknes */
 			{
-				if (fread(&(P[i+il[k]][jb[k]]),sizeof(REAL),size[1],PF) == 0)
+				if (fread(&(P[k+il[j]][jb[j]]),sizeof(REAL),size[1],PF) != size[1])
 					break;
-				if (fread(&(U[i+il[k]][jb[k]]),sizeof(REAL),size[1],UF) == 0)
+				if (fread(&(U[k+il[j]][jb[j]]),sizeof(REAL),size[1],UF) != size[1])
 					break;
-				if (fread(&(V[i+il[k]][jb[k]]),sizeof(REAL),size[1],VF) == 0)
+				if (fread(&(V[k+il[j]][jb[j]]),sizeof(REAL),size[1]+1,VF) != size[1]+1)
 					break;
 			}
+			if (fread(&(U[size[0]+il[j]][jb[j]]),sizeof(REAL),size[1],UF) != size[1])
+				break;
 		}
 		fclose(PF);
 		fclose(UF);

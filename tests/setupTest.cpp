@@ -11,12 +11,15 @@ class Setup : public ::testing::Test {
 	protected:
 		lattice grid;
 		bndCond bCond;
+		MPI_Comm Region;
 		virtual void SetUp ()
 		{
-			grid.deli = grid.delj = grid.imax = grid.jmax = 10;
-			grid.il = grid.jb = 0;
-			grid.edges = LEFT | RIGHT | TOP | BOTTOM;
+			int rank, dims[2];
+			Region = createCommGrid(&rank,dims);
+
+			grid.imax = grid.jmax = 10;
 			grid.delx = grid.dely = 0.1;
+			splitRegion(Region,rank,dims,&grid);
 
 			bCond = createBoundCond(NOSLIP,OUTFLOW,FREESLIP,NOSLIP);
 			bCond.FLAG = create2DIntegerField(grid.deli,grid.delj);
@@ -24,11 +27,14 @@ class Setup : public ::testing::Test {
 		virtual	void TearDown ()
 		{
 			destroy2Dfield((void**)bCond.FLAG,grid.deli+2);
+			MPI_Comm_free(&Region);
 		}
 };
 
 int cmpFlags (char **FLAG, int ib, int jb)
 {
+	if (ib <= 0 || jb <= 0)
+		return 1;
 	for (int j = 0; j < jb; j++)
 		if (FLAG[ib][j] != (C_B | B_O))
 			return 0;
@@ -38,6 +44,11 @@ int cmpFlags (char **FLAG, int ib, int jb)
 	if (FLAG[ib][jb] != (C_B | B_N | B_O))
 		return 0;
 	return 1;
+}
+
+TEST(MPI, Init)
+{
+	EXPECT_EQ(MPI_Init(nullptr, nullptr),MPI_SUCCESS);
 }
 
 TEST_F(Setup, Filling)
@@ -52,28 +63,23 @@ TEST_F(Setup, Filling)
 	destroy2Dfield((void**)U,grid.deli);
 }
 
-TEST_F(Setup, Flags)
-{
-	initFlags("Step",bCond.FLAG,&grid,MPI_COMM_WORLD);
-	for (int j = 0; j < grid.jmax+2; j++)
-	{
-		for (int i = 0; i < grid.imax+2; i++)
-			printf("%x,",bCond.FLAG[i][j]);
-		printf("\n");
-	}
-	EXPECT_TRUE(cmpFlags(bCond.FLAG,grid.deli/2,grid.deli/2));
-}
-
 TEST_F(Setup, Boundary)
 {
 	REAL **U = nullptr, **V = nullptr, **P = nullptr;
 	REAL init[3] = {1.0,1.0,1.0};
 	initUVP(&U,&V,&P,grid.imax,grid.jmax,init);
-	initFlags("Step",bCond.FLAG,&grid,MPI_COMM_WORLD);
+	initFlags("Step",bCond.FLAG,&grid,Region);
+	int ib = grid.imax/2-grid.il, jb = grid.jmax/2-grid.jb;
+	if (ib > grid.deli)
+		ib = grid.deli;
+	if (jb > grid.delj)
+		jb = grid.delj;
+	ASSERT_TRUE(cmpFlags(bCond.FLAG,ib,jb));
 
 	setBCond(U,V,&grid,&bCond);
 	setSpecBCond(U,V,&grid,"Step");
 	applyPbndCond(P,&grid,bCond.FLAG);
+
 	print2Dfield(U,grid.deli+3,grid.delj+2);
 	print2Dfield(V,grid.deli+2,grid.delj+3);
 	print2Dfield(P,grid.deli+2,grid.delj+2);
@@ -88,13 +94,17 @@ TEST_F(Setup, IO)
 {
 	int dims[2] = {1,1};
 	REAL **U = nullptr, **V = nullptr, **P = nullptr;
-	REAL init[3] = {1.7,2.0,0.773};
+	REAL init[3] = {1.7,0.773,2.1};
 	initUVP(&U,&V,&P,grid.imax,grid.jmax,init);
 
-	dumpFields(MPI_COMM_WORLD,U,V,P,&grid,0);
-	translateBinary(MPI_COMM_WORLD,&grid,1,0,dims);
+	dumpFields(Region,U,V,P,&grid,0);
+	translateBinary(Region,&grid,1,0,dims);
 
-	writeVTKfileFor2DvectorField(OUT_FILE,"momentumfield",U,V,&grid);
+	int rank;
+	MPI_Comm_rank(Region,&rank);
+	if (rank != 0)
+		writeVTKfileFor2DvectorField(OUT_FILE,"momentumfield",U,V,&grid);
+	MPI_Barrier(Region);
 
 	EXPECT_EQ(system("diff -q MomentumField_0.vtk " OUT_FILE),0);
 

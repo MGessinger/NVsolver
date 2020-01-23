@@ -14,15 +14,14 @@ MPI_Comm createCommGrid (int *rank, int *dims)
 	return Region;
 }
 
-void splitRegion (MPI_Comm Region, int *dims, lattice *grid)
+void splitRegion (MPI_Comm Region, int rank, int *dims, lattice *grid)
 {
 	if (!dims || !grid)
 		return;
 	grid->edges = 0;
-	int rank;
 	int coords[2] = {0,0};
-	MPI_Comm_rank(Region,&rank);
 	MPI_Cart_coords(Region,rank,2,coords);
+
 	/* Left and right */
 	grid->il = coords[0]*grid->imax/dims[0];
 	if (grid->il == 0)
@@ -31,6 +30,7 @@ void splitRegion (MPI_Comm Region, int *dims, lattice *grid)
 	if (ir == grid->imax)
 		grid->edges |= RIGHT;
 	grid->deli = ir - grid->il;
+
 	/* Top and bottom: */
 	grid->jb = coords[1]*grid->jmax/dims[1];
 	if (grid->jb == 0)
@@ -49,12 +49,12 @@ void exchangeMat (REAL **mat, int offx, int offy, REAL *buf, lattice *grid, MPI_
 	int prev, next, rank;
 	int coords[2];
 	MPI_Status st;
-	/* Top and bottom */
-	MPI_Cart_shift(Region,0,1,&prev,&next);
 	MPI_Comm_rank(Region,&rank);
 	MPI_Cart_coords(Region,rank,2,coords);
 	int lx = grid->deli+2*offx - (offx==2);
 	int ly = grid->delj+2*offy - (offy==2);
+	/* Top and bottom */
+	MPI_Cart_shift(Region,0,1,&prev,&next);
 	if (coords[0]%2 == 1 && prev != -1)
 		MPI_Sendrecv(mat[offx],ly,MPI_DOUBLE,prev,101,mat[0],ly,MPI_DOUBLE,prev,101,Region,&st);
 	else if (coords[0]%2 == 0 && next != -1)
@@ -64,7 +64,6 @@ void exchangeMat (REAL **mat, int offx, int offy, REAL *buf, lattice *grid, MPI_
 	else if (coords[0]%2 == 1 && next != -1)
 		MPI_Sendrecv(mat[lx-offx-1],ly,MPI_DOUBLE,next,102,mat[lx-offx],ly,MPI_DOUBLE,next,102,Region,&st);
 	/* Left and right */
-	return;
 	MPI_Cart_shift(Region,1,1,&prev,&next);
 	if (prev != -1)
 	{
@@ -89,15 +88,12 @@ void exchangeIntMat (char **mat, char *buf, lattice *grid, MPI_Comm Region)
 {
 	if (Region == MPI_COMM_WORLD)
 		return;
-	int prev, next, size;
+	int prev, next;
 	MPI_Status st;
-	/* Top and bottom */
-	MPI_Cart_shift(Region,0,1,&next,&prev);
-	MPI_Comm_size(Region,&size);
-	if (size == 0)
-		return;
 	int lx = grid->deli+2;
 	int ly = grid->delj+2;
+	/* Top and bottom */
+	MPI_Cart_shift(Region,0,1,&prev,&next);
 	if (prev != -1)
 		MPI_Sendrecv(mat[1],ly,MPI_CHAR,prev,101,mat[0],ly,MPI_CHAR,prev,102,Region,&st);
 	if (next != -1)
