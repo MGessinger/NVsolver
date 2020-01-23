@@ -40,6 +40,18 @@ int cmpFlags (char **FLAG, int ib, int jb)
 	return 1;
 }
 
+TEST_F(Setup, Filling)
+{
+	REAL **U = create2Dfield(grid.deli,grid.delj);
+	fill2Dfield(1.25,U,grid.deli,grid.delj);
+	REAL diff = 0;
+	for (int i = 0; i < grid.deli; i++)
+		for (int j = 0; j < grid.delj; j++)
+			diff += sqr(U[i][j]-1.25);
+	EXPECT_LE(diff,1e-10);
+	destroy2Dfield((void**)U,grid.deli);
+}
+
 TEST_F(Setup, Flags)
 {
 	initFlags("Step",bCond.FLAG,&grid,MPI_COMM_WORLD);

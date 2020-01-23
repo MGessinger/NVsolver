@@ -11,7 +11,7 @@
 
 void    print2Dfield (REAL** field, int sizeX, int sizeY);
 void    write2Dfield (const char* fileName, REAL** field, int sizeX, int sizeY, const char *mode);
-/* Output a matrix, either to stdout or to a file */
+/* Output a matrix, either to stdout or to a (binary) file */
 
 REAL**  read2Dfield (const char* fileName, int* sizeX, int* sizeY);
 /* Reads a field from fileName */
@@ -34,7 +34,7 @@ char**  readGeometry (const char *flagFile, int *width, int *height);
 
 char**  adjustFlags (char **FLAG, int height, int width, int imax, int jmax);
 void    findOptimalFlags (char **FLAG, int height, int width, int *imax, int *jmax);
-/* Changes the number of geomatry cells */
+/* Changes the number of geometry cells */
 
 int     readParameters (const char *inputFile, REAL *init,
 		lattice *grid, fluidSim *sim, bndCond *bCond,

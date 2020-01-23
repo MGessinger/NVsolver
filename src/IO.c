@@ -563,5 +563,8 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
 		fclose(VF);
 		outputVec(U,V,P,grid,i);
 	}
+	destroy2Dfield((void**)U,grid->imax+3);
+	destroy2Dfield((void**)V,grid->imax+2);
+	destroy2Dfield((void**)P,grid->imax+2);
 	return;
 }
