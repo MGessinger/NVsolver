@@ -2,6 +2,7 @@
 
 int main (int argc, char **argv)
 {
+	MPI_Init(&argc,&argv);
 	if (argc < 3 || argv[1][0] == '-')
 	{
 		printf("Usage: simulator <scene>\n"
@@ -10,7 +11,7 @@ int main (int argc, char **argv)
 				"                 [number_of_frames]\n");
 		printf("When specifying both an image and a parameter file, "
 				"the sizes specified from the image take precedence!\n");
-		printf("Type simulator -h for extended help.\n");
+		MPI_Finalize();
 		return 0;
 	}
 	REAL **U = NULL, **V = NULL, **P = NULL;
@@ -41,7 +42,6 @@ int main (int argc, char **argv)
 				break;
 		}
 	}
-	MPI_Init(&argc,&argv);
 	lattice grid = runSimulation(&U,&V,&P,argv[1],paramFile,imageFile,output);
 	/* Destroy simulated grids */
 	destroy2Dfield((void**)U,grid.deli+3);

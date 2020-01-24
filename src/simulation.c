@@ -7,6 +7,8 @@ lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *param
 	grid.deli = grid.delj = 0;
 	if (!scene || !paramFile)
 		return grid;
+	if (!imageFile)
+		imageFile = "";
 	if (!U || !V || !P)
 		return grid;
 	/* Local variables */
@@ -59,10 +61,14 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 	REAL **RHS = create2Dfield(grid->deli,grid->delj);
 	if (!F || !G || !RHS)
 		return 0;
-	int n = 1, rank;
+	int n, rank;
 	MPI_Comm_rank(Region,&rank);
 	REAL del_vec, dt = 0, delt = sim->dt;
-	REAL buf[grid->deli+grid->delj];
+
+	n = grid->deli;
+	if (grid->delj > n)
+		n = grid->delj;
+	REAL buf[n+2];
 	if (opt >= OUTPUT)
 		del_vec = t_end/(opt/OUTPUT);
 	else
@@ -70,6 +76,7 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 	/* Begin the simulation */
 	if (rank == 0)
 		printf("Computing Reynoldsnumber %lg.\n",sim->Re);
+	n = 0;
 	for (REAL time = 0; time <= t_end; time += delt)
 	{
 		if ((rank == 0) && (opt & PRINT))
@@ -88,7 +95,7 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 		exchangeMat(V,1,2,buf,grid,Region);
 		dt = compDelt(grid,U,V,sim);
 
-		if (time > del_vec*n)
+		if (time > del_vec*(n+1))
 		{
 			dumpFields(Region,U,V,P,grid,n++);
 		}

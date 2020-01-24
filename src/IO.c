@@ -506,11 +506,10 @@ int dumpFields (MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, in
 	MPI_Comm_rank(Region,&rank);
 	MPI_Comm_size(Region,&size);
 	MPI_Status st;
-	char pFile[32], uFile[32], vFile[32];
+	char pFile[32], uFile[32];
 	char *mode = (rank == 0 ? "wb" : "ab");
 	sprintf(pFile,"PressureField_%i.vtk",n);
 	sprintf(uFile,"MomentumField_%i.vtk",n);
-	sprintf(vFile,"V%i",n);
 	if (rank > 0)
 		MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 0, Region, &st);
 	write2Dfield(pFile,P,grid->deli,grid->delj,1,1,mode);
@@ -519,13 +518,9 @@ int dumpFields (MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, in
 	if (rank > 0)
 		MPI_Recv(&send,0,MPI_INT,rank-1,WRITE + 1,Region,&st);
 	write2Dfield(uFile,U,grid->deli+1,grid->delj+1,1,0,mode);
+	write2Dfield(uFile,V,grid->deli+1,grid->delj+1,0,1,"ab");
 	if (rank+1 != size)
-		MPI_Send(&send,0,MPI_INT,rank+1,WRITE + 1, Region);
-	if (rank > 0)
-		MPI_Recv(&send,0,MPI_INT,rank-1,WRITE + 2,Region,&st);
-	write2Dfield(vFile,V,grid->deli+1,grid->delj+1,0,1,mode);
-	if (rank+1 != size)
-		MPI_Send(&send,0,MPI_INT,rank+1,WRITE + 2,Region);
+		MPI_Send(&send,0,MPI_INT,rank+1,WRITE + 1,Region);
 	return send;
 }
 
@@ -533,8 +528,8 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
 {
 	if (files <= rank)
 		return;
-	char pFile[32], uFile[32], vFile[32];
-	FILE *PF, *UF, *VF;
+	char pFile[32], uFile[32];
+	FILE *PF, *UF;
 	REAL **U, **V, **P;
 	initUVP(&U,&V,&P,grid->imax,grid->jmax,NULL);
 	int coords[2], nproc = dims[0]*dims[1];
@@ -552,22 +547,19 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
 	{
 		sprintf(pFile,"PressureField_%i.vtk",i);
 		sprintf(uFile,"MomentumField_%i.vtk",i);
-		sprintf(vFile,"V%i",i);
 		PF = fopen(pFile,"rb");
 		UF = fopen(uFile,"rb");
-		VF = fopen(vFile,"rb");
 		for (int j = 0; j < nproc; j++) /* Loop over sub-matrices */
 		{
 			if (read2Dfield(PF,P,il[j]+1,jb[j]+1) < 0)
 				printf("Skipping file %s...\n",pFile);
-			if (read2Dfield(VF,V,il[j],jb[j]+1) < 0)
-				printf("Skipping file %s...\n",uFile);
 			if (read2Dfield(UF,U,il[j]+1,jb[j]) < 0)
-				printf("Skipping file %s...\n",vFile);
+				printf("Skipping file %s...\n",uFile);
+			if (read2Dfield(UF,V,il[j],jb[j]+1) < 0)
+				printf("Skipping file %s...\n",uFile);
 		}
 		fclose(PF);
 		fclose(UF);
-		fclose(VF);
 		outputVec(U,V,P,grid,i);
 	}
 	destroy2Dfield((void**)U,grid->imax+3);

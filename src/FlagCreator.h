@@ -3,11 +3,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "IO.h"
 #include "types.h"
 #include <string.h> //fuer strlength und strtok
-#define C_F (0)
-#define C_B (1)
 
 void writeFlag (const char* fileName, char** flag, int sizeX, int sizeY); //writes Flag in file (binary)
 char** ReadFlag (const char* fileName, int* sizeX, int* sizeY); //reads Flag from file (binary)
