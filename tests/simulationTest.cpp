@@ -24,5 +24,4 @@ TEST(Simulation, Trivial)
 	destroy2Dfield((void**)U,grid.deli+3);
 	destroy2Dfield((void**)V,grid.deli+2);
 	destroy2Dfield((void**)P,grid.deli+2);
-	MPI_Finalize();
 }

@@ -7,7 +7,7 @@ extern "C" {
 	#include "types.h"
 }
 
-TEST(Cleanup, FInalize)
+TEST(Cleanup, Finalize)
 {
 	EXPECT_EQ(MPI_Finalize(),MPI_SUCCESS);
 }

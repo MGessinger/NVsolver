@@ -10,8 +10,9 @@
 #define WRITTEN (0x200)
 
 void    print2Dfield (REAL** field, int sizeX, int sizeY);
-void    write2Dfield (const char* fileName, REAL** field, size_t sizeX, size_t sizeY, const char *mode);
-/* Output a matrix, either to stdout or to a (binary) file */
+void    write2Dfield (const char* fileName, REAL** field, size_t sizeX, size_t sizeY, size_t offX, size_t offY, const char *mode);
+int     read2Dfield (FILE *in, REAL **field, size_t offX, size_t offY);
+/* Output a matrix, either to stdout or to a (binary) file, or read it from a binary file */
 
 void    writeVTKfileFor2DscalarField (const char* fileName, const char* description, REAL** field, lattice *grid);
 void    writeVTKfileFor2DintegerField (const char* fileName, const char* description, char** field, lattice *grid);

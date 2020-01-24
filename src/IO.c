@@ -19,7 +19,7 @@ void print2Dfield (REAL** field, int sizeX, int sizeY)
 	return;
 }
 
-void write2Dfield (const char* fileName, REAL** field, size_t sizeX, size_t sizeY, const char *mode)
+void write2Dfield (const char* fileName, REAL** field, size_t sizeX, size_t sizeY, size_t offX, size_t offY, const char *mode)
 {
 	if (field == NULL)
 	{
@@ -36,10 +36,25 @@ void write2Dfield (const char* fileName, REAL** field, size_t sizeX, size_t size
 	fwrite(&sizeY,sizeof(size_t),1,out);
 	for (size_t i = 0; i < sizeX; i++)
 	{
-		fwrite(field[i],sizeof(REAL),sizeY,out);
+		fwrite(field[i+offX]+offY,sizeof(REAL),sizeY,out);
 	}
 	fclose(out);
 	return;
+}
+
+int read2Dfield (FILE *in, REAL **field, size_t offX, size_t offY)
+{
+	if (!in || !field)
+		return -1;
+	size_t size[2];
+	if (fread(size,sizeof(size_t),2,in) < 2)
+		return -1;
+	for (size_t k = 0; k < size[0]; k++) /* Loop over lines */
+	{
+		if (fread(field[k+offX]+offY,sizeof(REAL),size[1],in) != size[1])
+			return -1;
+	}
+	return 1;
 }
 
 void writeVTKfileFor2DintegerField (const char* fileName, const char* description, char **field, lattice *grid)
@@ -498,17 +513,17 @@ int dumpFields (MPI_Comm Region, REAL **U, REAL **V, REAL **P, lattice *grid, in
 	sprintf(vFile,"V%i",n);
 	if (rank > 0)
 		MPI_Recv(&send,1,MPI_INT,rank-1,WRITE + 0, Region, &st);
-	write2Dfield(pFile,P,grid->deli+2,grid->delj+2,mode);
+	write2Dfield(pFile,P,grid->deli,grid->delj,1,1,mode);
 	if (rank+1 != size)
 		MPI_Send(&send,0,MPI_INT,rank+1,WRITE + 0, Region);
 	if (rank > 0)
 		MPI_Recv(&send,0,MPI_INT,rank-1,WRITE + 1,Region,&st);
-	write2Dfield(uFile,U,grid->deli+3,grid->delj+2,mode);
+	write2Dfield(uFile,U,grid->deli+1,grid->delj+1,1,0,mode);
 	if (rank+1 != size)
 		MPI_Send(&send,0,MPI_INT,rank+1,WRITE + 1, Region);
 	if (rank > 0)
 		MPI_Recv(&send,0,MPI_INT,rank-1,WRITE + 2,Region,&st);
-	write2Dfield(vFile,V,grid->deli+2,grid->delj+3,mode);
+	write2Dfield(vFile,V,grid->deli+1,grid->delj+1,0,1,mode);
 	if (rank+1 != size)
 		MPI_Send(&send,0,MPI_INT,rank+1,WRITE + 2,Region);
 	return send;
@@ -519,7 +534,6 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
 	if (files <= rank)
 		return;
 	char pFile[32], uFile[32], vFile[32];
-	size_t size[2];
 	FILE *PF, *UF, *VF;
 	REAL **U, **V, **P;
 	initUVP(&U,&V,&P,grid->imax,grid->jmax,NULL);
@@ -542,26 +556,14 @@ void translateBinary (MPI_Comm Region, lattice *grid, int files, int rank, int *
 		PF = fopen(pFile,"rb");
 		UF = fopen(uFile,"rb");
 		VF = fopen(vFile,"rb");
-		if (!PF || !UF || !VF)
-			continue;
-		for (int j = 0; j < nproc; j++) /* Loop over matrices */
+		for (int j = 0; j < nproc; j++) /* Loop over sub-matrices */
 		{
-			if (fread(size,sizeof(size_t),2,PF) < 2)
-			{
-				printf("Could not read size. Skipping file %i...\n",i);
-				break;
-			}
-			for (size_t k = 0; k < size[0]; k++) /* Loop over lknes */
-			{
-				if (fread(&(P[k+il[j]][jb[j]]),sizeof(REAL),size[1],PF) != size[1])
-					break;
-				if (fread(&(U[k+il[j]][jb[j]]),sizeof(REAL),size[1],UF) != size[1])
-					break;
-				if (fread(&(V[k+il[j]][jb[j]]),sizeof(REAL),size[1]+1,VF) != size[1]+1)
-					break;
-			}
-			if (fread(&(U[size[0]+il[j]][jb[j]]),sizeof(REAL),size[1],UF) != size[1])
-				break;
+			if (read2Dfield(PF,P,il[j]+1,jb[j]+1) < 0)
+				printf("Skipping file %s...\n",pFile);
+			if (read2Dfield(VF,V,il[j],jb[j]+1) < 0)
+				printf("Skipping file %s...\n",uFile);
+			if (read2Dfield(UF,U,il[j]+1,jb[j]) < 0)
+				printf("Skipping file %s...\n",vFile);
 		}
 		fclose(PF);
 		fclose(UF);

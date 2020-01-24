@@ -18,7 +18,8 @@ class Setup : public ::testing::Test {
 			Region = createCommGrid(&rank,dims);
 
 			grid.imax = grid.jmax = 10;
-			grid.delx = grid.dely = 0.1;
+			grid.delx = 0.2;
+			grid.dely = 0.1;
 			splitRegion(Region,rank,dims,&grid);
 
 			bCond = createBoundCond(NOSLIP,OUTFLOW,FREESLIP,NOSLIP);
@@ -35,10 +36,10 @@ int cmpFlags (char **FLAG, int ib, int jb)
 {
 	if (ib <= 0 || jb <= 0)
 		return 1;
-	for (int j = 0; j < jb; j++)
+	for (int j = 1; j < jb; j++)
 		if (FLAG[ib][j] != (C_B | B_O))
 			return 0;
-	for (int i = 0; i < ib; i++)
+	for (int i = 1; i < ib; i++)
 		if (FLAG[i][jb] != (C_B | B_N))
 			return 0;
 	if (FLAG[ib][jb] != (C_B | B_N | B_O))
@@ -59,15 +60,14 @@ TEST_F(Setup, Filling)
 	for (int i = 0; i < grid.deli; i++)
 		for (int j = 0; j < grid.delj; j++)
 			diff += sqr(U[i][j]-1.25);
-	EXPECT_LE(diff,1e-10);
 	destroy2Dfield((void**)U,grid.deli);
+	EXPECT_LE(diff,1e-10);
 }
 
 TEST_F(Setup, Boundary)
 {
 	REAL **U = nullptr, **V = nullptr, **P = nullptr;
 	REAL init[3] = {1.0,1.0,1.0};
-	initUVP(&U,&V,&P,grid.imax,grid.jmax,init);
 	initFlags("Step",bCond.FLAG,&grid,Region);
 	int ib = grid.imax/2-grid.il, jb = grid.jmax/2-grid.jb;
 	if (ib > grid.deli)
@@ -75,6 +75,7 @@ TEST_F(Setup, Boundary)
 	if (jb > grid.delj)
 		jb = grid.delj;
 	ASSERT_TRUE(cmpFlags(bCond.FLAG,ib,jb));
+	initUVP(&U,&V,&P,grid.imax,grid.jmax,init);
 
 	setBCond(U,V,&grid,&bCond);
 	setSpecBCond(U,V,&grid,"Step");
@@ -102,13 +103,11 @@ TEST_F(Setup, IO)
 
 	int rank;
 	MPI_Comm_rank(Region,&rank);
-	if (rank != 0)
-		writeVTKfileFor2DvectorField(OUT_FILE,"momentumfield",U,V,&grid);
-	MPI_Barrier(Region);
-
-	EXPECT_EQ(system("diff -q MomentumField_0.vtk " OUT_FILE),0);
+	writeVTKfileFor2DvectorField(OUT_FILE,"momentumfield",U,V,&grid);
 
 	destroy2Dfield((void**)U,grid.deli+3);
 	destroy2Dfield((void**)V,grid.deli+2);
 	destroy2Dfield((void**)P,grid.deli+2);
+
+	EXPECT_EQ(system("diff -q MomentumField_0.vtk " OUT_FILE),0);
 }

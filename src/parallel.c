@@ -55,17 +55,17 @@ void exchangeMat (REAL **mat, int offx, int offy, REAL *buf, lattice *grid, MPI_
 	int ly = grid->delj+2*offy - (offy==2);
 	/* Top and bottom */
 	MPI_Cart_shift(Region,0,1,&prev,&next);
-	if (coords[0]%2 == 1 && prev != -1)
+	if (coords[0]%2 == 1 && prev >= 0)
 		MPI_Sendrecv(mat[offx],ly,MPI_DOUBLE,prev,101,mat[0],ly,MPI_DOUBLE,prev,101,Region,&st);
-	else if (coords[0]%2 == 0 && next != -1)
+	else if (coords[0]%2 == 0 && next >= 0)
 		MPI_Sendrecv(mat[lx-offx-1],ly,MPI_DOUBLE,next,101,mat[lx-offx],ly,MPI_DOUBLE,next,101,Region,&st);
-	if (coords[0]%2 == 0 && prev != -1)
+	if (coords[0]%2 == 0 && prev >= 0)
 		MPI_Sendrecv(mat[offx],ly,MPI_DOUBLE,prev,102,mat[0],ly,MPI_DOUBLE,prev,102,Region,&st);
-	else if (coords[0]%2 == 1 && next != -1)
+	else if (coords[0]%2 == 1 && next >= 0)
 		MPI_Sendrecv(mat[lx-offx-1],ly,MPI_DOUBLE,next,102,mat[lx-offx],ly,MPI_DOUBLE,next,102,Region,&st);
 	/* Left and right */
 	MPI_Cart_shift(Region,1,1,&prev,&next);
-	if (prev != -1)
+	if (prev >= 0)
 	{
 		for (int i = 0; i < lx; i++)
 			buf[i] = mat[i][0];
@@ -73,7 +73,7 @@ void exchangeMat (REAL **mat, int offx, int offy, REAL *buf, lattice *grid, MPI_
 		for (int i = 0; i < lx; i++)
 			mat[i][ly-1] = buf[i];
 	}
-	if (next != -1)
+	if (next >= 0)
 	{
 		for (int i = 0; i < lx; i++)
 			buf[i] = mat[i][ly-offx];
@@ -94,13 +94,13 @@ void exchangeIntMat (char **mat, char *buf, lattice *grid, MPI_Comm Region)
 	int ly = grid->delj+2;
 	/* Top and bottom */
 	MPI_Cart_shift(Region,0,1,&prev,&next);
-	if (prev != -1)
+	if (prev >= 0)
 		MPI_Sendrecv(mat[1],ly,MPI_CHAR,prev,101,mat[0],ly,MPI_CHAR,prev,102,Region,&st);
-	if (next != -1)
+	if (next >= 0)
 		MPI_Sendrecv(mat[grid->deli],ly,MPI_CHAR,next,102,mat[lx-1],ly,MPI_CHAR,next,101,Region,&st);
 	/* Left and right */
 	MPI_Cart_shift(Region,1,1,&prev,&next);
-	if (prev != -1)
+	if (prev >= 0)
 	{
 		for (int i = 0; i < lx; i++)
 			buf[i] = mat[i][0];
@@ -108,7 +108,7 @@ void exchangeIntMat (char **mat, char *buf, lattice *grid, MPI_Comm Region)
 		for (int i = 0; i < lx; i++)
 			mat[i][ly-1] = buf[i];
 	}
-	if (next != -1)
+	if (next >= 0)
 	{
 		for (int i = 0; i < lx; i++)
 			buf[i] = mat[i][grid->delj];
