@@ -34,6 +34,8 @@ lattice runSimulation (REAL ***U, REAL ***V, REAL ***P, char *scene, char *param
 	if (bCond.FLAG == NULL)
 		bCond.FLAG = create2DIntegerField(grid.deli,grid.delj);
 	initFlags(scene,bCond.FLAG,&grid,Region);
+	if (strcmp(scene, "Step") == 0 || strcmp(scene,"Von Karman") == 0)
+		scene = "Tunnel";
 
 	/* Run the simulation! */
 	int files = simulateFluid(*U,*V,*P,&bCond,&grid,&sim,Region,t_end,scene,output);

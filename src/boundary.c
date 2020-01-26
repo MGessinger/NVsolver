@@ -14,7 +14,7 @@ bndCond createBoundCond (int wl, int wr, int wt, int wb)
 void applyPbndCond (REAL **P, lattice *grid, char **FLAG)
 {
 	/* Apply boundary conditions for the pressure field */
-	short flag = 0;
+	char flag = 0;
 	/* First set values on the actual boundary of the region */
 	if (grid->edges & LEFT)
 		for (int j = 0; j <= grid->delj; j++)
@@ -96,7 +96,7 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 			U[grid->deli+1][j] = (bCond->wr == OUTFLOW) ? U[grid->deli][j] : 0;
 			V[grid->deli+1][j+1] = (bCond->wr == NOSLIP) ? -V[grid->deli][j+1] : V[grid->deli][j+1];
 		}
-	short flag;
+	char flag;
 	/* Boundary condtions on obstacles */
 	for (int i = 1; i <= grid->deli; i++)
 		for (int j = 1; j <= grid->delj; j++)
@@ -171,20 +171,7 @@ void setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem)
 		}
 		return;
 	}
-	if (strcmp(problem,"Step") == 0)
-	{
-		if (!(grid->edges & LEFT))
-			return;
-		for (int j = 1; j <= grid->delj; j++)
-		{
-			if (j + grid->jb < grid->jmax/2)
-				continue;
-			U[1][j] = 1;
-			V[0][j+1] = -V[1][j+1];
-		}
-		return;
-	}
-	if (strcmp(problem,"Tunnel") == 0 || strcmp(problem,"Von Karman") == 0)
+	if (strcmp(problem,"Tunnel") == 0)
 	{
 		if (!(grid->edges & LEFT))
 			return;
@@ -222,11 +209,11 @@ void initFlags (const char *problem, char **FLAG, lattice *grid, MPI_Comm Region
 	}
 	else if (strcmp(problem,"Von Karman") == 0)
 	{
-		for (int i = 1; i < grid->delj+1; i++)
+		for (int i = 1; i < grid->delj+2; i++)
 		{
-			if (i + grid->il < grid->jmax/3)
+			if (i + grid->il < grid->jmax/3+1)
 				continue;
-			if (i + grid->il >= 2*grid->jmax/3)
+			if (i + grid->il >= 2*grid->jmax/3+1)
 				break;
 			for (int j = -(grid->jmax/4)/2; j <= (grid->jmax/4)/2; j++)
 			{

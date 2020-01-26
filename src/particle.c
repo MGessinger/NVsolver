@@ -40,7 +40,7 @@ void ParticleSeed (particle *parts, REAL posx1, REAL posx2, REAL posy1, REAL pos
 	return;
 }
 
-void ParticleVelocity (REAL **U, REAL **V, particle *parts, lattice *grid, short **FLAG, int partcount)
+void ParticleVelocity (REAL **U, REAL **V, particle *parts, lattice *grid, char **FLAG, int partcount)
 {
 	int i,j;
 	REAL x2, y2;

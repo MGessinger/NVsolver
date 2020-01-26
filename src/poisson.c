@@ -133,20 +133,20 @@ REAL delUVbyDelZ (REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL delz
 	return (duvdz + alpha*correctionTerm)/delz;
 }
 
-REAL delFSqrdByDelZ (REAL **F, int i, int j, int z, REAL alpha, REAL delz)
+REAL delXSqrdByDelZ (REAL **X, int i, int j, int z, REAL alpha, REAL delz)
 {
 	int dx = (z == DERIVE_BY_X) ? 1 : 0;
 	int dy = (z == DERIVE_BY_Y) ? 1 : 0;
 	delz *= 4;
-	REAL df2dz = sqr(F[i][j] + F[i+dx][j+dy]) - sqr(F[i-dx][j-dy] + F[i][j]);
+	REAL df2dz = sqr(X[i][j] + X[i+dx][j+dy]) - sqr(X[i-dx][j-dy] + X[i][j]);
 	if (alpha == 0)
 		return df2dz/delz;
-	REAL correctionTerm = sqr(F[i][j]) - sqr(F[i+dx][j+dy]);
-	if (F[i+dx][j+dy] < -F[i][j])
+	REAL correctionTerm = sqr(X[i][j]) - sqr(X[i+dx][j+dy]);
+	if (X[i+dx][j+dy] < -X[i][j])
 		correctionTerm *= -1;
 	df2dz += alpha*correctionTerm;
-	correctionTerm = sqr(F[i-dx][j-dy]) - sqr(F[i][j]);
-	if (F[i-dx][j-dy] < - F[i][j])
+	correctionTerm = sqr(X[i-dx][j-dy]) - sqr(X[i][j]);
+	if (X[i-dx][j-dy] < - X[i][j])
 		correctionTerm *= -1;
 	df2dz -= alpha*correctionTerm;
 	return df2dz/delz;
@@ -174,7 +174,7 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 				d2uy = (U[i+1][j+1] - 2*U[i+1][j] + U[i+1][j-1])/sqr(grid->dely);
 
 				duvy = delUVbyDelZ(U,V,i,j,DERIVE_BY_Y,simulation->alpha,grid->dely);
-				du2x = delFSqrdByDelZ(U,i+1,j,DERIVE_BY_X,simulation->alpha,grid->delx);
+				du2x = delXSqrdByDelZ(U,i+1,j,DERIVE_BY_X,simulation->alpha,grid->delx);
 
 				F[i][j] = U[i+1][j] + delt*((d2ux+d2uy)/simulation->Re - du2x - duvy + simulation->GX);
 
@@ -182,7 +182,7 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 				d2vy = (V[i][j+2] - 2*V[i][j+1] + V[i][j])/sqr(grid->dely);
 
 				duvx = delUVbyDelZ(U,V,i,j,DERIVE_BY_X,simulation->alpha,grid->delx);
-				dv2y = delFSqrdByDelZ(V,i,j+1,DERIVE_BY_Y,simulation->alpha,grid->dely);
+				dv2y = delXSqrdByDelZ(V,i,j+1,DERIVE_BY_Y,simulation->alpha,grid->dely);
 
 				G[i][j] = V[i][j+1] + delt*((d2vx+d2vy)/simulation->Re - dv2y - duvx + simulation->GY);
 				continue;
@@ -190,7 +190,7 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 			if (flag & B_N)       /* North */
 				G[i][j] = V[i][j+1];
 			else if (flag & B_S)  /* South */
-				G[i-1][j] = V[i-1][j+1];
+				G[i][j-1] = V[i-1][j];
 			if (flag & B_O)       /* East */
 				F[i][j] = U[i+1][j];
 			else if (flag & B_W)  /* West */
