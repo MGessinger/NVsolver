@@ -101,9 +101,12 @@ TEST_F(Setup, IO)
 	dumpFields(Region,U,V,P,&grid,0);
 	translateBinary(Region,&grid,1,0,dims);
 
-	int rank;
-	MPI_Comm_rank(Region,&rank);
+	int size;
+	MPI_Comm_size(Region,&size);
+	if (size > 1)
+		return;
 	writeVTKfileFor2DvectorField(OUT_FILE,"momentumfield",U,V,&grid);
+	MPI_Barrier(Region);
 
 	destroy2Dfield((void**)U,grid.deli+3);
 	destroy2Dfield((void**)V,grid.deli+2);

@@ -5,12 +5,17 @@ int main (int argc, char **argv)
 	MPI_Init(&argc,&argv);
 	if (argc < 3 || argv[1][0] == '-')
 	{
-		printf("Usage: simulator <scene>\n"
-				"                 [-p\"parameter_file\"]\n"
-				"                 [-i\"image_file]\"\n"
-				"                 [number_of_frames]\n");
-		printf("When specifying both an image and a parameter file, "
-				"the sizes specified from the image take precedence!\n");
+		int rank;
+		MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+		if (rank == 0)
+		{
+			printf("Usage: simulator <scene>\n"
+					"                 [-p\"parameter_file\"]\n"
+					"                 [-i\"image_file]\"\n"
+					"                 [number_of_frames]\n");
+			printf("When specifying both an image and a parameter file, "
+					"the sizes specified from the image take precedence!\n");
+		}
 		MPI_Finalize();
 		return 0;
 	}

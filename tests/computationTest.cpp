@@ -37,6 +37,51 @@ static REAL fex (REAL x, REAL y)
 	return cos(2*M_PI*x)*cos(2*M_PI*y);
 }
 
+TEST_F(Computation, Exchange)
+{
+	int size, rank, coords[2];
+	MPI_Comm_size(Region,&size);
+	if (size <= 1)
+		return;
+	MPI_Comm_rank(Region,&rank);
+	MPI_Cart_coords(Region,rank,2,coords);
+	REAL **P = create2Dfield(grid.deli+2,grid.delj+2);
+	fill2Dfield((REAL)coords[0]+coords[1]*100,P,grid.deli+2,grid.delj+2);
+
+	int max = grid.deli;
+	if (grid.delj > max)
+		max = grid.delj;
+	REAL buf[max+2];
+	exchangeMat(P,1,1,buf,&grid,Region);
+
+	char outStr[64];
+	sprintf(outStr,"%i",rank);
+	FILE *out = fopen(outStr,"w");
+	fprintf(out,"(%i,%i)\n",coords[0],coords[1]);
+	for (int j = grid.delj+1; j >= 0; j--)
+	{
+		for (int i =  0; i < grid.deli+2; i++)
+			fprintf(out,"%i,",(int)P[i][j]);
+		fprintf(out,"\n");
+	}
+	fclose(out);
+
+	REAL err;
+	for (int j = 1; j <= grid.delj; j++)
+	{
+		if (coords[0] > 0)
+			err += sqr(P[0][j] - (100*coords[1])-(coords[0]-1));
+	}
+	for (int i = 1; i <= grid.deli; i++)
+	{
+		if (coords[1] > 0)
+			err += sqr(P[i][0]-(100*(coords[1]-1))-coords[0]);
+	}
+	destroy2Dfield((void**)P,grid.deli+2);
+
+	EXPECT_LE(err,0.1);
+}
+
 TEST_F(Computation, Timestep)
 {
 	REAL **U = nullptr, **V = nullptr, **P = nullptr;
@@ -63,7 +108,7 @@ TEST_F(Computation, PoissonSolver)
 	char **FLAG = create2DIntegerField(grid.deli,grid.delj);
 	for (int i = 0; i < grid.deli; i++)
 		for (int j = 0; j < grid.delj; j++)
-			rhs[i][j] = -frhs((i+0.5)*grid.delx,(j+0.5)*grid.dely);
+			rhs[i][j] = -frhs((i+grid.il+0.5)*grid.delx,(j+grid.jb+0.5)*grid.dely);
 
 	fluidSim sim;
 	sim.eps = 1e-5;
@@ -73,7 +118,7 @@ TEST_F(Computation, PoissonSolver)
 	printf("Performed %i iterations!\n",solveSORforPoisson(P,rhs,FLAG,&sim,&grid,Region));
 	for (int i = 1; i < grid.deli+1; i++)
 		for (int j = 1; j <= grid.delj+1; j++)
-			err += sqr(P[i][j] - fex((i-0.5)*grid.delx,(j-0.5)*grid.dely));
+			err += sqr(P[i][j] - fex((i+grid.il-0.5)*grid.delx,(j+grid.jb-0.5)*grid.dely));
 	printf("The remaining error in L2 was %g.\n",err/sqr(30));
 	destroy2Dfield((void**)rhs,grid.deli);
 	destroy2Dfield((void**)P,grid.deli+2);
