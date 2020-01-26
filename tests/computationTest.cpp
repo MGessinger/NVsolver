@@ -51,20 +51,8 @@ TEST_F(Computation, Exchange)
 	int max = grid.deli;
 	if (grid.delj > max)
 		max = grid.delj;
-	REAL buf[max+2];
-	exchangeMat(P,1,1,buf,&grid,Region);
-
-	char outStr[64];
-	sprintf(outStr,"%i",rank);
-	FILE *out = fopen(outStr,"w");
-	fprintf(out,"(%i,%i)\n",coords[0],coords[1]);
-	for (int j = grid.delj+1; j >= 0; j--)
-	{
-		for (int i =  0; i < grid.deli+2; i++)
-			fprintf(out,"%i,",(int)P[i][j]);
-		fprintf(out,"\n");
-	}
-	fclose(out);
+	REAL buf1[max+2], buf2[max+2];
+	exchangeMat(P,1,1,buf1,buf2,&grid,Region);
 
 	REAL err;
 	for (int j = 1; j <= grid.delj; j++)
@@ -115,7 +103,8 @@ TEST_F(Computation, PoissonSolver)
 	sim.omega = 1.7;
 	sim.itmax = 5000;
 
-	printf("Performed %i iterations!\n",solveSORforPoisson(P,rhs,FLAG,&sim,&grid,Region));
+	REAL buf1[grid.deli+2], buf2[grid.deli+2];
+	printf("Performed %i iterations!\n",solveSORforPoisson(P,rhs,FLAG,buf1,buf2,&sim,&grid,Region));
 	for (int i = 1; i < grid.deli+1; i++)
 		for (int j = 1; j <= grid.delj+1; j++)
 			err += sqr(P[i][j] - fex((i+grid.il-0.5)*grid.delx,(j+grid.jb-0.5)*grid.dely));

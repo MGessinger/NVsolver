@@ -68,7 +68,8 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 	n = grid->deli;
 	if (grid->delj > n)
 		n = grid->delj;
-	REAL buf[n+2];
+	REAL buf1[n+3], buf2[n+3];
+	n = 0;
 	if (opt >= OUTPUT)
 		del_vec = t_end/(opt/OUTPUT);
 	else
@@ -76,7 +77,6 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 	/* Begin the simulation */
 	if (rank == 0)
 		printf("Computing Reynoldsnumber %lg.\n",sim->Re);
-	n = 0;
 	for (REAL time = 0; time <= t_end; time += delt)
 	{
 		if ((rank == 0) && (opt & PRINT))
@@ -88,11 +88,11 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 		compRHS(F,G,RHS,bCond->FLAG,grid,delt);
 
 		/* Solve the Poisson Equation */
-		solveSORforPoisson(P,RHS,bCond->FLAG,sim,grid, Region);
+		solveSORforPoisson(P,RHS,bCond->FLAG,buf1,buf2,sim,grid, Region);
 		/* Update U and V through F,G and P */
 		adaptUV(U,V,P,F,G,delt,bCond->FLAG,grid);
-		exchangeMat(U,2,1,buf,grid,Region);
-		exchangeMat(V,1,2,buf,grid,Region);
+		exchangeMat(U,2,1,buf1,buf2,grid,Region);
+		exchangeMat(V,1,2,buf1,buf2,grid,Region);
 		dt = compDelt(grid,U,V,sim);
 
 		if (time > del_vec*(n+1))

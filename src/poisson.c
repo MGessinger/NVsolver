@@ -1,6 +1,7 @@
 #include "types.h"
 
 int solveSORforPoisson (REAL **p, REAL **rhs, char **FLAG,
+		REAL *buf1, REAL *buf2,
 		fluidSim *sim, lattice *grid, MPI_Comm Region)
 {
 	/* Use a SOR algorithm to solve the poisson equation */
@@ -9,7 +10,6 @@ int solveSORforPoisson (REAL **p, REAL **rhs, char **FLAG,
 	REAL invXWidthSqrd = 1/sqr(grid->delx);
 	REAL invYWidthSqrd = 1/sqr(grid->dely);
 	REAL scale = sim->omega/(2*(invXWidthSqrd+invYWidthSqrd));
-	REAL buf[grid->deli + grid->delj + 2];
 	/* Count the number of fluid cells */
 	int numberOfCells = 0;
 	for (i = 1; i <= grid->deli; i++)
@@ -34,7 +34,7 @@ int solveSORforPoisson (REAL **p, REAL **rhs, char **FLAG,
 					- rhs[i-1][j-1];
 				p[i][j] = scale*temporary + (1-sim->omega)*p[i][j];
 			}
-		exchangeMat(p,1,1,buf,grid,Region);
+		exchangeMat(p,1,1,buf1,buf2,grid,Region);
 		error = 0;
 		/* Calculate the residue with respect to the rhs field */
 		for (i = 1; i <= grid->deli; i++)

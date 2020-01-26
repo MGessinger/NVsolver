@@ -7,7 +7,7 @@
 #define DERIVE_BY_X (1)
 #define DERIVE_BY_Y (2)
 
-int     solveSORforPoisson (REAL **p, REAL **rhs, char **FLAG, fluidSim *sim, lattice *grid, MPI_Comm Region);
+int     solveSORforPoisson (REAL **p, REAL **rhs, char **FLAG, REAL *buf1, REAL *buf2, fluidSim *sim, lattice *grid, MPI_Comm Region);
 /* Solve the Poisson equation with an SOR algorithm, optimized for this use case */
 
 REAL    compDelt (lattice *grid, REAL **U, REAL **V, fluidSim *sim);

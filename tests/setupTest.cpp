@@ -34,16 +34,14 @@ class Setup : public ::testing::Test {
 
 int cmpFlags (char **FLAG, int ib, int jb)
 {
-	if (ib <= 0 || jb <= 0)
+	if (ib < 0 || jb < 0)
 		return 1;
-	for (int j = 1; j < jb; j++)
-		if (FLAG[ib][j] != (C_B | B_O))
+	for (int j = 1; j <= jb; j++)
+		if (FLAG[ib][j] & B_O == 0)
 			return 0;
-	for (int i = 1; i < ib; i++)
-		if (FLAG[i][jb] != (C_B | B_N))
+	for (int i = 1; i <= ib; i++)
+		if (FLAG[i][jb] & B_N == 0)
 			return 0;
-	if (FLAG[ib][jb] != (C_B | B_N | B_O))
-		return 0;
 	return 1;
 }
 
@@ -80,11 +78,11 @@ TEST_F(Setup, Boundary)
 	setBCond(U,V,&grid,&bCond);
 	setSpecBCond(U,V,&grid,"Step");
 	applyPbndCond(P,&grid,bCond.FLAG);
-
+/*
 	print2Dfield(U,grid.deli+3,grid.delj+2);
 	print2Dfield(V,grid.deli+2,grid.delj+3);
 	print2Dfield(P,grid.deli+2,grid.delj+2);
-
+*/
 	destroy2Dfield((void**)U,grid.deli+3);
 	destroy2Dfield((void**)V,grid.deli+2);
 	destroy2Dfield((void**)P,grid.deli+2);
@@ -93,7 +91,8 @@ TEST_F(Setup, Boundary)
 #define OUT_FILE "/home/matthias/Dokumente/Programming/Simulator/data/MomentumField.vtk"
 TEST_F(Setup, IO)
 {
-	int dims[2] = {1,1};
+	int dims[2], periods[2], coords[2];
+	MPI_Cart_get(Region,2,dims,periods,coords);
 	REAL **U = nullptr, **V = nullptr, **P = nullptr;
 	REAL init[3] = {1.7,0.773,2.1};
 	initUVP(&U,&V,&P,grid.imax,grid.jmax,init);
@@ -103,14 +102,14 @@ TEST_F(Setup, IO)
 
 	int size;
 	MPI_Comm_size(Region,&size);
-	if (size > 1)
-		return;
-	writeVTKfileFor2DvectorField(OUT_FILE,"momentumfield",U,V,&grid);
+	if (size == 1)
+		writeVTKfileFor2DvectorField(OUT_FILE,"momentumfield",U,V,&grid);
 	MPI_Barrier(Region);
 
 	destroy2Dfield((void**)U,grid.deli+3);
 	destroy2Dfield((void**)V,grid.deli+2);
 	destroy2Dfield((void**)P,grid.deli+2);
 
-	EXPECT_EQ(system("diff -q MomentumField_0.vtk " OUT_FILE),0);
+	if (size == 0)
+		EXPECT_EQ(system("diff -q MomentumField_0.vtk " OUT_FILE),0);
 }

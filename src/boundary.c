@@ -208,7 +208,7 @@ void initFlags (const char *problem, char **FLAG, lattice *grid, MPI_Comm Region
 		if (grid->imax < max)
 			max = grid->imax;
 		max = (max+2)/2;
-		for (int i = 0; i < grid->deli+1; i++)
+		for (int i = 0; i < grid->deli+2; i++)
 		{
 			if (i + grid->il >= max)
 				break;
@@ -242,23 +242,21 @@ void initFlags (const char *problem, char **FLAG, lattice *grid, MPI_Comm Region
 	int size = grid->deli+2;
 	if (grid->delj+2 > size)
 		size = grid->delj+2;
-	char buf[size];
-	exchangeIntMat(FLAG,buf,grid,Region);
+	char buf1[size], buf2[size];
+	exchangeIntMat(FLAG,buf1,buf2,grid,Region);
 	for (int i = 0; i < grid->deli+1; i++)
 	{
 		for (int j = 0; j < grid->delj+1; j++)
 		{
 			if (FLAG[i][j] == C_F)
 				continue;
-			int acti = i + grid->il;
-			int actj = j + grid->jb;
-			if ((actj+1) != grid->delj && FLAG[i][j+1] == C_F)
+			if ((j != grid->delj) && (FLAG[i][j+1] == C_F))
 				FLAG[i][j] |= B_N;
-			else if (actj != 0 && FLAG[i][j-1] == C_F)
+			else if ((j != 0) && (FLAG[i][j-1] == C_F))
 				FLAG[i][j] |= B_S;
-			if ((acti+1) != grid->delj && FLAG[i+1][j] == C_F)
+			if ((i != grid->delj) && (FLAG[i+1][j] == C_F))
 				FLAG[i][j] |= B_O;
-			else if (acti != 0 && FLAG[i-1][j] == C_F)
+			else if ((i != 0) && (FLAG[i-1][j] == C_F))
 				FLAG[i][j] |= B_W;
 		}
 	}
