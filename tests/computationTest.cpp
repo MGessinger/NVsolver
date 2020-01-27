@@ -12,6 +12,7 @@ class Computation : public ::testing::Test
 	protected:
 		lattice grid;
 		MPI_Comm Region;
+		REAL **U = nullptr, **V = nullptr, **P = nullptr;
 		virtual void SetUp ()
 		{
 			int rank, dims[2];
@@ -72,7 +73,6 @@ TEST_F(Computation, Exchange)
 
 TEST_F(Computation, Timestep)
 {
-	REAL **U = nullptr, **V = nullptr, **P = nullptr;
 	REAL init[3] = {0.3,0.4,0.5};
 	initUVP(&U,&V,&P,grid.deli,grid.delj,init);
 	fluidSim sim;
@@ -88,10 +88,48 @@ TEST_F(Computation, Timestep)
 	EXPECT_LE(delt-1.0/12,1e-4);
 }
 
+TEST_F(Computation, FG)
+{
+	REAL init[3] = {0.773,14.567,113.4};
+	initUVP(&U,&V,&P,grid.deli,grid.delj,init);
+	REAL **F = create2Dfield(grid.deli+1, grid.delj+1);
+	REAL **G = create2Dfield(grid.deli+1, grid.delj+1);
+	REAL **rhs = create2Dfield(grid.deli,grid.delj);
+	char **FLAG = create2DIntegerField(grid.deli,grid.delj);
+
+	fluidSim sim;
+	sim.Re = 1000;
+	sim.GX = 0;
+	sim.GY = 0;
+	sim.alpha = 0;
+	compFG(U,V,F,G,FLAG,0.5,&grid,&sim);
+	compRHS(F,G,rhs,FLAG,&grid,0.5);
+	REAL errF = 0, errG = 0, errRHS = 0;
+	for (int i = 1; i <= grid.deli; i++)
+		for (int j = 1; j <= grid.delj; j++)
+		{
+			errF += sqr(F[i-1][j] - U[i][j]);
+			errG += sqr(G[i][j-1] - V[i][j]);
+			errRHS += sqr(rhs[i-1][j-1]);
+		}
+
+	destroy2Dfield((void**)U,grid.deli+3);
+	destroy2Dfield((void**)V,grid.deli+2);
+	destroy2Dfield((void**)P,grid.deli+2);
+	destroy2Dfield((void**)F,grid.deli+1);
+	destroy2Dfield((void**)G,grid.deli+1);
+	destroy2Dfield((void**)rhs,grid.deli);
+	destroy2Dfield((void**)FLAG,grid.deli+2);
+
+	EXPECT_LE(errF,1e-4);
+	EXPECT_LE(errG,1e-4);
+	EXPECT_LE(errRHS,1e-4);
+}
+
 TEST_F(Computation, PoissonSolver)
 {
 	REAL err = 0;
-	REAL **P = create2Dfield(grid.deli+2,grid.delj+2);
+	P = create2Dfield(grid.deli+2,grid.delj+2);
 	REAL **rhs = create2Dfield(grid.deli,grid.delj);
 	char **FLAG = create2DIntegerField(grid.deli,grid.delj);
 	for (int i = 0; i < grid.deli; i++)

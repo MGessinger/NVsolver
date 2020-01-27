@@ -103,8 +103,8 @@ void adaptUV (REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
 		{
 			if (FLAG[i][j] != C_F)
 				continue;
-			U[i+1][j] = F[i][j] - facX*(P[i+1][j] - P[i][j]);
-			V[i][j+1] = G[i][j] - facY*(P[i][j+1] - P[i][j]);
+			U[i][j] = F[i-1][j] - facX*(P[i][j] - P[i-1][j]);
+			V[i][j] = G[i][j-1] - facY*(P[i][j] - P[i][j-1]);
 		}
 	return;
 }
@@ -161,7 +161,7 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 	REAL duvx, duvy;
 	short flag;
 	int i,j;
-	for (i = 1; i <= grid->deli; i++)
+	for (i = 0; i <= grid->deli; i++)
 	{
 		for (j = 1; j <= grid->delj; j++)
 		{
@@ -170,6 +170,8 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 				continue;
 			else if (flag == C_F) /* Pure fluid cells */
 			{
+				/* !! Notice: The index of F is shifted to match that of U! This computes the boundary condition of U!
+				 * Therefore there is no shift in i-direction here!! */
 				d2ux = (U[i+2][j] - 2*U[i+1][j] + U[i][j])/sqr(grid->delx);
 				d2uy = (U[i+1][j+1] - 2*U[i+1][j] + U[i+1][j-1])/sqr(grid->dely);
 
@@ -177,7 +179,24 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 				du2x = delXSqrdByDelZ(U,i+1,j,DERIVE_BY_X,simulation->alpha,grid->delx);
 
 				F[i][j] = U[i+1][j] + delt*((d2ux+d2uy)/simulation->Re - du2x - duvy + simulation->GX);
-
+				continue;
+			}
+			if (flag & B_O)       /* East */
+				F[i][j] = U[i+1][j];
+			else if (flag & B_W)  /* West */
+				F[i-1][j] = U[i][j];
+		}
+	}
+	for (i = 1; i <= grid->deli; i++)
+	{
+		for (j = 0; j <= grid->delj; j++)
+		{
+			flag = FLAG[i][j];
+			if (flag == C_B)      /* Boundary cells with no neighboring fluid cells */
+				continue;
+			else if (flag == C_F) /* Pure fluid cells */
+			{
+				/* A similar shift holds for G, except in the j-direction! */
 				d2vx = (V[i+1][j+1] - 2*V[i][j+1] + V[i-1][j+1])/sqr(grid->delx);
 				d2vy = (V[i][j+2] - 2*V[i][j+1] + V[i][j])/sqr(grid->dely);
 
@@ -191,30 +210,26 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 				G[i][j] = V[i][j+1];
 			else if (flag & B_S)  /* South */
 				G[i][j-1] = V[i-1][j];
-			if (flag & B_O)       /* East */
-				F[i][j] = U[i+1][j];
-			else if (flag & B_W)  /* West */
-				F[i-1][j] = U[i][j];
 		}
 	}
 	if (grid->edges & LEFT)
 	{
-		for (j = 1; j<= grid->delj; j++)
+		for (j = 0; j < grid->delj+1; j++)
 			F[0][j] = U[1][j];
 	}
 	if (grid->edges & RIGHT)
 	{
-		for (j = 1; j<= grid->delj; j++)
+		for (j = 0; j < grid->delj+1; j++)
 			F[grid->deli][j] = U[grid->deli+1][j];
 	}
 	if (grid->edges & BOTTOM)
 	{
-		for (i = 1; i <= grid->deli; i++)
+		for (i = 0; i < grid->deli+1; i++)
 			G[i][0] = V[i][1];
 	}
 	if (grid->edges & TOP)
 	{
-		for (i = 1; i <= grid->deli; i++)
+		for (i = 0; i < grid->deli+1; i++)
 			G[i][grid->delj] = V[i][grid->delj+1];
 	}
 	return;
