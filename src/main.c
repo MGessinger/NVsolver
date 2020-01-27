@@ -1,5 +1,16 @@
 #include "types.h"
 
+void writeHorizontal (REAL **U, int sizeX, int sizeY, char *fileName)
+{
+	FILE *out = fopen(fileName,"w");
+	fprintf(out,"[");
+	for (int j = 1; j <= sizeY; j++)
+		fprintf(out,"%g,",U[2+sizeX/2][j]);
+	fprintf(out,"]");
+	fclose(out);
+	return;
+}
+
 int main (int argc, char **argv)
 {
 	MPI_Init(&argc,&argv);
@@ -48,6 +59,7 @@ int main (int argc, char **argv)
 		}
 	}
 	lattice grid = runSimulation(&U,&V,&P,argv[1],paramFile,imageFile,output);
+	//writeHorizontal(U,grid.deli,grid.delj,"hor.dat");
 	/* Destroy simulated grids */
 	destroy2Dfield((void**)U,grid.deli+3);
 	destroy2Dfield((void**)V,grid.deli+2);

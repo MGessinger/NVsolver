@@ -90,7 +90,7 @@ TEST_F(Computation, Timestep)
 
 TEST_F(Computation, FG)
 {
-	REAL init[3] = {0.773,14.567,113.4};
+	REAL init[3] = {0.773,14.567,0};
 	initUVP(&U,&V,&P,grid.deli,grid.delj,init);
 	REAL **F = create2Dfield(grid.deli+1, grid.delj+1);
 	REAL **G = create2Dfield(grid.deli+1, grid.delj+1);
@@ -129,6 +129,7 @@ TEST_F(Computation, FG)
 TEST_F(Computation, PoissonSolver)
 {
 	REAL err = 0;
+	int size = grid.deli*grid.delj;
 	P = create2Dfield(grid.deli+2,grid.delj+2);
 	REAL **rhs = create2Dfield(grid.deli,grid.delj);
 	char **FLAG = create2DIntegerField(grid.deli,grid.delj);
@@ -146,7 +147,7 @@ TEST_F(Computation, PoissonSolver)
 	for (int i = 1; i < grid.deli+1; i++)
 		for (int j = 1; j <= grid.delj+1; j++)
 			err += sqr(P[i][j] - fex((i+grid.il-0.5)*grid.delx,(j+grid.jb-0.5)*grid.dely));
-	printf("The remaining error in L2 was %g.\n",err/sqr(30));
+	printf("The remaining error in L2 was %g.\n",err/sqr(size));
 	destroy2Dfield((void**)rhs,grid.deli);
 	destroy2Dfield((void**)P,grid.deli+2);
 	destroy2Dfield((void**)FLAG,grid.deli+2);
