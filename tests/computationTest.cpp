@@ -103,7 +103,7 @@ TEST_F(Computation, FG)
 	sim.GY = 0;
 	sim.alpha = 0;
 	compFG(U,V,F,G,FLAG,0.5,&grid,&sim);
-	compRHS(F,G,rhs,FLAG,&grid,0.5);
+	compRHS(F,G,rhs,&grid,0.5);
 	REAL errF = 0, errG = 0, errRHS = 0;
 	for (int i = 1; i <= grid.deli; i++)
 		for (int j = 1; j <= grid.delj; j++)

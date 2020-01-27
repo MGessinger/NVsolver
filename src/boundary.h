@@ -9,6 +9,8 @@
 #define B_O (0x04)
 #define B_S (0x08)
 #define B_W (0x10)
+#define B_NS (0x0A)
+#define B_OW (0x14)
 
 #define NOSLIP   (0u)
 #define FREESLIP (1u)

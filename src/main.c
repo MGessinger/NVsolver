@@ -22,13 +22,18 @@ int main (int argc, char **argv)
 	REAL **U = NULL, **V = NULL, **P = NULL;
 	char *paramFile = NULL;
 	char *imageFile = NULL;
+	char *scene = NULL;
 	int output = SILENT;
 
-	for (int i = 2; i < argc; i++)
+	for (int i = 1; i < argc; i++)
 	{
 		if (argv[i][0] != '-')
 		{
-			output |= atoi(argv[i])*OUTPUT;
+			int out = strtol(argv[i],&scene,0);
+			if (scene[0] == '\0')
+				output |= out*OUTPUT;
+			else
+				scene = argv[i];
 			continue;
 		}
 		switch (argv[i][1])
@@ -47,7 +52,7 @@ int main (int argc, char **argv)
 				break;
 		}
 	}
-	lattice grid = runSimulation(&U,&V,&P,argv[1],paramFile,imageFile,output);
+	lattice grid = runSimulation(&U,&V,&P,scene,paramFile,imageFile,output);
 	/* Destroy simulated grids */
 	destroy2Dfield((void**)U,grid.deli+3);
 	destroy2Dfield((void**)V,grid.deli+2);

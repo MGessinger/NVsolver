@@ -14,10 +14,7 @@ int solveSORforPoisson (REAL **p, REAL **rhs, char **FLAG,
 	int numberOfCells = 0;
 	for (i = 1; i <= grid->deli; i++)
 		for (j = 1; j <= grid->delj; j++)
-		{
-			if (FLAG[i][j] == C_F)
-				numberOfCells++;
-		}
+			numberOfCells += (FLAG[i][j] == C_F);
 	temporary = eps*numberOfCells;
 	MPI_Allreduce(&temporary,&eps,1,MPI_DOUBLE,MPI_SUM,Region);
 	do {
@@ -78,15 +75,13 @@ REAL compDelt (lattice *grid, REAL **U, REAL **V, fluidSim *sim)
 	return dt;
 }
 
-void compRHS (REAL **F, REAL **G, REAL **RHS, char **FLAG, lattice *grid, REAL delt)
+void compRHS (REAL **F, REAL **G, REAL **RHS, lattice *grid, REAL delt)
 {
 	REAL facX = delt*(grid->delx);
 	REAL facY = delt*(grid->dely);
 	for (int i = 1; i <= grid->deli; i++)
 		for (int j = 1; j <= grid->delj; j++)
 		{
-			if (FLAG[i][j] != C_F)
-				continue;
 			RHS[i-1][j-1] = (F[i][j] - F[i-1][j])/facX;
 			RHS[i-1][j-1] += (G[i][j] - G[i][j-1])/facY;
 		}
@@ -94,15 +89,13 @@ void compRHS (REAL **F, REAL **G, REAL **RHS, char **FLAG, lattice *grid, REAL d
 }
 
 void adaptUV (REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
-		REAL delt, char **FLAG, lattice *grid)
+		REAL delt, lattice *grid)
 {
 	REAL facX = delt/(grid->delx);
 	REAL facY = delt/(grid->dely);
 	for (int i = 1; i <= grid->deli; i++)
 		for (int j = 1; j <= grid->delj; j++)
 		{
-			if (FLAG[i][j] != C_F)
-				continue;
 			U[i][j] = F[i-1][j] - facX*(P[i][j] - P[i-1][j]);
 			V[i][j] = G[i][j-1] - facY*(P[i][j] - P[i][j-1]);
 		}
@@ -136,7 +129,7 @@ REAL delUVbyDelZ (REAL **U, REAL **V, int i, int j, int z, REAL alpha, REAL delz
 REAL delXSqrdByDelZ (REAL **X, int i, int j, int z, REAL alpha, REAL delz)
 {
 	int dx = (z == DERIVE_BY_X) ? 1 : 0;
-	int dy = (z == DERIVE_BY_Y) ? 1 : 0;
+	int dy = 1-dx;
 	delz *= 4;
 	REAL df2dz = sqr(X[i][j] + X[i+dx][j+dy]) - sqr(X[i-dx][j-dy] + X[i][j]);
 	if (alpha == 0)

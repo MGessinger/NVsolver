@@ -87,12 +87,12 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 		setBCond(U,V,grid,bCond);
 		setSpecBCond(U,V,grid,problem);
 		compFG(U,V,F,G,bCond->FLAG,delt,grid,sim);
-		compRHS(F,G,RHS,bCond->FLAG,grid,delt);
+		compRHS(F,G,RHS,grid,delt);
 
 		/* Solve the Poisson Equation */
 		solveSORforPoisson(P,RHS,bCond->FLAG,buf1,buf2,sim,grid, Region);
 		/* Update U and V through F,G and P */
-		adaptUV(U,V,P,F,G,delt,bCond->FLAG,grid);
+		adaptUV(U,V,P,F,G,delt,grid);
 		exchangeMat(U,2,1,buf1,buf2,grid,Region);
 		exchangeMat(V,1,2,buf1,buf2,grid,Region);
 		dt = compDelt(grid,U,V,sim);

@@ -30,41 +30,23 @@ void applyPbndCond (REAL **P, lattice *grid, char **FLAG)
 			P[i][grid->delj+1] = P[i][grid->delj];
 	REAL dxSqrd = sqr(grid->delx);
 	REAL dySqrd = sqr(grid->dely);
+	REAL num, denom;
+	int delNS, delOW;
 	for (int i = 1; i <= grid->deli; i++)
 		for (int j = 1; j <= grid->delj; j++)
 		{
+			num = 0;
 			flag = FLAG[i][j];
-			if (flag == C_F)
-				continue;
-			switch (flag ^ C_B)
-			{
-				case B_N:
-					P[i][j] = P[i][j+1];
-					break;
-				case B_O:
-					P[i][j] = P[i+1][j];
-					break;
-				case B_S:
-					P[i][j] = P[i][j-1];
-					break;
-				case B_W:
-					P[i][j] = P[i-1][j];
-					break;
-				case (B_N | B_O):
-					P[i][j] = (dxSqrd*P[i][j+1] + dySqrd*P[i+1][j])/(dxSqrd + dySqrd);
-					break;
-				case (B_N | B_W):
-					P[i][j] = (dxSqrd*P[i][j+1] + dySqrd*P[i-1][j])/(dxSqrd + dySqrd);
-					break;
-				case (B_S | B_O):
-					P[i][j] = (dxSqrd*P[i][j-1] + dySqrd*P[i+1][j])/(dxSqrd + dySqrd);
-					break;
-				case (B_S | B_W):
-					P[i][j] = (dxSqrd*P[i][j-1] + dySqrd*P[i-1][j])/(dxSqrd + dySqrd);
-					break;
-				default:
-					P[i][j] = 0;
-			}
+			denom = (flag == C_F) + (flag & B_NS)*dxSqrd + (flag & B_OW)*dySqrd;
+			delNS = ((flag & B_N) != 0) - ((flag & B_S) != 0);
+			delOW = ((flag & B_O) != 0) - ((flag & B_W) != 0);
+
+			if (flag & B_NS)
+				num += (P[i][j+delNS]-P[i][j]) * dxSqrd;
+			if (flag & B_OW)
+				num += (P[i+delOW][j]-P[i][j]) * dySqrd;
+
+			P[i][j] += num / denom;
 		}
 	return;
 }
