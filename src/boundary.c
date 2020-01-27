@@ -54,30 +54,47 @@ void applyPbndCond (REAL **P, lattice *grid, char **FLAG)
 void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 {
 	/* Boundary conditions on the actual boundary of the region */
+	int fac1, fac2;
 	if (grid->edges & BOTTOM)
+	{
+		fac1 = 1-2*(bCond->wb == NOSLIP);
+		fac2 = bCond->wb == OUTFLOW;
 		for (int i = 0; i <= grid->deli; i++)
 		{
-			U[i+1][0] = (bCond->wb == NOSLIP) ? -U[i+1][1] : U[i+1][1];
-			V[i][1] = (bCond->wb == OUTFLOW) ? V[i][2] : 0;
+			U[i+1][0] = fac1 * U[i+1][1];
+			V[i][1] = fac2 * V[i][2];
 		}
+	}
 	if (grid->edges & TOP)
+	{
+		fac1 = 1-2*(bCond->wt == NOSLIP);
+		fac2 = bCond->wt == OUTFLOW;
 		for (int i = 0; i <= grid->deli; i++)
 		{
-			U[i+1][grid->delj+1] = (bCond->wt == NOSLIP) ? -U[i+1][grid->delj] : U[i+1][grid->delj];
-			V[i][grid->delj+1] = (bCond->wt == OUTFLOW) ? V[i][grid->delj] : 0;
+			U[i+1][grid->delj+1] = fac1 * U[i+1][grid->delj];
+			V[i][grid->delj+1] = fac2 * V[i][grid->delj];
 		}
+	}
 	if (grid->edges & LEFT)
+	{
+		fac1 = bCond->wl == OUTFLOW;
+		fac2 = 1-2*(bCond->wl == NOSLIP);
 		for (int j = 0; j <= grid->delj; j++)
 		{
-			U[1][j] = (bCond->wl == OUTFLOW) ? U[2][j] : 0;
-			V[0][j+1] = (bCond->wl == NOSLIP) ? -V[1][j+1] : V[1][j+1];
+			U[1][j] = fac1 * U[2][j];
+			V[0][j+1] = fac2 * V[1][j+1];
 		}
+	}
 	if (grid->edges & RIGHT)
+	{
+		fac1 = bCond->wr == OUTFLOW;
+		fac2 = 1-2*(bCond->wr == NOSLIP);
 		for (int j = 0; j <= grid->delj; j++)
 		{
-			U[grid->deli+1][j] = (bCond->wr == OUTFLOW) ? U[grid->deli][j] : 0;
-			V[grid->deli+1][j+1] = (bCond->wr == NOSLIP) ? -V[grid->deli][j+1] : V[grid->deli][j+1];
+			U[grid->deli+1][j] = fac1 * U[grid->deli][j];
+			V[grid->deli+1][j+1] = fac2 * V[grid->deli][j+1];
 		}
+	}
 	char flag;
 	/* Boundary condtions on obstacles */
 	for (int i = 1; i <= grid->deli; i++)
@@ -140,8 +157,6 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 void setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem)
 {
 	/* Set special (e.g. inflow) conditions */
-	if (problem[0] == '\0')
-		return;
 	if (strcmp(problem,"Driven Cavity") == 0)
 	{
 		if (!(grid->edges & TOP))

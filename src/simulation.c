@@ -71,7 +71,7 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 	if (grid->delj > n)
 		n = grid->delj;
 	REAL buf1[n+3], buf2[n+3];
-	n = 0;
+	n = 1;
 	if (opt >= OUTPUT)
 		del_vec = t_end/(opt/OUTPUT);
 	else
@@ -79,9 +79,11 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 	/* Begin the simulation */
 	if (rank == 0)
 		printf("Computing Reynoldsnumber %lg.\n",sim->Re);
+	else
+		opt -= opt&PRINT;
 	for (REAL time = 0; time <= t_end; time += delt)
 	{
-		if ((rank == 0) && (opt & PRINT))
+		if (opt & PRINT)
 			printf("Time is at %lg seconds\n",time);
 		/* Update all parameters and fields for the iteration */
 		setBCond(U,V,grid,bCond);
@@ -97,9 +99,10 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 		exchangeMat(V,1,2,buf1,buf2,grid,Region);
 		dt = compDelt(grid,U,V,sim);
 
-		if (time > del_vec*(n+1))
+		if (time > del_vec*n)
 		{
-			dumpFields(Region,U,V,P,grid,n++);
+			dumpFields(Region,U,V,P,grid,n-1);
+			n++;
 		}
 		MPI_Allreduce(&dt,&delt,1,MPI_DOUBLE,MPI_MIN,Region);
 	}

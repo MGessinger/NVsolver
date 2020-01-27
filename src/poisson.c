@@ -55,8 +55,6 @@ int solveSORforPoisson (REAL **p, REAL **rhs, char **FLAG,
 REAL compDelt (lattice *grid, REAL **U, REAL **V, fluidSim *sim)
 {
 	/* Find the optimal step width in time */
-	if (sim->tau <= 0)
-		return sim->dt;
 	REAL dt = sim->Re*(sqr(grid->delx) + sqr(grid->dely))/2;
 	REAL utime, vtime;
 	for (int i = 1; i <= grid->deli; i++)
