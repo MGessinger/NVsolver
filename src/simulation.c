@@ -78,7 +78,7 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 		del_vec = t_end*2;
 	/* Begin the simulation */
 	if (rank == 0)
-		printf("Computing Reynoldsnumber %lg.\n",sim->Re);
+		printf("Computing %s with Reynolds-number %lg.\n",problem,sim->Re);
 	else
 		opt -= opt&PRINT;
 	for (REAL time = 0; time <= t_end; time += delt)
@@ -107,7 +107,10 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 		MPI_Allreduce(&dt,&delt,1,MPI_DOUBLE,MPI_MIN,Region);
 	}
 	if (opt >= OUTPUT)
-		dumpFields(Region,U,V,P,grid,n++);
+	{
+		dumpFields(Region,U,V,P,grid,n-1);
+		n++;
+	}
 	if (rank == 0)
 		printf("[Simulation complete!]\n");
 

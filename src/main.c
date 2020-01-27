@@ -40,8 +40,9 @@ int main (int argc, char **argv)
 	{
 		if (argv[i][0] != '-')
 		{
-			int out = strtol(argv[i],&scene,0);
-			if (scene[0] == '\0')
+			char *endptr = "\0";
+			int out = strtol(argv[i],&endptr,0);
+			if (endptr[0] == '\0')
 				output |= out*OUTPUT;
 			else
 				scene = argv[i];
