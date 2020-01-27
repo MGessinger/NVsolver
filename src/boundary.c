@@ -17,16 +17,16 @@ void applyPbndCond (REAL **P, lattice *grid, char **FLAG)
 	char flag = 0;
 	/* First set values on the actual boundary of the region */
 	if (grid->edges & LEFT)
-		for (int j = 0; j <= grid->delj; j++)
+		for (int j = 1; j <= grid->delj; j++)
 			P[0][j] = P[1][j];
 	if (grid->edges & RIGHT)
-		for (int j = 0; j <= grid->delj; j++)
+		for (int j = 1; j <= grid->delj; j++)
 			P[grid->deli+1][j] = P[grid->deli][j];
 	if (grid->edges & BOTTOM)
-		for (int i = 0; i <= grid->deli; i++)
+		for (int i = 1; i <= grid->deli; i++)
 			P[i][0] = P[i][1];
 	if (grid->edges & TOP)
-		for (int i = 0; i <= grid->deli; i++)
+		for (int i = 1; i <= grid->deli; i++)
 			P[i][grid->delj+1] = P[i][grid->delj];
 	REAL dxSqrd = sqr(grid->delx);
 	REAL dySqrd = sqr(grid->dely);
@@ -35,16 +35,18 @@ void applyPbndCond (REAL **P, lattice *grid, char **FLAG)
 	for (int i = 1; i <= grid->deli; i++)
 		for (int j = 1; j <= grid->delj; j++)
 		{
-			num = 0;
 			flag = FLAG[i][j];
-			denom = (flag == C_F) + (flag & B_NS)*dxSqrd + (flag & B_OW)*dySqrd;
+			if (flag == C_F)
+				continue;
+			num = 0;
+			denom = (flag & B_NS)*dxSqrd + (flag & B_OW)*dySqrd;
 			delNS = ((flag & B_N) != 0) - ((flag & B_S) != 0);
 			delOW = ((flag & B_O) != 0) - ((flag & B_W) != 0);
 
 			if (flag & B_NS)
-				num += (P[i][j+delNS]-P[i][j]) * dxSqrd;
+				num += P[i][j+delNS] * dxSqrd;
 			if (flag & B_OW)
-				num += (P[i+delOW][j]-P[i][j]) * dySqrd;
+				num += P[i+delOW][j] * dySqrd;
 
 			P[i][j] += num / denom;
 		}
@@ -59,7 +61,7 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 	{
 		fac1 = 1-2*(bCond->wb == NOSLIP);
 		fac2 = bCond->wb == OUTFLOW;
-		for (int i = 0; i <= grid->deli; i++)
+		for (int i = 1; i <= grid->deli; i++)
 		{
 			U[i+1][0] = fac1 * U[i+1][1];
 			V[i][1] = fac2 * V[i][2];
@@ -69,7 +71,7 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 	{
 		fac1 = 1-2*(bCond->wt == NOSLIP);
 		fac2 = bCond->wt == OUTFLOW;
-		for (int i = 0; i <= grid->deli; i++)
+		for (int i = 1; i <= grid->deli; i++)
 		{
 			U[i+1][grid->delj+1] = fac1 * U[i+1][grid->delj];
 			V[i][grid->delj+1] = fac2 * V[i][grid->delj];
@@ -79,7 +81,7 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 	{
 		fac1 = bCond->wl == OUTFLOW;
 		fac2 = 1-2*(bCond->wl == NOSLIP);
-		for (int j = 0; j <= grid->delj; j++)
+		for (int j = 1; j <= grid->delj; j++)
 		{
 			U[1][j] = fac1 * U[2][j];
 			V[0][j+1] = fac2 * V[1][j+1];
@@ -89,7 +91,7 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 	{
 		fac1 = bCond->wr == OUTFLOW;
 		fac2 = 1-2*(bCond->wr == NOSLIP);
-		for (int j = 0; j <= grid->delj; j++)
+		for (int j = 1; j <= grid->delj; j++)
 		{
 			U[grid->deli+1][j] = fac1 * U[grid->deli][j];
 			V[grid->deli+1][j+1] = fac2 * V[grid->deli][j+1];

@@ -60,12 +60,12 @@ void exchangeMat (REAL **mat, int offx, int offy, REAL *buf1, REAL *buf2, lattic
 		if (prev >= 0)
 			MPI_Sendrecv(mat[offx],ly,MPI_DOUBLE,prev,101,mat[0],ly,MPI_DOUBLE,prev,102,Region,&st);
 		if (next >= 0)
-			MPI_Sendrecv(mat[lx-offx-1],ly,MPI_DOUBLE,next,104,mat[lx-1],ly,MPI_DOUBLE,next,103,Region,&st);
+			MPI_Sendrecv(mat[grid->deli],ly,MPI_DOUBLE,next,104,mat[lx-1],ly,MPI_DOUBLE,next,103,Region,&st);
 	}
 	else 
 	{
 		if (next >= 0)
-			MPI_Sendrecv(mat[lx-offx-1],ly,MPI_DOUBLE,next,102,mat[lx-1],ly,MPI_DOUBLE,next,101,Region,&st);
+			MPI_Sendrecv(mat[grid->deli],ly,MPI_DOUBLE,next,102,mat[lx-1],ly,MPI_DOUBLE,next,101,Region,&st);
 		if (prev >= 0)
 			MPI_Sendrecv(mat[offx],ly,MPI_DOUBLE,prev,103,mat[0],ly,MPI_DOUBLE,prev,104,Region,&st);
 	}
@@ -84,7 +84,7 @@ void exchangeMat (REAL **mat, int offx, int offy, REAL *buf1, REAL *buf2, lattic
 		if (next >= 0)
 		{
 			for (int i = 0; i < lx; i++)
-				buf1[i] = mat[i][ly-offx-1];
+				buf1[i] = mat[i][grid->delj];
 			MPI_Sendrecv(buf1,lx,MPI_DOUBLE,next,108,buf2,lx,MPI_DOUBLE,next,107,Region,&st);
 			for (int i = 0; i < lx; i++)
 				mat[i][ly-1] = buf2[i];
@@ -95,7 +95,7 @@ void exchangeMat (REAL **mat, int offx, int offy, REAL *buf1, REAL *buf2, lattic
 		if (next >= 0)
 		{
 			for (int i = 0; i < lx; i++)
-				buf1[i] = mat[i][ly-offx-1];
+				buf1[i] = mat[i][grid->delj];
 			MPI_Sendrecv(buf1,lx,MPI_DOUBLE,next,106,buf2,lx,MPI_DOUBLE,next,105,Region,&st);
 			for (int i = 0; i < lx; i++)
 				mat[i][ly-1] = buf2[i];
