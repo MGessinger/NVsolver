@@ -107,10 +107,7 @@ int simulateFluid (REAL **U, REAL **V, REAL **P,
 		MPI_Allreduce(&dt,&delt,1,MPI_DOUBLE,MPI_MIN,Region);
 	}
 	if (opt >= OUTPUT)
-	{
 		dumpFields(Region,U,V,P,grid,n-1);
-		n++;
-	}
 	if (rank == 0)
 		printf("[Simulation complete!]\n");
 

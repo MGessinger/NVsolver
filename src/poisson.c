@@ -77,11 +77,12 @@ void compRHS (REAL **F, REAL **G, REAL **RHS, lattice *grid, REAL delt)
 {
 	REAL facX = delt*(grid->delx);
 	REAL facY = delt*(grid->dely);
+	REAL tmp;
 	for (int i = 1; i <= grid->deli; i++)
 		for (int j = 1; j <= grid->delj; j++)
 		{
-			RHS[i-1][j-1] = (F[i][j] - F[i-1][j])/facX;
-			RHS[i-1][j-1] += (G[i][j] - G[i][j-1])/facY;
+			tmp = (F[i][j] - F[i-1][j])/facX;
+			RHS[i-1][j-1] = tmp + (G[i][j] - G[i][j-1])/facY;
 		}
 	return;
 }
@@ -97,6 +98,10 @@ void adaptUV (REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
 			U[i][j] = F[i-1][j] - facX*(P[i][j] - P[i-1][j]);
 			V[i][j] = G[i][j-1] - facY*(P[i][j] - P[i][j-1]);
 		}
+	for (int i = 1; i <= grid->deli; i++)
+		V[i][grid->delj+1] = G[i][grid->delj] - facY*(P[i][grid->delj+1] - P[i][grid->delj]);
+	for (int j = 1; j <= grid->delj; j++)
+		U[grid->deli+1][j] = F[grid->deli][j] - facX*(P[grid->deli+1][j] - P[grid->deli][j]);
 	return;
 }
 
@@ -150,6 +155,8 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 	REAL d2ux, d2uy, d2vx, d2vy;
 	REAL du2x, dv2y;
 	REAL duvx, duvy;
+	REAL dxSqrd = sqr(grid->delx);
+	REAL dySqrd = sqr(grid->dely);
 	short flag;
 	int i,j;
 	for (i = 0; i <= grid->deli; i++)
@@ -157,22 +164,19 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 		for (j = 1; j <= grid->delj; j++)
 		{
 			flag = FLAG[i][j];
-			if (flag == C_B)      /* Boundary cells with no neighboring fluid cells */
-				continue;
-			else if (flag == C_F) /* Pure fluid cells */
+			if (flag == C_F) /* Pure fluid cells */
 			{
 				/* !! Notice: The index of F is shifted to match that of U! This computes the boundary condition of U!
 				 * Therefore there is no shift in i-direction here!! */
-				d2ux = (U[i+2][j] - 2*U[i+1][j] + U[i][j])/sqr(grid->delx);
-				d2uy = (U[i+1][j+1] - 2*U[i+1][j] + U[i+1][j-1])/sqr(grid->dely);
+				d2ux = (U[i+2][j] - 2*U[i+1][j] + U[i][j])/dxSqrd;
+				d2uy = (U[i+1][j+1] - 2*U[i+1][j] + U[i+1][j-1])/dySqrd;
 
 				duvy = delUVbyDelZ(U,V,i,j,DERIVE_BY_Y,simulation->alpha,grid->dely);
 				du2x = delXSqrdByDelZ(U,i+1,j,DERIVE_BY_X,simulation->alpha,grid->delx);
 
 				F[i][j] = U[i+1][j] + delt*((d2ux+d2uy)/simulation->Re - du2x - duvy + simulation->GX);
-				continue;
 			}
-			if (flag & B_O)       /* East */
+			else if (flag & B_O)       /* East */
 				F[i][j] = U[i+1][j];
 			else if (flag & B_W)  /* West */
 				F[i-1][j] = U[i][j];
@@ -183,21 +187,18 @@ void    compFG (REAL **U, REAL **V, REAL **F, REAL **G, char **FLAG, REAL delt,
 		for (j = 0; j <= grid->delj; j++)
 		{
 			flag = FLAG[i][j];
-			if (flag == C_B)      /* Boundary cells with no neighboring fluid cells */
-				continue;
-			else if (flag == C_F) /* Pure fluid cells */
+			if (flag == C_F) /* Pure fluid cells */
 			{
 				/* A similar shift holds for G, except in the j-direction! */
-				d2vx = (V[i+1][j+1] - 2*V[i][j+1] + V[i-1][j+1])/sqr(grid->delx);
-				d2vy = (V[i][j+2] - 2*V[i][j+1] + V[i][j])/sqr(grid->dely);
+				d2vx = (V[i+1][j+1] - 2*V[i][j+1] + V[i-1][j+1])/dxSqrd;
+				d2vy = (V[i][j+2] - 2*V[i][j+1] + V[i][j])/dySqrd;
 
 				duvx = delUVbyDelZ(U,V,i,j,DERIVE_BY_X,simulation->alpha,grid->delx);
 				dv2y = delXSqrdByDelZ(V,i,j+1,DERIVE_BY_Y,simulation->alpha,grid->dely);
 
 				G[i][j] = V[i][j+1] + delt*((d2vx+d2vy)/simulation->Re - dv2y - duvx + simulation->GY);
-				continue;
 			}
-			if (flag & B_N)       /* North */
+			else if (flag & B_N)       /* North */
 				G[i][j] = V[i][j+1];
 			else if (flag & B_S)  /* South */
 				G[i][j-1] = V[i-1][j];

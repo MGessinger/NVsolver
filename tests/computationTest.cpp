@@ -30,7 +30,8 @@ class Computation : public ::testing::Test
 
 static REAL frhs (REAL x, REAL y)
 {
-	return 2*sqr(2*M_PI)*cos(2*M_PI*x)*cos(2*M_PI*y);
+	REAL pi2 = 2*M_PI;
+	return 2*sqr(pi2)*cos(pi2*x)*cos(pi2*y);
 }
 
 static REAL fex (REAL x, REAL y)
@@ -42,8 +43,6 @@ TEST_F(Computation, Exchange)
 {
 	int size, rank, coords[2];
 	MPI_Comm_size(Region,&size);
-	if (size <= 1)
-		return;
 	MPI_Comm_rank(Region,&rank);
 	MPI_Cart_coords(Region,rank,2,coords);
 	REAL **P = create2Dfield(grid.deli+2,grid.delj+2);
@@ -55,7 +54,7 @@ TEST_F(Computation, Exchange)
 	REAL buf1[max+2], buf2[max+2];
 	exchangeMat(P,1,1,buf1,buf2,&grid,Region);
 
-	REAL err;
+	REAL err = 0;
 	for (int j = 1; j <= grid.delj; j++)
 	{
 		if (coords[0] > 0)
@@ -130,6 +129,10 @@ TEST_F(Computation, PoissonSolver)
 {
 	REAL err = 0;
 	int size = grid.deli*grid.delj;
+	{
+		int tmp = size;
+		MPI_Allreduce(&tmp,&size,1,MPI_INT,MPI_SUM,Region);
+	}
 	P = create2Dfield(grid.deli+2,grid.delj+2);
 	REAL **rhs = create2Dfield(grid.deli,grid.delj);
 	char **FLAG = create2DIntegerField(grid.deli,grid.delj);
@@ -151,5 +154,8 @@ TEST_F(Computation, PoissonSolver)
 	destroy2Dfield((void**)rhs,grid.deli);
 	destroy2Dfield((void**)P,grid.deli+2);
 	destroy2Dfield((void**)FLAG,grid.deli+2);
-	EXPECT_LE(err/sqr(30),sim.eps);
+
+	REAL tmp = err / size;
+	MPI_Allreduce(&tmp,&err,1,MPI_DOUBLE,MPI_SUM,Region);
+	EXPECT_LE(err,sim.eps);
 }

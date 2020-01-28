@@ -98,13 +98,14 @@ TEST_F(Setup, IO)
 	initUVP(&U,&V,&P,grid.imax,grid.jmax,init);
 
 	dumpFields(Region,U,V,P,&grid,0);
+	MPI_Barrier(Region);
 	translateBinary(Region,&grid,1,0,dims);
 
 	int size;
 	MPI_Comm_size(Region,&size);
+	MPI_Barrier(Region);
 	if (size == 1)
 		writeVTKfileFor2DvectorField(OUT_FILE,"momentumfield",U,V,&grid);
-	MPI_Barrier(Region);
 
 	destroy2Dfield((void**)U,grid.deli+3);
 	destroy2Dfield((void**)V,grid.deli+2);
