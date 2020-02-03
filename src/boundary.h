@@ -3,14 +3,17 @@
 
 #include "types.h"
 
-#define C_F (0x00)
-#define C_B (0x01)
-#define B_N (0x02)
-#define B_O (0x04)
-#define B_S (0x08)
-#define B_W (0x10)
-#define B_NS (0x0A)
-#define B_OW (0x14)
+#define C_F (0x0F)
+#define C_B (0x00)
+#define B_N (0x01)
+#define B_O (0x02)
+#define B_S (0x04)
+#define B_W (0x08)
+#define B_NS (0x05)
+#define B_OW (0x0a)
+
+#define LO_NIBBLE(x) ((x) & 0x0F)
+#define HI_NIBBLE(x) ((x) & 0xF0)
 
 #define NOSLIP   (0u)
 #define FREESLIP (1u)

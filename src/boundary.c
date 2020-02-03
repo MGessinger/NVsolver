@@ -35,7 +35,7 @@ void applyPbndCond (REAL **P, lattice *grid, char **FLAG)
 	for (int i = 1; i <= grid->deli; i++)
 		for (int j = 1; j <= grid->delj; j++)
 		{
-			flag = FLAG[i][j];
+			flag = LO_NIBBLE(FLAG[i][j]);
 			if (flag == C_F)
 				continue;
 			num = 0;
@@ -102,11 +102,11 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 	for (int i = 1; i <= grid->deli; i++)
 		for (int j = 1; j <= grid->delj; j++)
 		{
-			flag = bCond->FLAG[i][j];
+			flag = LO_NIBBLE(bCond->FLAG[i][j]);
 			if (flag == C_F)
 				continue;
 			/* Set boundary conditions */
-			switch (flag ^ C_B)
+			switch (flag)
 			{
 				case B_N:
 					V[i][j+1] = 0;
