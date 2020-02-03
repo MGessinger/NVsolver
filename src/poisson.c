@@ -88,13 +88,18 @@ void compRHS (REAL **F, REAL **G, REAL **RHS, lattice *grid, REAL delt)
 }
 
 void adaptUV (REAL **U, REAL **V, REAL **P, REAL **F, REAL **G,
-		REAL delt, lattice *grid)
+		REAL delt, lattice *grid, char **FLAG)
 {
 	REAL facX = delt/(grid->delx);
 	REAL facY = delt/(grid->dely);
 	for (int i = 1; i <= grid->deli; i++)
 		for (int j = 1; j <= grid->delj; j++)
 		{
+			if (FLAG[i][j] != C_F)
+			{
+				U[i][j] = V[i][j] = 0;
+				continue;
+			}
 			U[i][j] = F[i-1][j] - facX*(P[i][j] - P[i-1][j]);
 			V[i][j] = G[i][j-1] - facY*(P[i][j] - P[i][j-1]);
 		}

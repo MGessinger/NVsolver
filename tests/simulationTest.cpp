@@ -11,7 +11,7 @@ TEST(Simulation, Trivial)
 {
 	REAL **U = nullptr, **V = nullptr, **P = nullptr;
 	lattice grid = runSimulation(&U, &V, &P, (char*)"Tunnel",
-				     (char*)"/home/matthias/Dokumente/Programming/Simulator/data/testfluid", (char*)"None", PRINT);
+				     (char*)"/home/matthias/Dokumente/Programming/Simulator/data/testfluid", (char*)"None", SILENT);
 	REAL err = 0;
 	for (int i = 1; i <= grid.deli; i++)
 		for (int j = 1; j <= grid.delj; j++)

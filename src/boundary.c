@@ -39,7 +39,7 @@ void applyPbndCond (REAL **P, lattice *grid, char **FLAG)
 			if (flag == C_F)
 				continue;
 			num = 0;
-			denom = (flag & B_NS)*dxSqrd + (flag & B_OW)*dySqrd;
+			denom = (flag == C_B) + ((flag & B_NS) != 0)*dxSqrd + ((flag & B_OW) != 0)*dySqrd;
 			delNS = ((flag & B_N) != 0) - ((flag & B_S) != 0);
 			delOW = ((flag & B_O) != 0) - ((flag & B_W) != 0);
 
@@ -48,7 +48,7 @@ void applyPbndCond (REAL **P, lattice *grid, char **FLAG)
 			if (flag & B_OW)
 				num += P[i+delOW][j] * dySqrd;
 
-			P[i][j] += num / denom;
+			P[i][j] = num / denom;
 		}
 	return;
 }
@@ -60,7 +60,7 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 	if (grid->edges & BOTTOM)
 	{
 		fac1 = 1-2*(bCond->wb == NOSLIP);
-		fac2 = bCond->wb == OUTFLOW;
+		fac2 = (bCond->wb == OUTFLOW);
 		for (int i = 1; i <= grid->deli; i++)
 		{
 			U[i+1][0] = fac1 * U[i+1][1];
@@ -70,7 +70,7 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 	if (grid->edges & TOP)
 	{
 		fac1 = 1-2*(bCond->wt == NOSLIP);
-		fac2 = bCond->wt == OUTFLOW;
+		fac2 = (bCond->wt == OUTFLOW);
 		for (int i = 1; i <= grid->deli; i++)
 		{
 			U[i+1][grid->delj+1] = fac1 * U[i+1][grid->delj];
@@ -79,7 +79,7 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 	}
 	if (grid->edges & LEFT)
 	{
-		fac1 = bCond->wl == OUTFLOW;
+		fac1 = (bCond->wl == OUTFLOW);
 		fac2 = 1-2*(bCond->wl == NOSLIP);
 		for (int j = 1; j <= grid->delj; j++)
 		{
@@ -89,7 +89,7 @@ void setBCond (REAL **U, REAL **V, lattice *grid, bndCond *bCond)
 	}
 	if (grid->edges & RIGHT)
 	{
-		fac1 = bCond->wr == OUTFLOW;
+		fac1 = (bCond->wr == OUTFLOW);
 		fac2 = 1-2*(bCond->wr == NOSLIP);
 		for (int j = 1; j <= grid->delj; j++)
 		{
@@ -176,7 +176,7 @@ void setSpecBCond (REAL **U, REAL **V, lattice *grid, const char *problem)
 			return;
 		for (int j = 1; j <= grid->delj; j++)
 		{
-			U[1][j] = U[0][j] = 1;
+			U[1][j]  = 1;
 			V[0][j+1] = -V[1][j+1];
 		}
 		return;
@@ -208,11 +208,11 @@ void initFlags (const char *problem, char **FLAG, lattice *grid, MPI_Comm Region
 	}
 	else if (strcmp(problem,"Von Karman") == 0)
 	{
-		for (int i = 1; i < grid->delj+2; i++)
+		for (int i = 0; i < grid->delj+1; i++)
 		{
-			if (i + grid->il < grid->jmax/3+1)
+			if (i + grid->il < grid->jmax/3)
 				continue;
-			if (i + grid->il >= 2*grid->jmax/3+1)
+			if (i + grid->il >= 2*grid->jmax/3)
 				break;
 			for (int j = -(grid->jmax/4)/2; j <= (grid->jmax/4)/2; j++)
 			{
@@ -221,7 +221,7 @@ void initFlags (const char *problem, char **FLAG, lattice *grid, MPI_Comm Region
 					continue;
 				if (x >= 2*grid->jmax/3 || x >= grid->deli)
 					break;
-				FLAG[i+j][i] = C_B;
+				FLAG[i+j+1][i+1] = C_B;
 			}
 		}
 	}
