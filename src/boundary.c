@@ -208,7 +208,7 @@ void initFlags (const char *problem, char **FLAG, lattice *grid, MPI_Comm Region
 	}
 	else if (strcmp(problem,"Von Karman") == 0)
 	{
-		for (int i = 0; i < grid->delj+1; i++)
+		for (int i = 0; i < grid->delj+2; i++)
 		{
 			if (i + grid->il < grid->jmax/3)
 				continue;
@@ -230,17 +230,15 @@ void initFlags (const char *problem, char **FLAG, lattice *grid, MPI_Comm Region
 		size = grid->delj+2;
 	char buf1[size], buf2[size];
 	exchangeIntMat(FLAG,buf1,buf2,grid,Region);
-	for (int i = 0; i < grid->deli+1; i++)
+	for (int i = 0; i < grid->deli+2; i++)
 	{
-		for (int j = 0; j < grid->delj+1; j++)
+		for (int j = 0; j < grid->delj+2; j++)
 		{
-			if (FLAG[i][j] == C_F)
-				continue;
-			if ((j != grid->delj) && (FLAG[i][j+1] == C_F))
+			if ((j <= grid->delj) && (FLAG[i][j+1] == C_F))
 				FLAG[i][j] |= B_N;
 			else if ((j != 0) && (FLAG[i][j-1] == C_F))
 				FLAG[i][j] |= B_S;
-			if ((i != grid->delj) && (FLAG[i+1][j] == C_F))
+			if ((i <= grid->deli) && (FLAG[i+1][j] == C_F))
 				FLAG[i][j] |= B_O;
 			else if ((i != 0) && (FLAG[i-1][j] == C_F))
 				FLAG[i][j] |= B_W;
