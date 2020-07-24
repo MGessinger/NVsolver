@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <mpi/mpi.h>
+#include <mpi.h>
 
 #define REAL double
 
@@ -63,5 +63,7 @@ static inline REAL sqr (REAL x)
 #define OUTPUT (0x10)
 #define PRINT  (0x01)
 #define SILENT (0x0)
+
+#define BOOLEAN_MASK(b) (!(b) - 1)
 
 #endif /* TYPES_H_ */
