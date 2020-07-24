@@ -401,15 +401,22 @@ int readParameters (const char *inputFile, REAL *init,
 		printf("The file \"%s\" probably doesn't exist. Please check your input!\n",inputFile);
 		return 0;
 	}
-	char variable[32];
 	REAL value;
 	REAL xlength = 0, ylength = 0;
 	int readVars = 0;
 
-	while (fscanf(input,"%s%*[A-Za-z ]%lg\n",variable,&value) == 2)
+	char *variable = NULL;
+	size_t len = 0;
+
+	while (getline(&variable, &len, input) > 0)
 	{
 		if (variable[0] == '#')
 			continue;
+		if (sscanf(variable, "%*s%*[ \t]%lg", &value) != 1)
+		{
+			printf("Malformed input: %s\n",variable);
+			continue;
+		}
 		switch(variable[0])
 		{
 			case 'x':
@@ -470,6 +477,7 @@ int readParameters (const char *inputFile, REAL *init,
 		readVars++;
 	}
 	fclose(input);
+	free(variable);
 	grid->delx = xlength/grid->imax;
 	grid->dely = ylength/grid->jmax;
 	return readVars;
