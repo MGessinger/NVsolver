@@ -5,8 +5,6 @@
 
 /* ==================== Creation ==================== */
 
-void clearDoubleField (double **, int);
-
 double ** newDoubleField (int imax, int jmax) {
 	double ** X = malloc(imax * sizeof(double*));
 	if (X == NULL) {
@@ -38,6 +36,11 @@ lattice * newLattice (double dx, double dy, int imax, int jmax) {
 	G->dy = dy;
 	G->imax = imax;
 	G->jmax = jmax;
+
+	G->bc_top = STICK;
+	G->bc_bottom = STICK;
+	G->bc_left = STICK;
+	G->bc_right = STICK;
 
 	return G;
 }
