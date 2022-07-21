@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include "types.h"
 #include "setup.h"
@@ -35,36 +36,46 @@ void setDrivenCavity (simulation * S) {
 		U[i][S->G->jmax + 1] = 2 - U[i][S->G->jmax];
 }
 
-void setOpenTunnel (simulation * S) {
-	double ** U = S->F->U;
-	double ** V = S->F->V;
+void readArgv (simulation ** S, double * t, int argc, char ** argv) {
+	for (int i = 1; i < argc; i++) {
+		if (argv[i][0] != '-') {
+			fprintf(stderr, "Unrecognized parameter: [%s]\n", argv[i]);
+			continue;
+		}
 
-	for (int j = 0; j <= S->G->jmax + 1; j++) {
-		U[0][j] = U[1][j];
-		U[S->G->imax + 1][j] = U[S->G->imax][j];
-
-		V[0][j] = 0;
-		V[S->G->imax + 1][j] = 0;
+		switch (argv[i][1]) {
+			case 'f':
+				*S = newSimulationFromFile(argv[++i]);
+				break;
+			case 't':
+				*t = atof(argv[++i]);
+				break;
+			default:
+				fprintf(stderr, "Unrecognized parameter: [%s]\n", argv[i]);
+		}
 	}
 }
 
-int main () {
-	int imax = 32, jmax = 64;
-	simulation * S = newSimulation(imax, jmax, 1.0 / imax, 1.0 / jmax, 500);
-	S->GX = 1;
+int main (int argc, char ** argv) {
+	simulation * S = NULL;
+	double dt, t = 1;
 
-	double dt = S->dt;
-	double t = 1;
-	int it;
+	readArgv(&S, &t, argc, argv);
+
+	if (S == NULL) {
+		fprintf(stderr, "No simulation found!\n");
+		return -1;
+	}
+
 	/* Main Loop */
 	do {
 		dt = computeDT(S);		/* Above */
 		setVelocitiesOnBoundary(S);	/* In boundary.h */
-		setOpenTunnel(S);
+		setDrivenCavity(S);
 		computeAuxiliaryFields(S, dt);	/* In velocities.h */
 
 		computePoissonRHS(S, dt);	/* In poisson.h */
-		it = solvePoissonEquation(S);	/* In poisson.h */
+		int it = solvePoissonEquation(S);	/* In poisson.h */
 		printf("Iterations: %i\n", it);
 
 		updateVelocities(S, dt);	/* In velocities.h */

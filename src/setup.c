@@ -57,6 +57,66 @@ fluid * newFluid (double Re, int imax, int jmax) {
 	return F;
 }
 
+simulation * newSimulationFromFile (char * filename) {
+	FILE * parameter_file = fopen(filename, "r");
+	if (parameter_file == NULL)
+		return NULL;
+
+	char * line = NULL;
+	size_t len = 0;
+
+	simulation * S = NULL;
+	int imax = 1, jmax = 1;
+	double dx = 1, dy = 1;
+	double Re = 100;
+
+	for (int k = 0; k < 5; k++) {
+		getline(&line, &len, parameter_file);
+		if (strncmp("imax", line, 4) == 0)
+			imax = atoi(line + 5);
+		else if (strncmp("jmax", line, 4) == 0)
+			jmax = atoi(line + 5);
+		else if (strncmp("Reynolds", line, 8) == 0)
+			Re = atof(line + 9);
+		else if (strncmp("dx", line, 2) == 0)
+			dx = atof(line + 3);
+		else if (strncmp("dy", line, 2) == 0)
+			dy = atof(line + 3);
+		else {
+			fprintf(stderr, "This file is formatted incorrectly!\nPlease provide imax, jmax, dx, dy and Re first.\n");
+			return NULL;
+		}
+	}
+
+	S = newSimulation(imax, jmax, dx, dy, Re);
+	
+	while (getline(&line, &len, parameter_file) > 0) {
+		if (strncmp("tau", line, 3) == 0)
+			S->tau = atof(line + 4);
+		else if (strncmp("GX", line, 2) == 0)
+			S->GX = atof(line + 3);
+		else if (strncmp("GY", line, 2) == 0)
+			S->GY = atof(line + 3);
+		else if (strncmp("dt", line, 2) == 0)
+			S->dt = atof(line + 3);
+		else if (strncmp("alpha", line, 5) == 0)
+			S->alpha = atof(line + 6);
+		else if (strncmp("omega", line, 5) == 0)
+			S->omega = atof(line + 6);
+		else if (strncmp("itmax", line, 5) == 0)
+			S->max_iterations = atoi(line + 6);
+		else if (strncmp("epsilon", line, 7) == 0)
+			S->solver_tol = atof(line + 8);
+		else
+			fprintf(stderr, "Unrecognized option: [%s]\n", line);
+	}
+
+	fclose(parameter_file);
+	if (line != NULL)
+		free(line);
+	return S;
+}
+
 simulation * newSimulation (int imax, int jmax, double dx, double dy, double Re) {
 	simulation * S = malloc(sizeof(simulation));
 	if (S == NULL) {
