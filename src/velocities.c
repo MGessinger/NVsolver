@@ -96,13 +96,13 @@ void computeAuxiliaryFields (simulation * S, double dt) {
 		}
 
 		/* Sneak in the boundary term as well */
-		S->auxG[i][0] = V[i][0] + S->GY;
-		S->auxG[i][G->jmax] = V[i][G->jmax] + S->GY;
+		S->auxG[i][0] = V[i][0] + dt * S->GY;
+		S->auxG[i][G->jmax] = V[i][G->jmax] + dt * S->GY;
 	}
 
 	for (int j = 1; j <= G->jmax; j++) {
-		S->auxF[0][j] = U[0][j] + S->GY;
-		S->auxF[G->imax][j] = U[G->imax][j] + S->GY;
+		S->auxF[0][j] = U[0][j] + dt * S->GX;
+		S->auxF[G->imax][j] = U[G->imax][j] + dt * S->GX;
 	}
 }
 

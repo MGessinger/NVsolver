@@ -35,7 +35,10 @@ double fg (double x, double y) {
 
 int main () {
 	int imax = 100, jmax = 100;
+	double dt = 0.01;
 	simulation * S = newSimulation (imax, jmax, 1.0 / imax, 1.0 / jmax, 1000);
+	S->GX = -0.375;
+	S->GY = -0.75;
 
 	for (int i = 0; i <= imax + 1; i++) {
 		for (int j = 0; j <= jmax + 1; j++) {
@@ -44,13 +47,17 @@ int main () {
 		}
 	}
 
-	computeAuxiliaryFields(S, 0.01);
+	computeAuxiliaryFields(S, dt);
 
+	double expF, expG;
 	double avg_err_f = 0, avg_err_g = 0;
-	for (int i = 1; i <= S->G->imax; i++) {
-		for (int j = 1; j <= S->G->jmax; j++) {
-			avg_err_f += absd(S->auxF[i][j] - ff(XY_U(i, j)));
-			avg_err_g += absd(S->auxG[i][j] - fg(XY_V(i, j)));
+	for (int i = 1; i < S->G->imax; i++) {
+		for (int j = 1; j < S->G->jmax; j++) {
+			expF = ff(XY_U(i, j)) + dt * S->GX;
+			expG = fg(XY_U(i, j)) + dt * S->GY;
+
+			avg_err_f += absd(S->auxF[i][j] - expF);
+			avg_err_g += absd(S->auxG[i][j] - expG);
 		}
 	}
 
@@ -59,7 +66,7 @@ int main () {
 
 	clearSimulation(S);
 	printf("Average errors: %g, %g\n", avg_err_f, avg_err_g);
-	if (avg_err_f > 0.05 || avg_err_g > 0.05)
+	if (avg_err_f > 0.01 || avg_err_g > 0.01)
 		return EXIT_FAILURE;
 	return EXIT_SUCCESS;
 }
