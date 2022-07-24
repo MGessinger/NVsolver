@@ -54,15 +54,6 @@ void computePoissonRHS (simulation * S, double dt) {
 		for (int j = 1; j <= Grid->jmax; j++) {
 			S->RHS[i][j] = (F[i][j] - F[i - 1][j]) * fx
 				     + (G[i][j] - G[i][j - 1]) * fy;
-			/* Us the following code, if the poisson solver produces a NaN value.
-			 * Since no divisions by time-dependent values take place there, any
-			 * NaN values must most likely come from here. */
-			/*if (isnan(S->RHS[i][j])) {
-				fprintf(stderr, "RHS computation yielded zero on input:\n");
-				fprintf(stderr, "i: %i, j: %i\nF[i][j] = %g, F[i - 1][j] = %g\nG[i][j] = %g, G[i][j - 1] = %g\n", i, j, F[i][j], F[i - 1][j], G[i][j], G[i][j - 1]);
-				fprintf(stderr, "dt = %g, fx = %g, fy = %g\n", dt, fx, fy);
-				exit(-1);
-			}*/
 		}
 	}
 }

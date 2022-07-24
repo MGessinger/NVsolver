@@ -27,9 +27,9 @@ int checkLattice (lattice * G) {
 }
 
 int checkSimulation (simulation * S) {
-	if (S->GX != 0.375)
+	if (S->GX != -0.375)
 		return 1;
-	if (S->GY != 0.875)
+	if (S->GY != -0.875)
 		return 2;
 
 	if (S->tau != 0.25)
@@ -51,7 +51,7 @@ int checkSimulation (simulation * S) {
 }
 
 int main () {
-	simulation * S = newSimulationFromFile("../test_parameter_file.dat");
+	simulation * S = newSimulationFromFile("../../data/test_parameter_file");
 
 	if (S == NULL) {
 		fprintf(stderr, "Reading from file failed big time\n");

@@ -106,11 +106,11 @@ void outputToFile (simulation * S) {
 	fprintf(p_file, "[");
 	fprintf(u_file, "[");
 	fprintf(v_file, "[");
-	for (int i = 1; i <= S->G->imax; i++) {
+	for (int j = 1; j <= S->G->jmax; j++) {
 		fprintf(p_file, "[");
 		fprintf(u_file, "[");
 		fprintf(v_file, "[");
-		for (int j = 1; j <= S->G->jmax; j++) {
+		for (int i = 1; i <= S->G->imax; i++) {
 			fprintf(p_file, "%g, ", F->P[i][j]);
 			fprintf(u_file, "%g, ", (F->U[i - 1][j] + F->U[i][j]) / 2);
 			fprintf(v_file, "%g, ", (F->V[i][j - 1] + F->V[i][j]) / 2);

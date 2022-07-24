@@ -1,0 +1,17 @@
+imax	123
+jmax	321
+dx	0.125
+dy	0.75
+Reynolds	54321
+bc_top	STICK
+bc_bottom	SLIP
+bc_left	OUTFLOW
+bc_right	SPECIAL
+GX	-0.375
+GY	-0.875
+tau	0.25
+dt	2.5
+alpha	1.125
+omega	0.875
+epsilon	0.0625
+itmax	4321

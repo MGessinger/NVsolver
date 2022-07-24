@@ -79,7 +79,7 @@ simulation * newSimulation (int imax, int jmax, double dx, double dy, double Re)
 	S->dt = 0.02;
 	S->alpha = 0.5;
 	S->omega = 1.7;
-	S->max_iterations = 5000;
+	S->max_iterations = 500;
 	S->solver_tol = 0.01;
 
 	return S;
