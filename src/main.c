@@ -9,24 +9,30 @@
 
 double computeDT (simulation * S) {
 	/* Find the optimal step width in time */
-	double dt = S->F->Reynolds * (sqr(S->G->dx) + sqr(S->G->dy)) / 2;
 
 	lattice * G = S->G;
 	double ** U = S->F->U;
 	double ** V = S->F->V;
 
+	double invDX = 1 / G->dx;
+	double invDY = 1 / G->dy;
+
+	double invDT = 2 / (S->F->Reynolds * (sqr(G->dx) + sqr(G->dy)));
+
 	double utime, vtime;
 	for (int i = 1; i <= G->imax; i++) {
 		for (int j = 1; j <= G->jmax; j++)
 		{
-			utime = G->dx / absd(U[i+1][j]);
-			dt = maxd(dt, utime);
+			utime = invDX * absd(U[i+1][j]);
+			invDT = mind(invDT, utime);
 
-			vtime = G->dy / absd(V[i][j+1]);
-			dt = maxd(dt, vtime);
+			vtime = invDX * absd(V[i][j+1]);
+			invDT = mind(invDT, vtime);
 		}
 	}
-	return mind(S->tau * dt, S->dt);
+	if (invDT == 0)
+		return S->dt;
+	return mind(S->tau / invDT, S->dt);
 }
 
 void setDrivenCavity (simulation * S) {
@@ -34,6 +40,18 @@ void setDrivenCavity (simulation * S) {
 
 	for (int i = 1; i <= S->G->imax; i++)
 		U[i][S->G->jmax + 1] = 2 - U[i][S->G->jmax];
+}
+
+void setTunnel (simulation * S) {
+	double ** U = S->F->U;
+	double ** V = S->F->V;
+
+	lattice * G = S->G;
+
+	for (int j = 0; j < G->jmax + 2; j++) {
+		U[0][j] = 1;
+		V[0][j] =  - V[1][j];
+	}
 }
 
 void readArgv (simulation ** S, double * t, int argc, char ** argv) {
@@ -71,11 +89,15 @@ int main (int argc, char ** argv) {
 	do {
 		dt = computeDT(S);		/* Above */
 		setVelocitiesOnBoundary(S);	/* In boundary.h */
-		setDrivenCavity(S);
+		setTunnel(S);
 		computeAuxiliaryFields(S, dt);	/* In velocities.h */
 
 		computePoissonRHS(S, dt);	/* In poisson.h */
 		int it = solvePoissonEquation(S);	/* In poisson.h */
+		if (it <= 0) {
+			printf("Aborted with %g left on the clock.\n", t);
+			break;
+		}
 		printf("Iterations: %i\n", it);
 
 		updateVelocities(S, dt);	/* In velocities.h */

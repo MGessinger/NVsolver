@@ -3,6 +3,7 @@
 
 #include "types.h"
 
+simulation * newSimulationFromFile (char * filename);
 void outputToFile (simulation * S);
 
 #endif /* IO_H_ */

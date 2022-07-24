@@ -1,5 +1,6 @@
 set(Tests
 	sim_creation
+	sim_from_file
 	poisson
 	derivative_du2dx
 	derivative_dv2dy

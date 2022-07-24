@@ -4,13 +4,16 @@ void setPressureOnBoundary (simulation * S) {
 	double ** P = S->F->P;
 	lattice * G = S->G;
 
+	int i_ghost = G->imax + 1;
+	int j_ghost = G->jmax + 1;
+
 	for (int i = 1; i <= G->imax; i++) {
 		P[i][0] = P[i][1];
-		P[i][G->jmax + 1] = P[i][G->jmax];
+		P[i][j_ghost] = P[i][G->jmax];
 	}
-	for (int j = 1; j < G->jmax; j++) {
+	for (int j = 1; j <= G->jmax; j++) {
 		P[0][j] = P[1][j];
-		P[G->imax + 1][j] = P[G->imax][j];
+		P[i_ghost][j] = P[G->imax][j];
 	}
 }
 
@@ -26,19 +29,19 @@ void setVelocitiesOnBoundary (simulation * S) {
 	/* TOP (j maximal) */
 	switch (G->bc_top) {
 		case STICK:
-			for (i = 1; i <= G->imax; i++) {
+			for (i = 0; i <= i_ghost; i++) {
 				U[i][j_ghost] = -U[i][G->jmax];
 				V[i][G->jmax] = 0;
 			}
 			break;
 		case SLIP:
-			for (i = 1; i <= G->imax; i++) {
+			for (i = 0; i <= i_ghost; i++) {
 				U[i][j_ghost] = U[i][G->jmax];
 				V[i][G->jmax] = 0;
 			}
 			break;
 		case OUTFLOW:
-			for (i = 1; i <= G->imax; i++) {
+			for (i = 0; i <= i_ghost; i++) {
 				U[i][j_ghost] = U[i][G->jmax];
 				V[i][G->jmax] = V[i][G->jmax - 1];
 			}
@@ -49,19 +52,19 @@ void setVelocitiesOnBoundary (simulation * S) {
 	/* BOTTOM (j minimal) */
 	switch (G->bc_bottom) {
 		case STICK:
-			for (i = 1; i <= G->imax; i++) {
+			for (i = 0; i <= i_ghost; i++) {
 				U[i][0] = -U[i][1];
 				V[i][0] = 0;
 			}
 			break;
 		case SLIP:
-			for (i = 1; i <= G->imax; i++) {
+			for (i = 0; i <= i_ghost; i++) {
 				U[i][0] = U[i][1];
 				V[i][0] = 0;
 			}
 			break;
 		case OUTFLOW:
-			for (i = 1; i <= G->imax; i++) {
+			for (i = 0; i <= i_ghost; i++) {
 				U[i][0] = U[i][1];
 				V[i][0] = V[i][1];
 			}
@@ -72,19 +75,19 @@ void setVelocitiesOnBoundary (simulation * S) {
 	/* LEFT (i minimal) */
 	switch (G->bc_left) {
 		case STICK:
-			for (j = 1; j <= G->jmax; j++) {
+			for (j = 0; j <= j_ghost; j++) {
 				U[0][j] = 0;
 				V[0][j] = -V[1][j];
 			}
 			break;
 		case SLIP:
-			for (j = 1; j <= G->jmax; j++) {
+			for (j = 0; j <= j_ghost; j++) {
 				U[0][j] = 0;
 				V[0][j] = V[1][j];
 			}
 			break;
 		case OUTFLOW:
-			for (j = 1; j <= G->jmax; j++) {
+			for (j = 0; j <= j_ghost; j++) {
 				U[0][j] = U[1][j];
 				V[0][j] = V[1][j];
 			}
@@ -95,19 +98,19 @@ void setVelocitiesOnBoundary (simulation * S) {
 	/* RIGHT (i maximal) */
 	switch (G->bc_left) {
 		case STICK:
-			for (j = 1; j <= G->jmax; j++) {
+			for (j = 0; j <= j_ghost; j++) {
 				U[G->imax][j] = 0;
 				V[i_ghost][j] = -V[G->imax][j];
 			}
 			break;
 		case SLIP:
-			for (j = 1; j <= G->jmax; j++) {
+			for (j = 0; j <= j_ghost; j++) {
 				U[G->imax][j] = 0;
 				V[i_ghost][j] = V[G->imax][j];
 			}
 			break;
 		case OUTFLOW:
-			for (j = 1; j <= G->jmax; j++) {
+			for (j = 0; j <= j_ghost; j++) {
 				U[G->imax][j] = U[G->imax - 1][j];
 				V[i_ghost][j] = V[G->imax][j];
 			}
