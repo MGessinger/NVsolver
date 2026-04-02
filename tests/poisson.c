@@ -7,7 +7,7 @@
 #define XY(i,j) (((i) - 0.5) * S->G->dx),(((j) - 0.5) * S->G->dy)
 
 double cosines (double x, double y) {
-	return sqr(2 * M_PI) * cos(2 * M_PI * x) * cos(2 * M_PI * y);
+	return cos(2 * M_PI * x) * cos(2 * M_PI * y);
 }
 
 double constant (double x, double y) {
@@ -17,7 +17,7 @@ double constant (double x, double y) {
 }
 
 double cubic (double x, double y) {
-	return 6 * (x + y - 1);
+	return (x + y - 1);
 }
 
 int test (simulation * S, double (*f)(double x, double y)) {

@@ -54,6 +54,12 @@ void setTunnel (simulation * S) {
 	}
 }
 
+void printUsageInfo () {
+	fprintf(stderr, "Usage:\n");
+	fprintf(stderr, "\t-f: Specifies the file to read simulation parameters from\n");
+	fprintf(stderr, "\t-t: Specifies the total time to simulate\n");
+}
+
 void readArgv (simulation ** S, double * t, int argc, char ** argv) {
 	for (int i = 1; i < argc; i++) {
 		if (argv[i][0] != '-') {
@@ -78,6 +84,12 @@ int main (int argc, char ** argv) {
 	simulation * S = NULL;
 	double dt, t = 1;
 
+	if (argc == 1) {
+		fprintf(stderr, "No parameters specified! Aborting...\n\n");
+		printUsageInfo();
+		return -1;
+	}
+
 	readArgv(&S, &t, argc, argv);
 
 	if (S == NULL) {
@@ -89,7 +101,8 @@ int main (int argc, char ** argv) {
 	do {
 		dt = computeDT(S);		/* Above */
 		setVelocitiesOnBoundary(S);	/* In boundary.h */
-		setTunnel(S);
+		//setTunnel(S);
+		setDrivenCavity(S);
 		computeAuxiliaryFields(S, dt);	/* In velocities.h */
 
 		computePoissonRHS(S, dt);	/* In poisson.h */

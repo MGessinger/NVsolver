@@ -48,7 +48,7 @@ simulation * newSimulationFromFile (char * filename) {
 	}
 
 	S = newSimulation(imax, jmax, dx, dy, Re);
-	
+
 	while (getline(&line, &len, parameter_file) > 0) {
 		if (strncmp("tau", line, 3) == 0)
 			S->tau = atof(line + 4);

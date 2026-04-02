@@ -5,7 +5,8 @@ int solvePoissonEquation (simulation * S) {
 	double ** P = S->F->P;
 	double invXWidthSqrd = sqr(1 / G->dx);
 	double invYWidthSqrd = sqr(1 / G->dy);
-	double scale = S->omega / (2 * (invXWidthSqrd + invYWidthSqrd) );
+	double scale = 2 * (invXWidthSqrd + invYWidthSqrd);
+	double factor = S->omega / scale;
 
 	double temp = 0;
 	double error = 0;
@@ -21,7 +22,7 @@ int solvePoissonEquation (simulation * S) {
 				temp = invXWidthSqrd * (P[i + 1][j] + P[i - 1][j])
 				     + invYWidthSqrd * (P[i][j + 1] + P[i][j - 1])
 				     - S->RHS[i][j];
-				P[i][j] = (1 - S->omega) * P[i][j] + scale * temp;
+				P[i][j] = (1 - S->omega) * P[i][j] + factor * temp;
 			}
 		}
 
@@ -29,8 +30,9 @@ int solvePoissonEquation (simulation * S) {
 		error = 0;
 		for (int i = 1; i <= G->imax; i++) {
 			for (int j = 1; j <= G->jmax; j++) {
-				temp = invXWidthSqrd * (P[i + 1][j] - 2 * P[i][j] + P[i - 1][j])
-				     + invYWidthSqrd * (P[i][j + 1] - 2 * P[i][j] + P[i][j - 1])
+				temp = invXWidthSqrd * (P[i + 1][j] + P[i - 1][j])
+				     + invYWidthSqrd * (P[i][j + 1] + P[i][j - 1])
+				     - scale * P[i][j]
 				     - S->RHS[i][j];
 				error += sqr(temp);
 			}
