@@ -6,5 +6,6 @@
 
 void computePoissonRHS (simulation * S, double dt);
 int solvePoissonEquation (simulation * S);
+double computeDT (simulation * S);
 
 #endif /* POISSON_H_ */

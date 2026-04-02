@@ -1,0 +1,17 @@
+imax	50
+jmax	50
+dx	0.2
+dy	0.2
+Reynolds	100
+bc_top	SPECIAL
+bc_bottom	STICK
+bc_left	STICK
+bc_right	STICK
+GX	0
+GY	0
+tau	0.5
+dt	0.02
+alpha	0.5
+omega	1.7
+epsilon	0.001
+itmax	100

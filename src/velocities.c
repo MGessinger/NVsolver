@@ -79,6 +79,7 @@ void computeAuxiliaryFields (simulation * S, double dt) {
 	lattice * G = S->G;
 	double invDxSqrd = sqr(1 / G->dx);
 	double invDySqrd = sqr(1 / G->dy);
+	double invRe = 1 / S->F->Reynolds;
 
 	for (int i = 1; i <= G->imax; i++) {
 		for (int j = 1; j <= G->jmax; j++) {
@@ -91,8 +92,8 @@ void computeAuxiliaryFields (simulation * S, double dt) {
 			d2vdx = (V[i + 1][j] - 2 * V[i][j] + V[i - 1][j]) * invDxSqrd;
 			d2vdy = (V[i][j + 1] - 2 * V[i][j] + V[i][j - 1]) * invDySqrd;
 
-			S->auxF[i][j] = U[i][j] + dt * ( (d2udx + d2udy) / S->F->Reynolds - du2dx - duvdy + S->GX );
-			S->auxG[i][j] = V[i][j] + dt * ( (d2vdx + d2vdy) / S->F->Reynolds - duvdx - dv2dy + S->GY );
+			S->auxF[i][j] = U[i][j] + dt * ( (d2udx + d2udy) * invRe - du2dx - duvdy + S->GX );
+			S->auxG[i][j] = V[i][j] + dt * ( (d2vdx + d2vdy) * invRe - duvdx - dv2dy + S->GY );
 		}
 
 		/* Sneak in the boundary term as well */
@@ -122,3 +123,4 @@ void updateVelocities (simulation * S, double dt) {
 		}
 	}
 }
+

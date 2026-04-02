@@ -7,39 +7,13 @@
 #include "velocities.h"
 #include "IO.h"
 
-double computeDT (simulation * S) {
-	/* Find the optimal step width in time */
-
-	lattice * G = S->G;
-	double ** U = S->F->U;
-	double ** V = S->F->V;
-
-	double invDX = 1 / G->dx;
-	double invDY = 1 / G->dy;
-
-	double invDT = 2 / (S->F->Reynolds * (sqr(G->dx) + sqr(G->dy)));
-
-	double utime, vtime;
-	for (int i = 1; i <= G->imax; i++) {
-		for (int j = 1; j <= G->jmax; j++)
-		{
-			utime = invDX * absd(U[i+1][j]);
-			invDT = mind(invDT, utime);
-
-			vtime = invDX * absd(V[i][j+1]);
-			invDT = mind(invDT, vtime);
-		}
-	}
-	if (invDT == 0)
-		return S->dt;
-	return mind(S->tau / invDT, S->dt);
-}
-
 void setDrivenCavity (simulation * S) {
 	double ** U = S->F->U;
 
+	int j_ghost = S->G->jmax + 1;
+
 	for (int i = 1; i <= S->G->imax; i++)
-		U[i][S->G->jmax + 1] = 2 - U[i][S->G->jmax];
+		U[i][j_ghost] = 2 - U[i][j_ghost - 1];
 }
 
 void setTunnel (simulation * S) {
@@ -114,10 +88,12 @@ int main (int argc, char ** argv) {
 		printf("Iterations: %i\n", it);
 
 		updateVelocities(S, dt);	/* In velocities.h */
+		outputToFile(S, t);			/* In IO.h */
 
 		t -= dt;
 	} while (t > 0);
-	outputToFile(S);			/* In IO.h */
+
+	outputToFile(S, 0);			/* In IO.h */
 
 	clearSimulation(S);
 	return 0;
